@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">APS project</string>
+    <string name="spinner_pults_prompt">Выберите пульт</string>
+</resources>

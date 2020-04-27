@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <ImageView
+        android:id="@+id/master_andon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginLeft="50dp"
+        app:layout_constraintBottom_toBottomOf="@+id/master_btn"
+        app:layout_constraintStart_toEndOf="@+id/master_btn"
+        app:srcCompat="@drawable/grey48_fine" />
+
+    <ImageView
+        android:id="@+id/raw_andon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginLeft="52dp"
+        app:layout_constraintBottom_toBottomOf="@+id/raw_btn"
+        app:layout_constraintStart_toEndOf="@+id/raw_btn"
+        app:srcCompat="@drawable/grey48_fine" />
+
+    <Button
+        android:id="@+id/repair_btn"
+        android:layout_width="200dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="188dp"
+        android:text="ремонт"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/quality_btn"
+        android:layout_width="200dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="50dp"
+        android:text="ОТК"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/repair_btn" />
+
+    <Button
+        android:id="@+id/raw_btn"
+        android:layout_width="200dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="50dp"
+        android:text="сырье"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/quality_btn" />
+
+    <Button
+        android:id="@+id/master_btn"
+        android:layout_width="200dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="50dp"
+        android:text="МАСТЕР"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias=".2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/raw_btn" />
+
+    <Button
+        android:id="@+id/open_factory_condition"
+        android:layout_width="200dp"
+        android:layout_height="70dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginLeft="40dp"
+        android:text="Мониторинг ситуации на заводе"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/settings" />
+
+    <TextView
+        android:id="@+id/punkt_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="108dp"
+        android:gravity="center_horizontal"
+        android:textStyle="bold"
+        android:textSize="20dp"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_editor_absoluteX="-16dp" />
+
+    <ImageView
+        android:id="@+id/settings"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_margin="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/aps_icon" />
+
+    <ImageView
+        android:id="@+id/repair_andon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginLeft="50dp"
+        app:layout_constraintBottom_toBottomOf="@+id/repair_btn"
+        app:layout_constraintStart_toEndOf="@+id/repair_btn"
+        app:srcCompat="@drawable/grey48_fine" />
+
+    <ImageView
+        android:id="@+id/quality_andon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="52dp"
+        android:layout_marginLeft="52dp"
+        app:layout_constraintBottom_toBottomOf="@+id/quality_btn"
+        app:layout_constraintStart_toEndOf="@+id/quality_btn"
+        app:srcCompat="@drawable/grey48_fine" />
+</androidx.constraintlayout.widget.ConstraintLayout>
