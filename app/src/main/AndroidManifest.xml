@@ -6,7 +6,7 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/aps_app_icon"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
@@ -21,6 +21,9 @@
         <activity android:name=".MainActivity" />
         <activity android:name=".Login" />
         <activity android:name=".FactoryCondition" />
+
+        <!--        QuestAPS activities below-->
+        <activity android:name=".QuestMainActivity"/>
     </application>
 
 </manifest>
