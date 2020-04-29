@@ -1,6 +1,7 @@
 package com.akfa.apsproject;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -70,6 +71,7 @@ public class MainAdapter extends BaseExpandableListAdapter {
         }
         TextView textView = convertView.findViewById(R.id.list_parent);
         textView.setText(group);
+        textView.setTextColor(Color.parseColor("#28E4FF"));
         return convertView;
     }
 
@@ -84,6 +86,7 @@ public class MainAdapter extends BaseExpandableListAdapter {
 
         TextView textView = convertView.findViewById(R.id.list_child);
         textView.setText(child);
+        textView.setTextColor(Color.parseColor("#28E4FF"));
         return convertView;
     }
 
