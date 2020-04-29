@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".QRScanner">
+<TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/directionsTextView"
+    android:layout_above="@+id/camerapreview"
+    android:layout_marginBottom="10sp"
+    android:textSize='12sp'
+    android:gravity="center"
+    />
+<SurfaceView android:layout_height="300sp"
+    android:layout_width="match_parent"
+    android:id="@+id/camerapreview"
+    android:layout_centerInParent="true"
+    />
+<TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/textView"
+    android:layout_below="@+id/camerapreview"
+    android:layout_marginTop="20sp"
+    android:text="@string/qr_text_below_scanner"
+    android:textSize='12sp'
+    android:gravity="center"
+    />
+
+</RelativeLayout>

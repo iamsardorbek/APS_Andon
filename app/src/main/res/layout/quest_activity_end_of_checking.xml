@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".QuestEndOfChecking">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/endOfChecking"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Проверка окончена" />
+
+            <TextView
+                android:id="@+id/shop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/shop" />
+
+            <TextView
+                android:id="@+id/equipmentLine"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/equipmentLine" />
+
+            <TextView
+                android:id="@+id/numberOfProblems"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/numberOfProblems" />
+
+            <TextView
+                android:id="@+id/checkingDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/checkingDuration" />
+
+            <TextView
+                android:id="@+id/furtherActions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Дальнейшие действия" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/newChecking"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5sp"
+                    android:layout_weight="1"
+                    android:text="Новая проверка" />
+
+                <Button
+                    android:id="@+id/closeApp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5sp"
+                    android:layout_weight="1"
+                    android:text="Закрыть приложение" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/aps_app_icon"
@@ -25,6 +27,9 @@
         <!--        QuestAPS activities below-->
         <activity android:name=".QuestMainActivity"/>
         <activity android:name=".QuestVerification" />
+        <activity android:name=".QuestPointDynamic" />
+        <activity android:name=".QuestEndOfChecking" />
+        <activity android:name=".QRScanner" />
     </application>
 
 </manifest>
