@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">APS project</string>
+    <string name="app_name">APS</string>
     <string name="spinner_pults_prompt">Выберите пульт</string>
     <string name="login_button">Войти в систему</string>
     <string name="tip">Введите данные</string>
@@ -11,5 +11,32 @@
     <string name="master_button">Мастер</string>
     <string name="open_factory_cond_button">Мониторинг\nзавода</string>
     <string name="choose_pult_login">Выбрать пульт</string>
-    <string name="access_login">Логин</string>
+
+    <string name="about_title">Подтверждение личности</string>
+    <string name="welcome_text">Добро пожаловать в приложение QuestAPS,
+        \nсозданное Akfa R&D.
+        \nДанное приложение облегчает и оптимизирует процесс
+        \nпроверки параметров производственных линий.
+        \nНиже выберите ваш цех, линию, на которой вы хотите провести проверку.</string>
+    <string name="factory_name">Радиаторный завод Akfa</string>
+    <string name="group1">Литейный цех</string>
+    <string name="group2">Цех механической обработки и покраски</string>
+
+    <string-array name="group1">
+        <item>Литейная машина высокого давления IDRA 1100 T</item>
+    </string-array>
+    <string-array name="group2">
+        <item>Линия механической обработки Gizetta</item>
+    </string-array>
+
+    <string name="shop">Цех: </string>
+    <string name="equipmentLine">Линия: </string>
+    <string name="numberOfProblems">Обнаружено проблем: </string>
+    <string name="checkingDuration">Время проверки: </string>
+    <string name="equipment_name_textview">Название оборудования:</string>
+    <string name="nomer_punkta_textview">"Номер пункта: "</string>
+    <string name="next_point_button_text">Следующий пункт</string>
+    <string name="qr_text_below_scanner">Поднесите камеру к QR коду</string>
+    <string name="capture_image">Сфоткать проблему</string>
+
 </resources>
