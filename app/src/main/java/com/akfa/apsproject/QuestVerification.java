@@ -44,13 +44,13 @@ public class QuestVerification extends AppCompatActivity {
                 switch(checkUser(login.getText().toString(), password.getText().toString()))
                 {
                     case 2:
-                        Toast.makeText(Verification.this, "Проверщик",
+                        Toast.makeText(getApplicationContext(), "Проверщик",
                                 Toast.LENGTH_SHORT).show();
                         Log.i("Доступ разрешен", "Вывел Тост. Создаю интент");
                         //попросит подойти к пункту 1 и откроет окно QRScanner
                         Intent intent = new Intent(getApplicationContext(), QRScanner.class);
-                        intent.putExtra("Номер цеха", MainActivity.groupPositionG);
-                        intent.putExtra("Номер линии", MainActivity.childPositionG);
+                        intent.putExtra("Номер цеха", QuestMainActivity.groupPositionG);
+                        intent.putExtra("Номер линии", QuestMainActivity.childPositionG);
                         intent.putExtra("Номер пункта", INITIAL_POINT_NUMBER_FOR_QR); //1
                         intent.putExtra("Открой PointDynamic", "да");
                         intent.putExtra("Код пункта", codeToDetect);
@@ -58,14 +58,13 @@ public class QuestVerification extends AppCompatActivity {
                         startActivity(intent);
                         break;
                     case 1:
-                        Toast.makeText(Verification.this, "Ремонтник",
+                        Toast.makeText(getApplicationContext(), "Ремонтник",
                                 Toast.LENGTH_SHORT).show();
-                        intent = new Intent(getApplicationContext(), ProblemsListForRepairers.class);
-                        startActivity(intent);
+//                        intent = new Intent(getApplicationContext(), ProblemsListForRepairers.class);
+//                        startActivity(intent);
                         break;
                     case 0:
-                        Toast.makeText(Verification.this, "Введите логин и пароль снова.",
-                                Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Введите логин и пароль снова.", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -86,7 +85,7 @@ public class QuestVerification extends AppCompatActivity {
     private void setCodeToDetect()
     {
         DatabaseReference codeToDetectRef = FirebaseDatabase.getInstance().getReference()
-                .child("Цеха/" + MainActivity.groupPositionG + "/" + MainActivity.childPositionG +
+                .child("Цеха/" + QuestMainActivity.groupPositionG + "/" + QuestMainActivity.childPositionG +
                         "/QR_коды/qr_1");
         codeToDetectRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override

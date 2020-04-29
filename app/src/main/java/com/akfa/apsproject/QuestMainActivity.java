@@ -50,7 +50,7 @@ public class QuestMainActivity extends AppCompatActivity  {
                 Log.i("Pressed child", "#" + childPosition);
                 groupPositionG = groupPosition;
                 childPositionG = childPosition;
-                Intent intent = new Intent(getApplicationContext(), Verification.class);
+                Intent intent = new Intent(getApplicationContext(), QuestVerification.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                 startActivity(intent);
                 return false;
@@ -64,13 +64,13 @@ public class QuestMainActivity extends AppCompatActivity  {
                 Toast.makeText(getApplicationContext(), R.string.welcome_text, Toast.LENGTH_LONG).show();
             }
         });
-        //следующие 5 строк созданы для проверки окна EndOfChecking
+        //следующие 5 строк созданы для проверки окна QuestEndOfChecking
         endOfChecking = findViewById(R.id.endOfChecking);
         endOfChecking.setOnClickListener(new Button.OnClickListener(){
 
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), EndOfChecking.class);
+                Intent intent = new Intent(getApplicationContext(), QuestEndOfChecking.class);
                 startActivity(intent);
         }
         });
