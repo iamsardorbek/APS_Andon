@@ -1,18 +1,10 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:app="http://schemas.android.com/apk/res-auto"
-xmlns:tools="http://schemas.android.com/tools"
-android:layout_width="match_parent"
-android:layout_height="match_parent"
-android:background="@drawable/grey_background"
-android:gravity="center"
-tools:context=".Login">
-
-<LinearLayout
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center"
+    android:background="@drawable/grey_background"
     android:orientation="vertical"
-    android:layout_margin="20dp">
+    tools:context=".Login">
 
     <TextView
         android:id="@+id/loading"
@@ -22,14 +14,16 @@ tools:context=".Login">
         android:textColor="#28E4FF"
         android:text="@string/loading"
         android:gravity="center_horizontal"
-        />
+        android:layout_marginTop="20dp"/>
+
     <ImageView
         android:id="@+id/title_pic"
         android:layout_marginTop="75dp"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_gravity="center"
-        android:src="@drawable/aps_icon" />
+        android:contentDescription="@null"
+        android:src="@drawable/aps_icon"/>
 
     <TextView
         android:id="@+id/tip"
@@ -42,15 +36,23 @@ tools:context=".Login">
         android:textStyle="bold"
         android:textSize="15sp"/>
 
-    <Spinner
-        android:id="@+id/spinner_pults"
+    <EditText
+        android:id="@+id/access_login"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:prompt="@string/spinner_pults_prompt"
-        android:drawablePadding="10dp"
+        android:inputType="textPassword"
+        android:hint="@string/access_login"
+        android:textColorHint="#1A546C"
+        android:gravity="start"
+        android:textColor="#28E46F"
         android:layout_gravity="center"
+        android:drawablePadding="10dp"
+        android:layout_marginTop="10dp"
         android:background="@drawable/edit"
-        android:layout_marginTop="10dp"/>
+        android:padding="10dp"
+        android:drawableLeft="@drawable/ic_login"
+        android:drawableStart="@drawable/ic_login"
+        android:autofillHints="username" />
 
     <EditText
         android:id="@+id/access_code"
@@ -58,9 +60,8 @@ tools:context=".Login">
         android:layout_height="wrap_content"
         android:inputType="textPassword"
         android:hint="@string/access_code"
-        android:textColorHint="#54c1d1"
-        android:layout_centerInParent="true"
-        android:gravity="center_horizontal"
+        android:textColorHint="#1A546C"
+        android:gravity="start"
         android:textColor="#28E46F"
         android:layout_gravity="center"
         android:drawablePadding="10dp"
@@ -68,7 +69,8 @@ tools:context=".Login">
         android:background="@drawable/edit"
         android:padding="10dp"
         android:drawableLeft="@drawable/ic_lock"
-         />
+        android:drawableStart="@drawable/ic_lock"
+        android:autofillHints="password" />
 
     <Button
         android:id="@+id/check_this_point"
@@ -81,5 +83,3 @@ tools:context=".Login">
     <!--        -->
 
 </LinearLayout>
-
-</RelativeLayout>

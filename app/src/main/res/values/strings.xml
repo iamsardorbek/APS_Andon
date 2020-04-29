@@ -11,4 +11,5 @@
     <string name="master_button">Мастер</string>
     <string name="open_factory_cond_button">Мониторинг\nзавода</string>
     <string name="choose_pult_login">Выбрать пульт</string>
+    <string name="access_login">Логин</string>
 </resources>
