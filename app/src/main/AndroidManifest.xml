@@ -24,6 +24,7 @@
 
         <!--        QuestAPS activities below-->
         <activity android:name=".QuestMainActivity"/>
+        <activity android:name=".QuestVerification" />
     </application>
 
 </manifest>
