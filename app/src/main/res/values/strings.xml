@@ -1,10 +1,9 @@
 <resources>
     <string name="app_name">APS</string>
-    <string name="spinner_pults_prompt">Выберите пульт</string>
     <string name="login_button">Войти в систему</string>
     <string name="tip">Введите данные</string>
     <string name="loading">Подождите пока загрузятся\nданные с базы данных</string>
-    <string name="access_code">Код доступа</string>
+    <string name="access_code">Пароль</string>
     <string name="repair_button">Ремонт</string>
     <string name="quality_button">ОТК</string>
     <string name="raw_button">сырье</string>
@@ -39,5 +38,9 @@
     <string name="qr_text_below_scanner">Поднесите камеру к QR коду</string>
     <string name="capture_image">Сфоткать проблему</string>
     <string name="access_login">Логин</string>
+    <string name="separate_problem_title">Решение проблемы</string>
+    <string name="problem_description_text_filler">Здесь инфа про проблему\n\nНомер пункта, \n\nНазвание оборудования\n\nНазвание цеха</string>
+    <string name="take_pic">Сфотографировать решенную проблему</string>
+    <string name="problem_solved">Проблема решена</string>
 
 </resources>

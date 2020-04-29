@@ -30,6 +30,8 @@
         <activity android:name=".QuestPointDynamic" />
         <activity android:name=".QuestEndOfChecking" />
         <activity android:name=".QRScanner" />
+        <activity android:name=".RepairersProblemsList" />
+        <activity android:name=".RepairerSeparateProblem" />
     </application>
 
 </manifest>
