@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,7 +23,8 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 
 public class Login extends AppCompatActivity {
-    private TextView loading;
+    private TextView loading, tip;
+    private ImageView titlePic;
     private EditText accessCode;
     private Button checkThisPoint;
     private Spinner spinnerPults;
@@ -53,7 +55,11 @@ public class Login extends AppCompatActivity {
         accessCode = findViewById(R.id.access_code);
         checkThisPoint = findViewById(R.id.check_this_point);
         loading = findViewById(R.id.loading);
+        titlePic = findViewById(R.id.title_pic);
+        tip = findViewById(R.id.tip);
         //невидимы пока с базы не загрузил данные
+        titlePic.setVisibility(View.INVISIBLE);
+        tip.setVisibility(View.INVISIBLE);
         spinnerPults.setVisibility(View.INVISIBLE);
         accessCode.setVisibility(View.INVISIBLE);
         checkThisPoint.setVisibility(View.INVISIBLE);
@@ -73,9 +79,11 @@ public class Login extends AppCompatActivity {
                 {
                     pultsList.add(pult.getKey());
                 }
-                ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_spinner_item, pultsList);
-                arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.spinner_item, pultsList);
+                arrayAdapter.setDropDownViewResource(R.layout.spinner_item);
                 spinnerPults.setAdapter(arrayAdapter);
+                titlePic.setVisibility(View.VISIBLE);
+                tip.setVisibility(View.VISIBLE);
                 spinnerPults.setVisibility(View.VISIBLE);
                 accessCode.setVisibility(View.VISIBLE);
                 checkThisPoint.setVisibility(View.VISIBLE);

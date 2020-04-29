@@ -18,7 +18,7 @@ public class FactoryCondition extends AppCompatActivity{
         webview.getSettings().setJavaScriptEnabled(true);
         webview.getSettings().setDomStorageEnabled(true);
         webview.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
-        webview.loadUrl("https://www.google.com");
+        webview.loadUrl("https://aps-project-akfa.web.app/");
     }
 
     // find all variables
