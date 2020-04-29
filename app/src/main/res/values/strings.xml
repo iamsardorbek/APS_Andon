@@ -39,5 +39,9 @@
     <string name="qr_text_below_scanner">Поднесите камеру к QR коду</string>
     <string name="capture_image">Сфоткать проблему</string>
     <string name="access_login">Логин</string>
+    <string name="separate_problem_title">Решение проблемы</string>
+    <string name="problem_description_text_filler">Здесь инфа про проблему\n\nНомер пункта, \n\nНазвание оборудования\n\nНазвание цеха</string>
+    <string name="take_pic">Сфотографировать решенную проблему</string>
+    <string name="problem_solved">Проблема решена</string>
 
 </resources>
