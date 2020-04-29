@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@drawable/login_background"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -18,6 +18,7 @@
             <TextView
                 android:id="@+id/endOfChecking"
                 android:layout_width="wrap_content"
+                android:textColor="#FFFFFF"
                 android:layout_height="wrap_content"
                 android:text="Проверка окончена" />
 
@@ -25,31 +26,36 @@
                 android:id="@+id/shop"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
                 android:text="@string/shop" />
 
             <TextView
                 android:id="@+id/equipmentLine"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
                 android:text="@string/equipmentLine" />
 
             <TextView
                 android:id="@+id/numberOfProblems"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/numberOfProblems" />
+                android:textColor="#FFFFFF"
+                android:text="@string/numberOfProblems"/>
 
             <TextView
                 android:id="@+id/checkingDuration"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/checkingDuration" />
+                android:textColor="#FFFFFF"
+                android:text="@string/checkingDuration"/>
 
             <TextView
                 android:id="@+id/furtherActions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Дальнейшие действия" />
+                android:textColor="#FFFFFF"
+                android:text="Дальнейшие действия"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -62,15 +68,23 @@
                     android:layout_height="wrap_content"
                     android:layout_margin="5sp"
                     android:layout_weight="1"
-                    android:text="Новая проверка" />
+                    android:textColor="#FFFFFF"
+                    android:paddingLeft="10dp"
+                    android:drawableLeft="@drawable/new_revise"
+                    android:background="@drawable/edit"
+                    android:text="Новая проверка"/>
 
                 <Button
                     android:id="@+id/closeApp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="5sp"
+                    android:background="@drawable/edit"
                     android:layout_weight="1"
-                    android:text="Закрыть приложение" />
+                    android:textColor="#FFFFFF"
+                    android:paddingRight="10dp"
+                    android:drawableRight="@drawable/cancel_app"
+                    android:text="Закрыть приложение"/>
             </LinearLayout>
 
         </LinearLayout>

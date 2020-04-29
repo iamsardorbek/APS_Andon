@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:background="@drawable/login_background"
     android:layout_height="match_parent"
     tools:context=".QuestPointDynamic">
 
@@ -31,6 +32,7 @@
                     android:layout_height="wrap_content"
                     android:includeFontPadding="false"
                     android:text="@string/equipment_name_textview"
+                    android:textColor="#FFFFFF"
                     android:textSize="20sp" />
 
                 <TextView
@@ -41,6 +43,7 @@
                     android:layout_marginTop="5dp"
                     android:layout_marginRight="5dp"
                     android:layout_marginBottom="20dp"
+                    android:textColor="#FFFFFF"
                     android:text="@string/nomer_punkta_textview"
                     android:textSize="18sp" />
 
@@ -51,6 +54,10 @@
                     android:layout_margin="0dp"
                     android:layout_marginLeft="0dp"
                     android:layout_marginRight="0dp"
+                    android:textColor="#FFFFFF"
+                    android:paddingRight="10dp"
+                    android:background="@drawable/edit"
+                    android:drawableRight="@drawable/next"
                     android:text="@string/next_point_button_text" />
 
                 <ScrollView
