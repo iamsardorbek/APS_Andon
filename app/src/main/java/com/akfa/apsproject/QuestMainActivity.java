@@ -18,8 +18,6 @@ import java.util.List;
 
 public class QuestMainActivity extends AppCompatActivity  {
 
-    Button info; //чтобы дать инфу про приложение
-    Button endOfChecking, captureImage;
     static int childPositionG, groupPositionG;
 //    uz.akfa.questaps.EquipmentLine liteyniy[4];
 //    equipmentLines[0] = new uz.akfa.questaps.EquipmentLine()
@@ -56,28 +54,6 @@ public class QuestMainActivity extends AppCompatActivity  {
                 return false;
             }
         });
-        info = findViewById(R.id.info);
-        info.setOnClickListener(new Button.OnClickListener(){
-
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), R.string.welcome_text, Toast.LENGTH_LONG).show();
-            }
-        });
-        //следующие 5 строк созданы для проверки окна QuestEndOfChecking
-        endOfChecking = findViewById(R.id.endOfChecking);
-        endOfChecking.setOnClickListener(new Button.OnClickListener(){
-
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), QuestEndOfChecking.class);
-                startActivity(intent);
-        }
-        });
-        //а также проверка работы с камерой
-        captureImage = findViewById(R.id.captureImage);
-
-
     }
 
     //добавить данные в раскрывающийся список
