@@ -14,11 +14,11 @@
 
     <string name="about_title">Подтверждение личности</string>
     <string name="welcome_text">Добро пожаловать в приложение QuestAPS,
-        \nсозданное Akfa R&D.
+        \nсозданное Akfa Research and Development.
         \nДанное приложение облегчает и оптимизирует процесс
         \nпроверки параметров производственных линий.
         \nНиже выберите ваш цех, линию, на которой вы хотите провести проверку.</string>
-    <string name="factory_name">Радиаторный завод Akfa</string>
+    <string name="factory_name">Радиаторный завод AKFA</string>
     <string name="group1">Литейный цех</string>
     <string name="group2">Цех механической обработки и покраски</string>
 
