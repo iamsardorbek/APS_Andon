@@ -38,5 +38,6 @@
     <string name="next_point_button_text">Следующий пункт</string>
     <string name="qr_text_below_scanner">Поднесите камеру к QR коду</string>
     <string name="capture_image">Сфоткать проблему</string>
+    <string name="access_login">Логин</string>
 
 </resources>
