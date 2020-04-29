@@ -1,10 +1,9 @@
 <resources>
     <string name="app_name">APS</string>
-    <string name="spinner_pults_prompt">Выберите пульт</string>
     <string name="login_button">Войти в систему</string>
     <string name="tip">Введите данные</string>
     <string name="loading">Подождите пока загрузятся\nданные с базы данных</string>
-    <string name="access_code">Код доступа</string>
+    <string name="access_code">Пароль</string>
     <string name="repair_button">Ремонт</string>
     <string name="quality_button">ОТК</string>
     <string name="raw_button">сырье</string>

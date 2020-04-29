@@ -55,7 +55,7 @@
         android:autofillHints="username" />
 
     <EditText
-        android:id="@+id/access_code"
+        android:id="@+id/password"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:inputType="textPassword"
@@ -73,7 +73,7 @@
         android:autofillHints="password" />
 
     <Button
-        android:id="@+id/check_this_point"
+        android:id="@+id/enter"
         android:layout_width="300dp"
         android:layout_height="60dp"
         android:layout_gravity="center"
