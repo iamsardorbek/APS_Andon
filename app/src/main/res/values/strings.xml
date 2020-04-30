@@ -42,5 +42,6 @@
     <string name="problem_description_text_filler">Здесь инфа про проблему\n\nНомер пункта, \n\nНазвание оборудования\n\nНазвание цеха</string>
     <string name="take_pic">Сфотографировать решенную проблему</string>
     <string name="problem_solved">Проблема решена</string>
+    <string name="cameraViewDescription">cameraView</string>
 
 </resources>
