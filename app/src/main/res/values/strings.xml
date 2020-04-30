@@ -43,5 +43,17 @@
     <string name="take_pic">Сфотографировать решенную проблему</string>
     <string name="problem_solved">Проблема решена</string>
     <string name="cameraViewDescription">cameraView</string>
+    <string name="reviseDone">Проверка окончена</string>
+    <string name="nextSteps">Дальнейшие действия</string>
+    <string name="newRevision">Новая проверка</string>
+    <string name="exitApp">Закрыть приложение</string>
+    <string name="apsTitle">AKFA PRODUCTION SYSTEM</string>
+    <string name="r_and_dTitle"><![CDATA[R&D Department]]></string>
+    <string name="logo">Logo</string>
+    <string name="remoteButtonRed">Ремонт</string>
+    <string name="remoteButtonYellow">OTK</string>
+    <string name="remoteButtonGreen">Сырьё</string>
+    <string name="remoteButtonBlue">МАСТЕР</string>
+    <string name="problemsListTitle">Список проблем на линиях</string>
 
 </resources>

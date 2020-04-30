@@ -5,12 +5,13 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="10sp"
-    android:background="@android:color/white">
+    android:background="@drawable/login_background">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/list_child"
         android:textSize="20sp"
-        android:paddingLeft="30sp" />
+        android:padding="5dp"
+        android:layout_margin="5dp" />
 </LinearLayout>

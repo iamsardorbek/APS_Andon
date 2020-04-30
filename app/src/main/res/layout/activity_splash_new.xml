@@ -12,31 +12,34 @@ tools:context=".SplashNew">
     android:layout_width="200dp"
     android:layout_height="200dp"
     android:src="@drawable/aps_icon"
-    android:layout_centerInParent="true"
-
-    android:layout_centerHorizontal="true"/>
+    android:layout_marginTop="200dp"
+    android:layout_centerHorizontal="true"
+    android:contentDescription="@string/logo" />
 
 <TextView
     android:id="@+id/big_title"
-    android:layout_width="226dp"
+    android:layout_width="wrap_content"
+    android:gravity="center"
     android:layout_height="30dp"
-    android:text="Akfa Production System"
-    android:textSize="20dp"
+    android:text="@string/apsTitle"
+    android:textSize="20sp"
+    app:fontFamily="sans-serif-condensed-medium"
     android:layout_below="@+id/icon"
     android:layout_centerHorizontal="true"
-    android:textColor="#28E4FF"
+    android:textColor="@color/text"
     android:layout_marginVertical="10dp"
-    android:textStyle="bold" />
+    android:textStyle="bold"/>
 
-<TextView
-    android:id="@+id/small_title"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
-    android:textColor="#28E4FF"
-    android:layout_below="@+id/big_title"
-    android:text="Research and Development Engineering"
-    android:layout_centerHorizontal="true"/>
+    <TextView
+        android:id="@+id/small_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/big_title"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"
+        android:text="@string/r_and_dTitle"
+        android:textColor="@color/text"
+        app:fontFamily="sans-serif-condensed-medium" />
 
 <ProgressBar
     android:id="@+id/progressBar"

@@ -25,26 +25,30 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                tools:ignore="UselessParent">
 
                 <TextView
                     android:id="@+id/equipmentName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:padding="5dp"
+                    android:background="@drawable/edit"
                     android:includeFontPadding="false"
                     android:text="@string/equipment_name_textview"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text"
                     android:textSize="20sp"/>
 
                 <TextView
                     android:id="@+id/nomer_punkta"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="5dp"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginRight="5dp"
+                    android:layout_margin="10dp"
+                    android:padding="5dp"
+                    android:background="@drawable/edit"
                     android:layout_marginBottom="20dp"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/text"
                     android:text="@string/nomer_punkta_textview"
                     android:textSize="18sp"/>
 
@@ -52,28 +56,23 @@
                     android:id="@+id/nextPoint"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="0dp"
-                    android:layout_marginLeft="0dp"
-                    android:layout_marginRight="0dp"
-                    android:textColor="#FFFFFF"
+                    android:layout_margin="10dp"
+                    android:textColor="@color/text"
                     android:paddingRight="10dp"
                     android:background="@drawable/edit"
                     android:drawableRight="@drawable/next"
-                    android:text="@string/next_point_button_text"/>
+                    android:text="@string/next_point_button_text"
+                    android:paddingEnd="10dp"
+                    tools:ignore="RtlSymmetry"
+                    android:drawableEnd="@drawable/next" />
 
-                <ScrollView
-                    android:id="@+id/scrollView"
+                <LinearLayout
+                    android:id="@+id/scrollLinearLayout"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
 
-                    <LinearLayout
-                        android:id="@+id/scrollLinearLayout"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical">
-
-                    </LinearLayout>
-                </ScrollView>
+                </LinearLayout>
 
             </LinearLayout>
 

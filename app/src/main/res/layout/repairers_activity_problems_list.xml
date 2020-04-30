@@ -1,33 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/login_background"
     tools:context=".RepairersProblemsList">
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="top|center"
-        android:text="Список проблем на линиях"
+        android:gravity="center"
+        android:padding="5dp"
+        android:layout_margin="5dp"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:textColor="@color/text"
+        android:background="@drawable/edit"
+        android:text="@string/problemsListTitle"
+        android:id="@+id/title" />
 
-        android:id="@+id/title"
-        ></TextView>
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/title"
+        android:layout_margin="5dp"
+        android:padding="5dp"
+        android:background="@drawable/edit"
         android:id="@+id/scrollView"
         >
 <!--        textView, распологающиеся под друг другом, при нажатии на элемент,
 открывается активити с описанием и фоткой проблемы-->
 
-
         <LinearLayout
             android:id="@+id/linearLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"></LinearLayout>
+            android:orientation="vertical" />
     </ScrollView>
 
 </RelativeLayout>

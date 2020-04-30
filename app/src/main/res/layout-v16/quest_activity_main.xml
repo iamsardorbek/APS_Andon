@@ -23,15 +23,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/factory_name"
-                android:layout_margin="10dp"
-                android:padding="5dp"
                 android:background="@drawable/edit"
+                android:layout_margin="5dp"
+                android:padding="5dp"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:typeface="sans"
                 android:textColor="@color/text"
+                android:fontFamily="sans-serif-condensed-medium"
                 app:fontFamily="serif" />
 
             <ExpandableListView

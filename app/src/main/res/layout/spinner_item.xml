@@ -3,8 +3,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:textColor="#54C1D1"
-    android:padding="10dp"
+    android:textColor="@color/text"
+    android:padding="5dp"
+    android:layout_margin="5dp"
     android:layout_gravity="center"
     android:background="@drawable/edit_spinner_item"
     />
