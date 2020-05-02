@@ -55,5 +55,13 @@
     <string name="remoteButtonGreen">Сырьё</string>
     <string name="remoteButtonBlue">МАСТЕР</string>
     <string name="problemsListTitle">Список проблем на линиях</string>
-
+    <string name="open">Открыть</string>
+    <string name="close">Закрыть</string>
+    <string name="qr_scanner_text_top">Подойдите к начальному пункту выбранной линии</string>
+    <string name="about_app_submenu">О приложении</string>
+    <string name="log_out_submenu">Выйти</string>
+    <string name="check_equipment_submenu">Проверка линии</string>
+    <string name="pult_submenu">Пульт</string>
+    <string name="web_monitoring_submenu">Мониторинг завода</string>
+    <string name="problems_list_submenu">Список проблем</string>
 </resources>

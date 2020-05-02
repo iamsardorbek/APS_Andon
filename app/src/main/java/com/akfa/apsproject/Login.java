@@ -2,13 +2,16 @@ package com.akfa.apsproject;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,19 +22,24 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 public class Login extends AppCompatActivity {
-    private TextView loading, tip;
-    private ImageView titlePic;
+    private TextView loading;
     private EditText passwordView, loginView;
     private Button enter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        //возьми разрешение использования камеры
+        int permissionStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+        if (permissionStatus == PackageManager.PERMISSION_DENIED) {
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.CAMERA}, 0);
+        }
+
         initInstances();
         enter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String login = loginView.getText().toString();
+                final String login = loginView.getText().toString();
                 final String password = passwordView.getText().toString();
                 loading.setVisibility(View.VISIBLE);
                 DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("Users/" + login);
@@ -45,14 +53,16 @@ public class Login extends AppCompatActivity {
                                 if (user.child("position").getValue().toString().equals("operator")) {
                                     Intent openPult = new Intent(getApplicationContext(), MainActivity.class);
                                     openPult.putExtra("Номер пульта", user.child("pultNo").getValue().toString());
+                                    openPult.putExtra("Логин пользователя", login);
                                     startActivity(openPult);
                                 } else if (user.child("position").getValue().toString().equals("master")) {
-                                    Intent openPult = new Intent(getApplicationContext(), QuestMainActivity.class);
-                                    openPult.putExtra("Номер пульта", user.child("pultNo").getValue().toString());
-                                    startActivity(openPult);
+                                    Intent openFactoryCondition = new Intent(getApplicationContext(), QuestMainActivity.class); //actually there should be the FactoryCondition.class, but it is incomplete yet
+                                    openFactoryCondition.putExtra("Логин пользователя", login);
+                                    startActivity(openFactoryCondition);
                                 } else if (user.child("position").getValue().toString().equals("repairer")) {
-                                    Intent openPult = new Intent(getApplicationContext(), RepairersProblemsList.class);
-                                    startActivity(openPult);
+                                    Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
+                                    openProblemsList.putExtra("Логин пользователя", login);
+                                    startActivity(openProblemsList);
                                 }
                             }
                             else
@@ -82,7 +92,7 @@ public class Login extends AppCompatActivity {
         passwordView = findViewById(R.id.password);
         enter = findViewById(R.id.enter);
         loading = findViewById(R.id.loading);
-        titlePic = findViewById(R.id.title_pic);
-        tip = findViewById(R.id.tip);
+        getSupportActionBar().hide();
+        loading.setVisibility(View.INVISIBLE);
     }
 }

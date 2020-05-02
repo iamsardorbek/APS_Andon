@@ -23,6 +23,7 @@ public class QuestEndOfChecking extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.quest_activity_end_of_checking);
+        getSupportActionBar().hide();
         shop = findViewById(R.id.shop);
         equipmentLine = findViewById(R.id.equipmentLine);
         numberOfProblems = findViewById(R.id.numberOfProblems);

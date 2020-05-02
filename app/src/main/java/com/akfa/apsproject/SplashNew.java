@@ -12,11 +12,12 @@ public class SplashNew extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_new);
+        getSupportActionBar().hide();
         handler=new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                Intent intent=new Intent(SplashNew.this,MainActivity.class);
+                Intent intent=new Intent(SplashNew.this, Login.class);
                 startActivity(intent);
                 finish();
             }

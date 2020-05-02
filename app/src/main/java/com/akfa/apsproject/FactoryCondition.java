@@ -13,6 +13,7 @@ public class FactoryCondition extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.factory_condition);
+        getSupportActionBar().hide();
         find_objects();
         webview.setWebViewClient(new WebViewClient());
         webview.getSettings().setJavaScriptEnabled(true);

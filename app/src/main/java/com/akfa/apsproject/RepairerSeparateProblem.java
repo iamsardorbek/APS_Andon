@@ -46,6 +46,7 @@ public class RepairerSeparateProblem extends AppCompatActivity {
     }
 
     private void initInstances() {
+        getSupportActionBar().hide();
         problemsRef = FirebaseDatabase.getInstance().getReference().child("Проблемы");
         String IDOfTheProblem = getIntent().getExtras().getString("ID проблемы в таблице Problems");
         thisProblemRef = problemsRef.child(IDOfTheProblem);

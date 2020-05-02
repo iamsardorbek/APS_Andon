@@ -3,7 +3,7 @@
     package="com.akfa.apsproject">
 
     <uses-permission android:name="android.permission.INTERNET" />
-
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
@@ -26,7 +26,6 @@
 
         <!--        QuestAPS activities below-->
         <activity android:name=".QuestMainActivity"/>
-        <activity android:name=".QuestVerification" />
         <activity android:name=".QuestPointDynamic" />
         <activity android:name=".QuestEndOfChecking" />
         <activity android:name=".QRScanner" />

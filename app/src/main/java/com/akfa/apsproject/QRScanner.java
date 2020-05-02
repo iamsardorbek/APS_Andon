@@ -10,22 +10,24 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
-import com.karumi.dexter.Dexter;
-import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.PermissionDeniedResponse;
-import com.karumi.dexter.listener.PermissionGrantedResponse;
-import com.karumi.dexter.listener.PermissionRequest;
-import com.karumi.dexter.listener.single.PermissionListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.IOException;
 
@@ -36,7 +38,8 @@ public class QRScanner extends AppCompatActivity {
     TextView textView, directionsTextView;
     BarcodeDetector barcodeDetector;
     Bundle arguments;
-    private String codeToDetect, addressPunkta, shouldOpenPointDynamic;
+    private String codeToDetect;
+    private String shouldOpenPointDynamic;
     private int equipmentNumber, shopNumber, nomerPunkta;
     private boolean detectedOnce = false;
     private int numOfPoints;
@@ -48,6 +51,7 @@ public class QRScanner extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.quest_activity_q_r_scanner);
+        getSupportActionBar().hide();
         initInstances();
         barcodeDetector = new BarcodeDetector.Builder(this)
                 .setBarcodeFormats(Barcode.QR_CODE).build();
@@ -64,40 +68,42 @@ public class QRScanner extends AppCompatActivity {
         nomerPunkta = arguments.getInt("Номер пункта");
         shouldOpenPointDynamic = arguments.getString("Открой PointDynamic");
         //на самом деле в адрес пункта нужно заложить полные названия цеха и линии, но пока на номерах
-        addressPunkta = "Цех №" + shopNumber + "\nЛиния №"
+        String addressPunkta = "Цех №" + shopNumber + "\nЛиния №"
                 + equipmentNumber + "\nПункт №" + nomerPunkta;
         numOfPoints = arguments.getInt("Количество пунктов");
         startTimeMillis = arguments.getLong("startTimeMillis");
         employeeLogin = arguments.getString("Логин пользователя");
         problemsCount = arguments.getInt("Количество обнаруженных проблем");
         //ИНИЦИАЛИЗИРОВАТЬ ПЕРЕМЕННУЮ! codeToDetect, возьми данные из таблицы "QRCodes"
-        //Используй аргументы переданные в arguments
-        codeToDetect = arguments.getString("Код пункта"); //getEncodedString
-        //arguments.getString("Код пункта");
+        //еще не все готово!!!!!!
+        DatabaseReference codeToDetectRef = FirebaseDatabase.getInstance().getReference().child("Shops/" + QuestMainActivity.groupPositionG + "/Equipment_lines/" + QuestMainActivity.childPositionG + "/QR_codes/qr_" + nomerPunkta);
+        codeToDetectRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot qrCode) {
+                codeToDetect = qrCode.getValue().toString();
+                Toast.makeText(getApplicationContext(), codeToDetect, Toast.LENGTH_LONG).show();
+                directionsTextView.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        });
         surfaceView = findViewById(R.id.camerapreview);
         textView = findViewById(R.id.textView);
         directionsTextView = findViewById(R.id.directionsTextView);
         directionsTextView.setText("Подойдите к\n" + addressPunkta);
+        directionsTextView.setVisibility(View.INVISIBLE);
     }
 
     private void requestCameraPermission() {
-        Dexter.withActivity(this).withPermission(Manifest.permission.CAMERA).withListener(new PermissionListener() {
-            @Override
-            public void onPermissionGranted(PermissionGrantedResponse response) {
-                qrScanCameraON();
-            }
-
-            @Override
-            public void onPermissionDenied(PermissionDeniedResponse response) {
-                Toast toast = Toast.makeText(getApplicationContext(), "Разрешите использование камеры", Toast.LENGTH_SHORT);
-                toast.show();
-            }
-
-            @Override
-            public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
-                token.continuePermissionRequest();
-            }
-        }).check();
+        int permissionStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+        if (permissionStatus == PackageManager.PERMISSION_DENIED) {
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.CAMERA}, 0);
+        }
+        else
+        {
+            qrScanCameraON();
+        }
     }
 
     private void qrScanCameraON()
@@ -177,8 +183,7 @@ public class QRScanner extends AppCompatActivity {
                                 else
                                 {
                                     Toast.makeText(getApplicationContext(), "Неверный код", Toast.LENGTH_SHORT).show();
-                                    textView.setText(qrCodes.valueAt(0).displayValue
-                                            + "\nВы не в том месте!\nИдите в пункт, указанный выше.");
+                                    textView.setText("Вы не в том месте!\nИдите в пункт, указанный выше.");
                                     //textView.setText("Вы не в том месте!\nИдите на пункт" + addressPunkta);
                                 }
                             }
