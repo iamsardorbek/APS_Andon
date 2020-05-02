@@ -54,14 +54,17 @@ public class Login extends AppCompatActivity {
                                     Intent openPult = new Intent(getApplicationContext(), MainActivity.class);
                                     openPult.putExtra("Номер пульта", user.child("pultNo").getValue().toString());
                                     openPult.putExtra("Логин пользователя", login);
+                                    openPult.putExtra("Должность", user.child("position").getValue().toString());
                                     startActivity(openPult);
                                 } else if (user.child("position").getValue().toString().equals("master")) {
                                     Intent openFactoryCondition = new Intent(getApplicationContext(), QuestMainActivity.class); //actually there should be the FactoryCondition.class, but it is incomplete yet
                                     openFactoryCondition.putExtra("Логин пользователя", login);
+                                    openFactoryCondition.putExtra("Должность", user.child("position").getValue().toString());
                                     startActivity(openFactoryCondition);
                                 } else if (user.child("position").getValue().toString().equals("repairer")) {
                                     Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
                                     openProblemsList.putExtra("Логин пользователя", login);
+                                    openProblemsList.putExtra("Должность", user.child("position").getValue().toString());
                                     startActivity(openProblemsList);
                                 }
                             }

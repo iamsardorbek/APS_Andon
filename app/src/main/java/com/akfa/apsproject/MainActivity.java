@@ -24,18 +24,16 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener { //здесь пульты
     // all variables
-    ActionBar actionBar;
-    private Button[] andons = new Button[4];
+    int numOfButtons = 4;
+    private Button[] andons = new Button[numOfButtons];
     private int nomerPulta = 0;
-    public Integer[] btn_condition = new Integer[4];
-    private String login;
+    public Integer[] btn_condition = new Integer[numOfButtons];
+    private String login, position; //inter-activity strings
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference pultRef;
-    private DrawerLayout drawerLayout;
     private ActionBarDrawerToggle toggle;
-    private NavigationView navigationView;
 
 
   @Override
@@ -44,142 +42,147 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
       setContentView(R.layout.activity_main);
       Bundle arguments = getIntent().getExtras();
       find_objects(); //инициализация всех layout элементов
-      andons[0].setVisibility(View.INVISIBLE);
-      andons[1].setVisibility(View.INVISIBLE);
-      andons[2].setVisibility(View.INVISIBLE);
-      andons[3].setVisibility(View.INVISIBLE);
+      toggle = setUpNavBar(); //setUpNavBar выполняет все действия и возвращает toggle, которые используется в функции onOptionsItemSelected()
+      setAndonsVisibility(false);
       if(arguments != null) //был ли сделан правилно логин и возвратил ли он оттуда номер пульта
-          {
-            nomerPulta = Integer.parseInt(arguments.getString("Номер пульта"));
-            pultRef = database.getReference("Pults/" + nomerPulta);
-            //инициализируем listener базы данных, чтобы считать данные оттуда
-              //пока данные не пришли с базы, в pultInfo будет показываться "Загрузка данных"
-            pultRef.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot messages) {
-                    setTitle("Пульт " + nomerPulta);
-                    for (DataSnapshot oneMessage : messages.getChildren()){
-                        // This method is called once with the initial value and again
-                        // whenever data at this location is updated.
-                        String key ="";
-                        key = oneMessage.getKey();
-                        long val;
-                        val = (long) oneMessage.getValue();
-                        int indexOfChild = 0;
-                        switch(key) //switch from keys to indices
-                        {
-                            case "repair":
-                                indexOfChild = 0;
-                                break;
-                            case "quality":
-                                indexOfChild = 1;
-                                break;
-                            case "raw":
-                                indexOfChild = 2;
-                                break;
-                            case "master":
-                                indexOfChild = 3;
-                                break;
-                        }
-                        switch(indexOfChild) //set up the button background behaviour
-                        {// behaviour depends on the button index, its condition value number
-                            //that's why there are two switch statements
-                            case 0:
-                                switch((int) val)
-                                {
-                                    case 0:
-                                        andons[indexOfChild].setBackgroundResource(R.drawable.remont_button);
-                                        break;
-                                    case 1:
-                                        andons[indexOfChild].setBackgroundResource(R.drawable.remont_button_animation);
-                                        AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                        problemAlert.start();
-                                        break;
-                                    case 2:
-                                        andons[indexOfChild].setBackgroundResource(R.drawable.remont_button_alert);
-                                        break;
-                                }
-                                break;
-                            case 1:
-                                switch((int) val)
-                                {
-                                    case 0:
-                                        andons[indexOfChild].setBackgroundResource(R.drawable.otk_button);
-                                        break;
-                                    case 1:
-                                        andons[indexOfChild].setBackgroundResource(R.drawable.otk_button_animation);
-                                        AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                        problemAlert.start();
-                                        break;
-                                    case 2:
-                                        andons[indexOfChild].setBackgroundResource(R.drawable.otk_button_alert);
-                                        break;
-                                }
-                                break;
-                            case 2:
-                                switch((int) val)
-                                {
-                                    case 0:
-                                        andons[indexOfChild].setBackgroundResource(R.drawable.materials_button);
-                                        break;
-                                    case 1:
-                                        andons[indexOfChild].setBackgroundResource(R.drawable.materials_button_animation);
-                                        AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                        problemAlert.start();
-                                        break;
-                                    case 2:
-                                        andons[indexOfChild].setBackgroundResource(R.drawable.materials_button_alert);
-                                        break;
-                                }
-                                break;
-                            case 3:
-                                switch((int) val)
-                                {
-                                    case 0:
-                                        andons[indexOfChild].setBackgroundResource(R.drawable.master_button);
-                                        break;
-                                    case 1:
-                                        andons[indexOfChild].setBackgroundResource(R.drawable.master_button_animation);
-                                        AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                        problemAlert.start();
-                                        break;
-                                    case 2:
-                                        andons[indexOfChild].setBackgroundResource(R.drawable.master_button_alert);
-                                        break;
-                                }
-                                break;
-                        }
-                        btn_condition[indexOfChild] = (int) val;
-                        Log.d("FB Listener",  key + " " + val);
+      {
+        nomerPulta = Integer.parseInt(arguments.getString("Номер пульта"));
+          position = arguments.getString("Должность");
+          login = arguments.getString("Логин пользователя");
+          pultRef = database.getReference("Pults/" + nomerPulta);
+        //инициализируем listener базы данных, чтобы считать данные оттуда
+          //пока данные не пришли с базы, в pultInfo будет показываться "Загрузка данных"
+        pultRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot messages) {
+                setTitle("Пульт " + nomerPulta);
+                for (DataSnapshot oneMessage : messages.getChildren()){
+                    // This method is called once with the initial value and again
+                    // whenever data at this location is updated.
+                    String key = "";
+                    key = oneMessage.getKey();
+                    long val;
+                    val = (long) oneMessage.getValue();
+                    int indexOfChild = 0;
+                    switch(key) //switch from keys to indices
+                    {
+                        case "repair":
+                            indexOfChild = 0;
+                            break;
+                        case "quality":
+                            indexOfChild = 1;
+                            break;
+                        case "raw":
+                            indexOfChild = 2;
+                            break;
+                        case "master":
+                            indexOfChild = 3;
+                            break;
                     }
-                    //сделать элементы видимыми, когда уже считали все данные с БД
-                    andons[0].setVisibility(View.VISIBLE);
-                    andons[1].setVisibility(View.VISIBLE);
-                    andons[2].setVisibility(View.VISIBLE);
-                    andons[3].setVisibility(View.VISIBLE);
+                    switch(indexOfChild) //set up the button background behaviour
+                    {// behaviour depends on the button index, its condition value number
+                        //that's why there are two switch statements
+                        case 0:
+                            switch((int) val)
+                            {
+                                case 0:
+                                    andons[indexOfChild].setBackgroundResource(R.drawable.remont_button);
+                                    break;
+                                case 1:
+                                    andons[indexOfChild].setBackgroundResource(R.drawable.remont_button_animation);
+                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
+                                    problemAlert.start();
+                                    break;
+                                case 2:
+                                    andons[indexOfChild].setBackgroundResource(R.drawable.remont_button_alert);
+                                    break;
+                            }
+                            break;
+                        case 1:
+                            switch((int) val)
+                            {
+                                case 0:
+                                    andons[indexOfChild].setBackgroundResource(R.drawable.otk_button);
+                                    break;
+                                case 1:
+                                    andons[indexOfChild].setBackgroundResource(R.drawable.otk_button_animation);
+                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
+                                    problemAlert.start();
+                                    break;
+                                case 2:
+                                    andons[indexOfChild].setBackgroundResource(R.drawable.otk_button_alert);
+                                    break;
+                            }
+                            break;
+                        case 2:
+                            switch((int) val)
+                            {
+                                case 0:
+                                    andons[indexOfChild].setBackgroundResource(R.drawable.materials_button);
+                                    break;
+                                case 1:
+                                    andons[indexOfChild].setBackgroundResource(R.drawable.materials_button_animation);
+                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
+                                    problemAlert.start();
+                                    break;
+                                case 2:
+                                    andons[indexOfChild].setBackgroundResource(R.drawable.materials_button_alert);
+                                    break;
+                            }
+                            break;
+                        case 3:
+                            switch((int) val)
+                            {
+                                case 0:
+                                    andons[indexOfChild].setBackgroundResource(R.drawable.master_button);
+                                    break;
+                                case 1:
+                                    andons[indexOfChild].setBackgroundResource(R.drawable.master_button_animation);
+                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
+                                    problemAlert.start();
+                                    break;
+                                case 2:
+                                    andons[indexOfChild].setBackgroundResource(R.drawable.master_button_alert);
+                                    break;
+                            }
+                            break;
+                    }
+                    btn_condition[indexOfChild] = (int) val;
+                    Log.d("FB Listener",  key + " " + val);
                 }
+                //сделать элементы видимыми, когда уже считали все данные с БД
+                setAndonsVisibility(true);
+            }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-                    // Failed to read value
-                    Log.e("БАЗА ДАННЫХ", "Ошибка работы с базой данных", error.toException());
-                }
-            });
-        }
-        else
-        {
-            Toast.makeText(getApplicationContext(), "Ошибка, постарайтесь зайти снова", Toast.LENGTH_LONG).show();
-        }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Failed to read value
+                Log.e("БАЗА ДАННЫХ", "Ошибка работы с базой данных", error.toException());
+            }
+        });
+      }
+      else {
+        Toast.makeText(getApplicationContext(), "Ошибка, постарайтесь зайти снова", Toast.LENGTH_LONG).show();
+      }
+    }
+
+    private void setAndonsVisibility(boolean visible) {
+      int visibilityState;
+      if(visible)
+          visibilityState = View.VISIBLE;
+      else
+          visibilityState = View.INVISIBLE;
+
+      for(Button andon : andons)
+      {
+          andon.setVisibility(visibilityState);
+      }
     }
 
 
-
-
-
     // find all variables
+
     protected void find_objects(){ //инициализация всех объектов layout
-//        punktInfo = findViewById(R.id.punkt_info); initialize statusBar instead
-        login = getIntent().getExtras().getString("Логин пользователя");
         andons[0] = findViewById(R.id.repair_btn);
         andons[1] = findViewById(R.id.quality_btn);
         andons[2] = findViewById(R.id.raw_btn);
@@ -190,17 +193,25 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         {
             andon.setOnTouchListener(this);
         }
+    }
 
-        actionBar = getSupportActionBar();
+    private ActionBarDrawerToggle setUpNavBar() {
+        //---------код связанный с nav bar---------//
+        //настрой actionBar
+        ActionBar actionBar = getSupportActionBar();
         actionBar.show();
         setTitle("Загрузка данных...");
-        //код связанный с nav bar
+        //настрой сам навигейшн бар
+        final DrawerLayout drawerLayout;
+        ActionBarDrawerToggle toggle;
+        NavigationView navigationView;
         drawerLayout = findViewById(R.id.activity_main);
         toggle = new ActionBarDrawerToggle(this, drawerLayout,R.string.open, R.string.close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
         actionBar.setDisplayHomeAsUpEnabled(true);
         navigationView = findViewById(R.id.nv);
+        //ниже действия, выполняемые при нажатиях на элементы нав бара
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -212,13 +223,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         break;
                     case R.id.check_equipment: //переход в модуль проверки
                         Intent openQuest = new Intent(getApplicationContext(), QuestMainActivity.class);
-                        openQuest.putExtra("login", login);
+                        openQuest.putExtra("Логин пользователя", login);
+                        openQuest.putExtra("Должность", position);
                         startActivity(openQuest);
                         break;
                     case R.id.about: //инфа про приложение и компанию и иинструкции может
 //                        Intent openAbout = new Intent(getApplicationContext(), About.class);
 //                        startActivity(openAbout);
-                        Toast.makeText(MainActivity.this, "Приложение создано Akfa R&D в 2020 году в Ташкенте.",Toast.LENGTH_SHORT).show();break;
+                        Toast.makeText(getApplicationContext(), "Приложение создано Akfa R&D в 2020 году в Ташкенте.",Toast.LENGTH_SHORT).show();break;
                     case R.id.log_out: //возвращение в логин page
                         Intent logOut = new Intent(getApplicationContext(), Login.class);
                         logOut.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
@@ -230,6 +242,16 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 return true;
             }
         });
+        return toggle;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        if(toggle.onOptionsItemSelected(item))
+            return true;
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -277,8 +299,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         }
         return true;
     }
-
     //запиши в базу данныъ новое состояние одной конкретной кнопки
+
     private void updateButton(int signalTypeIndex)
     {
         // check status and drop for 0 if more than 2
@@ -301,14 +323,5 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 break;
         }
 
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        if(toggle.onOptionsItemSelected(item))
-            return true;
-
-        return super.onOptionsItemSelected(item);
     }
 }

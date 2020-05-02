@@ -44,7 +44,7 @@ public class QRScanner extends AppCompatActivity {
     private boolean detectedOnce = false;
     private int numOfPoints;
     private long startTimeMillis;
-    private String employeeLogin;
+    private String employeeLogin, employeePosition;
     private int problemsCount;
 
     @Override
@@ -73,6 +73,7 @@ public class QRScanner extends AppCompatActivity {
         numOfPoints = arguments.getInt("Количество пунктов");
         startTimeMillis = arguments.getLong("startTimeMillis");
         employeeLogin = arguments.getString("Логин пользователя");
+        employeePosition = arguments.getString("Должность");
         problemsCount = arguments.getInt("Количество обнаруженных проблем");
         //ИНИЦИАЛИЗИРОВАТЬ ПЕРЕМЕННУЮ! codeToDetect, возьми данные из таблицы "QRCodes"
         //еще не все готово!!!!!!
@@ -156,8 +157,8 @@ public class QRScanner extends AppCompatActivity {
                                 if(areDetectedAndPassedCodesSame(codeFromQR, codeToDetect) && detectedOnce)
                                 {
                                     vibration(600);
-                                    Toast.makeText(getApplicationContext(), "ВЫ НА МЕСТЕ!", Toast.LENGTH_SHORT).show();
-                                    textView.setText(qrCodes.valueAt(0).displayValue);
+//                                    Toast.makeText(getApplicationContext(), "ВЫ НА МЕСТЕ!", Toast.LENGTH_SHORT).show();
+                                    textView.setText("Вы на месте!");
 
                                     //создаем интент, в него заносим код успешного распознования
                                     //после окончания finish(), интент сам найдет родительский активити и отдаст результат в
@@ -170,19 +171,23 @@ public class QRScanner extends AppCompatActivity {
                                         intent.putExtra("startTimeMillis", startTimeMillis);
                                         intent.putExtra("Логин пользователя", employeeLogin);
                                         intent.putExtra("Количество обнаруженных проблем", problemsCount);
-
+                                        intent.putExtra("Должность", employeePosition);
                                         startActivity(intent);
                                     }
-                                    else
+                                    else if(shouldOpenPointDynamic.equals("нет"))
                                     {
-                                        Intent intent = new Intent(); //intent говорят можно и убрать вообще, и просто возвратить setResult(QR_OK)
-                                        setResult(QR_OK, intent); //Если нету extra данных
+                                        Bundle arguments = getIntent().getExtras();
+                                        String problemKey = arguments.getString("ID проблемы в таблице Problems");
+                                        DatabaseReference problemRef = FirebaseDatabase.getInstance().getReference().child("Problems/" + problemKey);
+                                        problemRef.setValue(null);
+                                        Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
+                                        setResult(QR_OK, openProblemsList); //Если нету extra данных
+                                        startActivity(openProblemsList);
                                     }
                                     finish();
                                 }
                                 else
                                 {
-                                    Toast.makeText(getApplicationContext(), "Неверный код", Toast.LENGTH_SHORT).show();
                                     textView.setText("Вы не в том месте!\nИдите в пункт, указанный выше.");
                                     //textView.setText("Вы не в том месте!\nИдите на пункт" + addressPunkta);
                                 }

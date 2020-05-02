@@ -49,7 +49,7 @@ public class QuestPointDynamic extends AppCompatActivity
     FirebaseDatabase db;
     DatabaseReference equipmentRef;
     private boolean[] photographedProblem;
-    private String employeeLogin;
+    private String employeeLogin, employeePosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +81,7 @@ public class QuestPointDynamic extends AppCompatActivity
         nomerPunktaTextView.setText(getString(R.string.nomer_punkta_textview) + nomerPunkta);
         scrollLinearLayout = findViewById(R.id.scrollLinearLayout);
         employeeLogin = getIntent().getExtras().getString("Логин пользователя");
+        employeePosition = getIntent().getExtras().getString("Должность");
         setEquipmentData();
     }
 
@@ -230,6 +231,7 @@ public class QuestPointDynamic extends AppCompatActivity
         intent.putExtra("Открой PointDynamic", "да");
         intent.putExtra("Логин пользователя", employeeLogin);
         intent.putExtra("Количество обнаруженных проблем", problemsCount);
+        intent.putExtra("Должность", employeePosition);
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivity(intent);
     }

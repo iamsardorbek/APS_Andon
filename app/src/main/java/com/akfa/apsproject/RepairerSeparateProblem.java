@@ -29,7 +29,7 @@ public class RepairerSeparateProblem extends AppCompatActivity {
     Button takePic, problemSolved;
     ImageView problemPic;
     Button.OnClickListener clickListener;
-    private String codeToDetect;
+    private String codeToDetect, IDOfTheProblem;
     private boolean qrResultedSuccess;
     final int REQUEST_CODE_PHOTO = 1;
     private final int DIALOG_EXIT_FOR_CAMERA = 0;
@@ -48,7 +48,7 @@ public class RepairerSeparateProblem extends AppCompatActivity {
     private void initInstances() {
         getSupportActionBar().hide();
         problemsRef = FirebaseDatabase.getInstance().getReference().child("Проблемы");
-        String IDOfTheProblem = getIntent().getExtras().getString("ID проблемы в таблице Problems");
+        IDOfTheProblem = getIntent().getExtras().getString("ID проблемы в таблице Problems");
         thisProblemRef = problemsRef.child(IDOfTheProblem);
         thisProblemRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -107,8 +107,8 @@ public class RepairerSeparateProblem extends AppCompatActivity {
     { //needs to be changed
         //codeToDetectRef must be changed. The strings should be taken from textview.getText and parsed
         DatabaseReference codeToDetectRef = FirebaseDatabase.getInstance().getReference()
-                .child("Цеха/" + QuestMainActivity.groupPositionG + "/" + QuestMainActivity.childPositionG +
-                        "/QR_коды/qr_" + (nomerPunkta));
+                .child("Shops/" + QuestMainActivity.groupPositionG + "/Equipment_lines/" + QuestMainActivity.childPositionG +
+                        "/QR_codes/qr_" + (nomerPunkta));
         codeToDetectRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -129,6 +129,7 @@ public class RepairerSeparateProblem extends AppCompatActivity {
         intent.putExtra("Номер пункта", nomerPunkta);
         intent.putExtra("Код пункта", codeToDetect);
         intent.putExtra("Открой PointDynamic", "нет");
+        intent.putExtra("ID проблемы в таблице Problems", IDOfTheProblem);
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivityForResult(intent, QRScanner.CHECK_PERSON_ON_SPOT);
     }

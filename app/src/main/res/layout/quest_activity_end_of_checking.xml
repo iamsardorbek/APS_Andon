@@ -4,6 +4,7 @@
     android:background="@drawable/login_background"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:id="@+id/quest_activity_end_of_checking"
     android:layout_height="match_parent"
     tools:context=".QuestEndOfChecking">
 

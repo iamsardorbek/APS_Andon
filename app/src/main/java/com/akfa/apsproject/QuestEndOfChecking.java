@@ -13,7 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 public class QuestEndOfChecking extends AppCompatActivity {
     Button newChecking, closeApp;
     TextView shop, equipmentLine, numberOfProblems, checkingDuration;
-
+    String employeeLogin, employeePosition;
     //Данные, которые нужно вывести:
 //    из таблицы equipment возьми название цеха основываясь на номере цеха - MainActivity.groupPositionG
 //    из таблицы equipment возьми название оборудования/линии основываясь на номере оборудования/линии - MainActivity.childPositionG
@@ -30,6 +30,9 @@ public class QuestEndOfChecking extends AppCompatActivity {
         checkingDuration = findViewById(R.id.checkingDuration);
         Bundle arguments = getIntent().getExtras();
         int problemsCount = arguments.getInt("Количество обнаруженных проблем");
+        employeeLogin = getIntent().getExtras().getString("Логин пользователя");
+        employeePosition = getIntent().getExtras().getString("Должность");
+
         shop.setText(getString(R.string.shop) + QuestMainActivity.groupPositionG);
         equipmentLine.setText(getString(R.string.equipmentLine) + QuestMainActivity.childPositionG);
         numberOfProblems.setText(getString(R.string.numberOfProblems) + problemsCount);
