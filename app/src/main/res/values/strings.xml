@@ -64,4 +64,5 @@
     <string name="pult_submenu">Пульт</string>
     <string name="web_monitoring_submenu">Мониторинг завода</string>
     <string name="problems_list_submenu">Список проблем</string>
+    <string name="endOfChecking">Проверка закончена</string>
 </resources>

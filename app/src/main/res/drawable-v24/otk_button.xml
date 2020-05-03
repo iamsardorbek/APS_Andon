@@ -6,7 +6,7 @@
         android:bottomRightRadius="100dp"/>
     <stroke
         android:width="2dp"
-        android:color="#FFFFFF"/>
+        android:color="@color/white"/>
     <solid
-        android:color="#FFFCAC" />
+        android:color="@color/otkButtonBase" />
 </shape>
