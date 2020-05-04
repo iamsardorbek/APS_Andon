@@ -49,7 +49,7 @@ public class RepairerSeparateProblem extends AppCompatActivity {
 
     private void initInstances() {
         getSupportActionBar().hide();
-        problemsRef = FirebaseDatabase.getInstance().getReference().child("Проблемы");
+        problemsRef = FirebaseDatabase.getInstance().getReference().child("Problems");
         IDOfTheProblem = getIntent().getExtras().getString("ID проблемы в таблице Problems");
         employeeLogin = getIntent().getExtras().getString("Логин пользователя");
         thisProblemRef = problemsRef.child(IDOfTheProblem);
