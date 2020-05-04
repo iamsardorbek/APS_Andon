@@ -43,11 +43,11 @@ public class QuestMainActivity extends AppCompatActivity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.quest_activity_main);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
-        toggle = setUpNavBar();
         //inter-activity values
         login = getIntent().getExtras().getString("Логин пользователя");
         position = getIntent().getExtras().getString("Должность");
         initExpandableListView(); //иницилизация выпадающего списка
+        toggle = setUpNavBar();
     }
 
     private void initExpandableListView() {
@@ -99,19 +99,19 @@ public class QuestMainActivity extends AppCompatActivity  {
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
         actionBar.setDisplayHomeAsUpEnabled(true);
-        navigationView = findViewById(R.id.nv1);
-        //здесь адаптируем меню в нав баре в зависимости от уровня доступа пользователя: мастер/оператор, у ремонтника нет прав проверки
-//        navigationView.getMenu().clear();
-//        switch(position){
-//            case "operator":
-//                navigationView.inflateMenu(R.menu.operator_menu);
-//                break;
-//            case "master":
-//                navigationView.inflateMenu(R.menu.master_menu);
-//                break;
-//            //other positions shouldn't be able to access checking page at all
-//            //if some changes, u can add a case
-//        }
+        navigationView = findViewById(R.id.nv);
+//        здесь адаптируем меню в нав баре в зависимости от уровня доступа пользователя: мастер/оператор, у ремонтника нет прав проверки
+        navigationView.getMenu().clear();
+        switch(position){
+            case "operator":
+                navigationView.inflateMenu(R.menu.operator_menu);
+                break;
+            case "master":
+                navigationView.inflateMenu(R.menu.master_menu);
+                break;
+            //other positions shouldn't be able to access checking page at all
+            //if some changes, u can add a case
+        }
 
         //ниже действия, выполняемые при нажатиях на элементы нав бара
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
@@ -193,25 +193,25 @@ public class QuestMainActivity extends AppCompatActivity  {
                                                 currentShop.equipmentLines.put(equipmentNo, equipmentName);
                                                 //поставь это в дерево мап, которое будет вставлять с сортировкой
                                                 shopsMap.put(shopNo, currentShop);
+                                                //числа ниже используются для обращения к Firebase в Pointdynamic+QRScanner
+                                                groupPositionG = shopNo;
+                                                childPositionG = equipmentNo;
+                                                //количество цехов для ограничения цикла
+                                                //добавить это в лист и мап, нужные для добавления элементов в expandableListView
+//                                                Shop currentShop = shopsMap.get(shopNo);
+                                                listGroup.add(currentShop.name); //добавь название цеха в заголовок expandableTextView
+                                                List<String> listOfEquipmentLines = new ArrayList<>();
+                                                //перевести данные о линиях (их названия) из дерево-мапа в лист
+                                                listOfEquipmentLines.add(currentShop.equipmentLines.get(equipmentNo));
+                                                //добавить названия линий в expandableListView
+                                                listItem.put(currentShop.name, listOfEquipmentLines);
+                                                //обнови адаптер, чтобы изменения стали видны
+                                                adapter.notifyDataSetChanged();
                                                 break;
                                             }
                                         }
                                     }
                                 }
-                                //числа ниже используются для обращения к Firebase в Pointdynamic+QRScanner
-                                groupPositionG = shopNo;
-                                childPositionG = equipmentNo;
-                                //количество цехов для ограничения цикла
-                                //добавить это в лист и мап, нужные для добавления элементов в expandableListView
-                                Shop currentShop = shopsMap.get(shopNo);
-                                listGroup.add(currentShop.name); //добавь название цеха в заголовок expandableTextView
-                                List<String> listOfEquipmentLines = new ArrayList<>();
-                                //перевести данные о линиях (их названия) из дерево-мапа в лист
-                                listOfEquipmentLines.add(currentShop.equipmentLines.get(equipmentNo));
-                                //добавить названия линий в expandableListView
-                                listItem.put(currentShop.name, listOfEquipmentLines);
-                                //обнови адаптер, чтобы изменения стали видны
-                                adapter.notifyDataSetChanged();
                             }
                             @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
                         });

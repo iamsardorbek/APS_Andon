@@ -11,7 +11,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class QuestEndOfChecking extends AppCompatActivity {
-    Button newChecking, closeApp;
+    Button newChecking;
     TextView shop, equipmentLine, numberOfProblems, checkingDuration;
     String employeeLogin, employeePosition;
     //Данные, которые нужно вывести:
@@ -45,16 +45,6 @@ public class QuestEndOfChecking extends AppCompatActivity {
                 //Возвратиться на главное окно
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                 startActivity(intent);
-            }
-        });
-        closeApp = findViewById(R.id.closeApp);
-        closeApp.setOnClickListener(new Button.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
-            @Override
-            public void onClick(View v) {
-                // завершить работу приложения и закрыть его
-                finishAffinity();
-                System.exit(0);
             }
         });
     }
