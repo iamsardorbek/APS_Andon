@@ -32,7 +32,7 @@
         android:layout_gravity="center"
         android:layout_marginTop="30dp"
         android:text="@string/tip"
-        android:textColor="@color/borders"
+        android:textColor="@color/text"
         android:textStyle="bold"
         android:textSize="15sp"/>
 

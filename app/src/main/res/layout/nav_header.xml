@@ -5,11 +5,12 @@
     android:layout_height="wrap_content"
     android:gravity="center"
     android:background="#E4E3E3">
+
     <ImageView
         android:layout_width="120dp"
         android:layout_height="120dp"
-        android:layout_marginBottom="15dp"
         android:layout_marginTop="15dp"
-        android:background="@drawable/aps_icon"/>
+        android:layout_marginBottom="15dp"
+        android:background="@drawable/aps_icon" />
 
 </LinearLayout>
