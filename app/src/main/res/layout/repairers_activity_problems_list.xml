@@ -11,17 +11,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:padding="5dp"
-            android:layout_margin="5dp"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:textColor="@color/text"
-            android:text="@string/problemsListTitle"
-            android:id="@+id/title" />
 
         <ScrollView
             android:layout_width="match_parent"

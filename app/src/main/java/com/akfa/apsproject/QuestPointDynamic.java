@@ -269,7 +269,7 @@ public class QuestPointDynamic extends AppCompatActivity
                 sdf = new SimpleDateFormat("HH:mm z");
                 time = sdf.format(new Date());
                 DatabaseReference newProbRef = problemsRef.push();
-                newProbRef.setValue(new Problem(employeeLogin, date, time, shopName, equipmentName, nomerPunkta, i));
+                newProbRef.setValue(new Problem(employeeLogin, date, time, shopName, equipmentName, QuestMainActivity.groupPositionG, QuestMainActivity.childPositionG, nomerPunkta, i));
                 //прямо здесь надо выводить диалог с последующим вызовом камеры
 
                 /*subpointNumForDialogTitle = i;

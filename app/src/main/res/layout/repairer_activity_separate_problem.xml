@@ -30,13 +30,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="5dp"
-                android:layout_marginTop="10sp"
+                android:layout_marginTop="10dp"
                 android:layout_marginRight="5dp"
+                android:padding="5dp"
                 android:background="@drawable/edit"
                 android:gravity="center"
                 android:text="@string/problem_description_text_filler"
                 android:textColor="@color/text"
-                android:textSize="20sp" />
+                android:textSize="18sp" />
 
             <ImageView
                 android:id="@+id/problemPic"
