@@ -27,20 +27,19 @@
                 android:text="@string/factory_name"
                 android:layout_margin="10dp"
                 android:padding="5dp"
-                android:background="@drawable/edit"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:typeface="sans"
                 android:textColor="@color/text"
-                app:fontFamily="serif" />
+                app:fontFamily="sans-serif-light" />
 
             <ExpandableListView
                 android:id="@+id/equipment_list"
                 android:layout_width="match_parent"
                 android:layout_height="600sp">
-
+                
             </ExpandableListView>
 
         </LinearLayout>

@@ -25,18 +25,18 @@
         android:layout_weight="7" />
 
     <TextView
+        android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/textView"
-        android:padding="5dp"
-        android:layout_weight="0.5"
-        android:layout_marginTop="20dp"
         android:layout_marginHorizontal="10dp"
+        android:layout_marginTop="20dp"
         android:layout_marginBottom="10dp"
-        android:text="@string/qr_text_below_scanner"
-        android:textSize='20sp'
+        android:layout_weight="0.5"
         android:background="@drawable/edit"
         android:gravity="center"
-        android:textColor="@color/text" />
+        android:padding="5dp"
+        android:text="@string/qr_text_below_scanner"
+        android:textColor="@color/text"
+        android:textSize='20sp' />
 
 </LinearLayout>

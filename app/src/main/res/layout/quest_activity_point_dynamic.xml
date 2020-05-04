@@ -34,8 +34,8 @@
                     android:layout_height="wrap_content"
                     android:layout_margin="10dp"
                     android:padding="5dp"
-                    android:background="@drawable/edit"
                     android:includeFontPadding="false"
+                    android:gravity="center"
                     android:text="@string/equipment_name_textview"
                     android:textColor="@color/text"
                     android:textSize="20sp"/>
