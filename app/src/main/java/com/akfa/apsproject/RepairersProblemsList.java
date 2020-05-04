@@ -130,8 +130,7 @@ public class RepairersProblemsList extends AppCompatActivity {
             public void onChildAdded(@NonNull DataSnapshot problemDataSnapshot, @Nullable String prevChildKey) {
                 Problem problem = problemDataSnapshot.getValue(Problem.class);
                 problemIDs.add(problemDataSnapshot.getKey());
-                String problemInfoFromDB = "Цех: " + problem.getShop() + "\nОборудование: " + problem.getEquipment_line()
-                        + "\nПункт №" + problem.getPoint() + "\nПодпункт №" + problem.getSubpoint();
+                String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nПункт №" + problem.getPoint() + "\nПодпункт №" + problem.getSubpoint();
                 TextView problemsInfo;
                 problemsInfo = new TextView(getApplicationContext());
                 problemsInfo.setText(problemInfoFromDB);

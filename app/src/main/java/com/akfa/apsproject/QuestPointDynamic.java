@@ -47,9 +47,11 @@ public class QuestPointDynamic extends AppCompatActivity
     TextView equipmentNameTextView, nomerPunktaTextView;
     //Firebase
     FirebaseDatabase db;
-    DatabaseReference equipmentRef;
+    DatabaseReference shopRef;
     private boolean[] photographedProblem;
     private String employeeLogin, employeePosition;
+    private String shopName;
+    private String equipmentName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,8 +63,7 @@ public class QuestPointDynamic extends AppCompatActivity
     private void initInstances() {
         getSupportActionBar().hide();
         db = FirebaseDatabase.getInstance();
-        equipmentRef = db.getReference().child("Shops/" + QuestMainActivity.groupPositionG +
-                "/Equipment_lines/" + QuestMainActivity.childPositionG);
+        shopRef = db.getReference().child("Shops/" + QuestMainActivity.groupPositionG);
         nextPoint = findViewById(R.id.nextPoint);
         equipmentNameTextView = findViewById(R.id.equipmentName);
         nomerPunktaTextView = findViewById(R.id.nomer_punkta);
@@ -87,15 +88,18 @@ public class QuestPointDynamic extends AppCompatActivity
 
     private void setEquipmentData()
     {
-        equipmentRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        shopRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot equipmentSnapshot) {
-                String equipmentName = (String) equipmentSnapshot.child("equipment_name").getValue();
+            public void onDataChange(@NonNull DataSnapshot shopSnap) {
+                // "/Equipment_lines/" + QuestMainActivity.childPositionG
+                shopName = shopSnap.child("shop_name").getValue().toString();
+                DataSnapshot equipmentSnap = shopSnap.child("Equipment_lines/" + QuestMainActivity.childPositionG);
+                equipmentName = equipmentSnap.child("equipment_name").getValue().toString();
                 equipmentNameTextView.setText(getString(R.string.equipment_name_textview) + " " + equipmentName);
                 //простое кастование не получается, поэтому приходится писать больше кода
-                Long longNumOfPoints = new Long((long) equipmentSnapshot.child("number_of_punkts").getValue());
+                Long longNumOfPoints = new Long((long) equipmentSnap.child("number_of_punkts").getValue());
                 numOfPoints = longNumOfPoints.intValue();
-                Long longNumOfSubpoints = Long.valueOf((long) equipmentSnapshot.child(Integer.toString(nomerPunkta)).getValue());
+                Long longNumOfSubpoints = Long.valueOf((long) equipmentSnap.child(Integer.toString(nomerPunkta)).getValue());
                 numOfSubpoints = longNumOfSubpoints.intValue();
                 photographedProblem = new boolean[numOfSubpoints];
                 addRadioGroups();
@@ -126,11 +130,7 @@ public class QuestPointDynamic extends AppCompatActivity
             int RADIO_GROUP_ELEMENT_ID = 6000;
             rgTitle.setId(RADIO_GROUP_ELEMENT_ID + i * 10);
             rgTitle.setTextColor(Color.parseColor(textColor));
-            rgTitle.setLayoutParams(
-                    new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT)
-            );
+            rgTitle.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             rg.addView(rgTitle, 0, layoutParams);
 
             RadioButton[] rb = new RadioButton[2];
@@ -269,8 +269,7 @@ public class QuestPointDynamic extends AppCompatActivity
                 sdf = new SimpleDateFormat("HH:mm z");
                 time = sdf.format(new Date());
                 DatabaseReference newProbRef = problemsRef.push();
-                newProbRef.setValue(new Problem(employeeLogin, date, time,
-                        QuestMainActivity.groupPositionG, QuestMainActivity.childPositionG, nomerPunkta, i));
+                newProbRef.setValue(new Problem(employeeLogin, date, time, shopName, equipmentName, nomerPunkta, i));
                 //прямо здесь надо выводить диалог с последующим вызовом камеры
 
                 /*subpointNumForDialogTitle = i;

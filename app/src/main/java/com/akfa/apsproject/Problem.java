@@ -1,8 +1,8 @@
 package com.akfa.apsproject;
 
 public class Problem {
-    public String date, time, detected_by_employee;
-    public int shop, equipment_line, point, subpoint;
+    public String date, time, detected_by_employee, shop_name, equipment_line_name;
+    public int point, subpoint;
     public boolean solved;
 
     public Problem()
@@ -10,15 +10,15 @@ public class Problem {
 
     }
 
-    public Problem(String detected_by_employee, String date, String time, int shop, int equipment_line,
+    public Problem(String detected_by_employee, String date, String time, String shop_name, String equipment_line_name,
                    int point, int subpoint)
     {
         this.solved = false;
         this.detected_by_employee = detected_by_employee;
         this.date = date;
         this.time = time;
-        this.shop = shop;
-        this.equipment_line = equipment_line;
+        this.shop_name = shop_name;
+        this.equipment_line_name = equipment_line_name;
         this.point = point;
         this.subpoint = subpoint;
     }
@@ -35,13 +35,13 @@ public class Problem {
     {
         return time;
     }
-    public int getShop()
+    public String getShop_name()
     {
-        return shop;
+        return shop_name;
     }
-    public int getEquipment_line()
+    public String getEquipment_line_name()
     {
-        return equipment_line;
+        return equipment_line_name;
     }
     public int getPoint()
     {

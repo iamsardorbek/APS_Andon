@@ -24,7 +24,7 @@ public class QuestEndOfChecking extends AppCompatActivity {
     //Данные, которые нужно вывести:
 //    из таблицы equipment возьми название цеха основываясь на номере цеха - MainActivity.groupPositionG
 //    из таблицы equipment возьми название оборудования/линии основываясь на номере оборудования/линии - MainActivity.childPositionG
-//    число проблем, обнаруженных у этой линии - PointDynamic.problemsCount
+
     // время проверки - PointDynamic.checkDuration
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +62,7 @@ public class QuestEndOfChecking extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //Возвратиться на главное окно
-                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                Intent intent = new Intent(getApplicationContext(), QuestMainActivity.class);
                 startActivity(intent);
             }
         });

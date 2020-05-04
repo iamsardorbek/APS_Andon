@@ -53,10 +53,8 @@ public class QRScanner extends AppCompatActivity {
         setContentView(R.layout.quest_activity_q_r_scanner);
         getSupportActionBar().hide();
         initInstances();
-        barcodeDetector = new BarcodeDetector.Builder(this)
-                .setBarcodeFormats(Barcode.QR_CODE).build();
-        cameraSource = new CameraSource.Builder(this, barcodeDetector)
-                .setRequestedPreviewSize(640, 480).build();
+        barcodeDetector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.QR_CODE).build();
+        cameraSource = new CameraSource.Builder(this, barcodeDetector).setRequestedPreviewSize(640, 480).build();
         requestCameraPermission(); //в случае разрешения, стартует QR сканер
     }
 
@@ -68,32 +66,31 @@ public class QRScanner extends AppCompatActivity {
         nomerPunkta = arguments.getInt("Номер пункта");
         shouldOpenPointDynamic = arguments.getString("Открой PointDynamic");
         //на самом деле в адрес пункта нужно заложить полные названия цеха и линии, но пока на номерах
-        String addressPunkta = "Цех №" + shopNumber + "\nЛиния №"
-                + equipmentNumber + "\nПункт №" + nomerPunkta;
         numOfPoints = arguments.getInt("Количество пунктов");
         startTimeMillis = arguments.getLong("startTimeMillis");
         employeeLogin = arguments.getString("Логин пользователя");
         employeePosition = arguments.getString("Должность");
         problemsCount = arguments.getInt("Количество обнаруженных проблем");
-        //ИНИЦИАЛИЗИРОВАТЬ ПЕРЕМЕННУЮ! codeToDetect, возьми данные из таблицы "QRCodes"
-        //еще не все готово!!!!!!
-        DatabaseReference codeToDetectRef = FirebaseDatabase.getInstance().getReference().child("Shops/" + QuestMainActivity.groupPositionG + "/Equipment_lines/" + QuestMainActivity.childPositionG + "/QR_codes/qr_" + nomerPunkta);
-        codeToDetectRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        surfaceView = findViewById(R.id.camerapreview);
+        textView = findViewById(R.id.textView);
+        directionsTextView = findViewById(R.id.directionsTextView);
+        directionsTextView.setVisibility(View.INVISIBLE);
+        //codeToDetect, возьми данные из таблицы "QRCodes"
+        DatabaseReference shopRef = FirebaseDatabase.getInstance().getReference().child("Shops/" + shopNumber);
+        shopRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot qrCode) {
-                codeToDetect = qrCode.getValue().toString();
-                Toast.makeText(getApplicationContext(), codeToDetect, Toast.LENGTH_LONG).show();
+            public void onDataChange(@NonNull DataSnapshot shop) {
+                String shopName = shop.child("shop_name").getValue().toString();
+                String equipmentName = shop.child("Equipment_lines/" + equipmentNumber + "/equipment_name").getValue().toString();
+                String directionsText = "Подойдите к\n" + shopName + "\n" + equipmentName + "\nПункт №" + nomerPunkta;
+                directionsTextView.setText(directionsText);
+                codeToDetect = shop.child("Equipment_lines/" + equipmentNumber + "/QR_codes/qr_" + nomerPunkta).getValue().toString();
                 directionsTextView.setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
         });
-        surfaceView = findViewById(R.id.camerapreview);
-        textView = findViewById(R.id.textView);
-        directionsTextView = findViewById(R.id.directionsTextView);
-        directionsTextView.setText("Подойдите к\n" + addressPunkta);
-        directionsTextView.setVisibility(View.INVISIBLE);
     }
 
     private void requestCameraPermission() {
@@ -154,42 +151,35 @@ public class QRScanner extends AppCompatActivity {
                         public void run() {
                             {
                                 String codeFromQR = qrCodes.valueAt(0).displayValue;
-                                if(areDetectedAndPassedCodesSame(codeFromQR, codeToDetect) && detectedOnce)
-                                {
-                                    vibration(600);
-//                                    Toast.makeText(getApplicationContext(), "ВЫ НА МЕСТЕ!", Toast.LENGTH_SHORT).show();
-                                    textView.setText("Вы на месте!");
-
-                                    //создаем интент, в него заносим код успешного распознования
-                                    //после окончания finish(), интент сам найдет родительский активити и отдаст результат в
-                                    //onActivityResult
-                                    if(shouldOpenPointDynamic.equals("да"))
-                                    { //когда идет переход Verification->QR->PointDynamic
-                                        Intent intent = new Intent(getApplicationContext(), QuestPointDynamic.class);
-                                        intent.putExtra("Номер пункта", nomerPunkta);
-                                        intent.putExtra("Количество пунктов", numOfPoints);
-                                        intent.putExtra("startTimeMillis", startTimeMillis);
-                                        intent.putExtra("Логин пользователя", employeeLogin);
-                                        intent.putExtra("Количество обнаруженных проблем", problemsCount);
-                                        intent.putExtra("Должность", employeePosition);
-                                        startActivity(intent);
+                                if(!detectedOnce) {
+                                    if (areDetectedAndPassedCodesSame(codeFromQR, codeToDetect)) {
+                                        vibration(500);
+                                        //создаем интент, в него заносим код успешного распознования
+                                        //после окончания finish(), интент сам найдет родительский активити и отдаст результат в
+                                        //onActivityResult
+                                        if (shouldOpenPointDynamic.equals("да")) { //когда идет переход Verification->QR->PointDynamic
+                                            Intent intent = new Intent(getApplicationContext(), QuestPointDynamic.class);
+                                            intent.putExtra("Номер пункта", nomerPunkta);
+                                            intent.putExtra("Количество пунктов", numOfPoints);
+                                            intent.putExtra("startTimeMillis", startTimeMillis);
+                                            intent.putExtra("Логин пользователя", employeeLogin);
+                                            intent.putExtra("Количество обнаруженных проблем", problemsCount);
+                                            intent.putExtra("Должность", employeePosition);
+                                            startActivity(intent);
+                                        } else if (shouldOpenPointDynamic.equals("нет")) {
+                                            Bundle arguments = getIntent().getExtras();
+                                            String problemKey = arguments.getString("ID проблемы в таблице Problems");
+                                            DatabaseReference problemRef = FirebaseDatabase.getInstance().getReference().child("Problems/" + problemKey);
+                                            problemRef.child("solved").setValue(true);
+                                            problemRef.child("solved_by").setValue(employeeLogin);
+                                            Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
+                                            setResult(QR_OK, openProblemsList); //Если нету extra данных
+                                            startActivity(openProblemsList);
+                                        }
+                                        finish();
+                                    } else {
+                                        textView.setText("Вы не в том месте!\nИдите в пункт, указанный выше.");
                                     }
-                                    else if(shouldOpenPointDynamic.equals("нет"))
-                                    {
-                                        Bundle arguments = getIntent().getExtras();
-                                        String problemKey = arguments.getString("ID проблемы в таблице Problems");
-                                        DatabaseReference problemRef = FirebaseDatabase.getInstance().getReference().child("Problems/" + problemKey);
-                                        problemRef.setValue(null);
-                                        Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
-                                        setResult(QR_OK, openProblemsList); //Если нету extra данных
-                                        startActivity(openProblemsList);
-                                    }
-                                    finish();
-                                }
-                                else
-                                {
-                                    textView.setText("Вы не в том месте!\nИдите в пункт, указанный выше.");
-                                    //textView.setText("Вы не в том месте!\nИдите на пункт" + addressPunkta);
                                 }
                             }
                         }

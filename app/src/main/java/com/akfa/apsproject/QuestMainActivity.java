@@ -63,7 +63,7 @@ public class QuestMainActivity extends AppCompatActivity  {
             public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
                 //пользователь выбрал линию для проверки передаем данные в QRScanner
                 //логин в QRScanner не используется explicitly, он передается в PointDynamic. Таким образом QrScanner выступает посредником передачи логина
-                if(position.equals("Master")) {
+                if(position.equals("master")) {
                     groupPositionG = groupPosition;
                     childPositionG = childPosition;
                 }
@@ -77,7 +77,6 @@ public class QuestMainActivity extends AppCompatActivity  {
                 int problemsCount = 0;
                 intent.putExtra("Количество обнаруженных проблем", problemsCount);
                 intent.putExtra("Должность", position);
-                //should i put the position too? it can get lost after checking process
                 startActivity(intent);
                 return false;
             }
