@@ -53,10 +53,8 @@ public class QRScanner extends AppCompatActivity {
         setContentView(R.layout.quest_activity_q_r_scanner);
         getSupportActionBar().hide();
         initInstances();
-        barcodeDetector = new BarcodeDetector.Builder(this)
-                .setBarcodeFormats(Barcode.QR_CODE).build();
-        cameraSource = new CameraSource.Builder(this, barcodeDetector)
-                .setRequestedPreviewSize(640, 480).build();
+        barcodeDetector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.QR_CODE).build();
+        cameraSource = new CameraSource.Builder(this, barcodeDetector).setRequestedPreviewSize(640, 480).build();
         requestCameraPermission(); //в случае разрешения, стартует QR сканер
     }
 
@@ -68,32 +66,31 @@ public class QRScanner extends AppCompatActivity {
         nomerPunkta = arguments.getInt("Номер пункта");
         shouldOpenPointDynamic = arguments.getString("Открой PointDynamic");
         //на самом деле в адрес пункта нужно заложить полные названия цеха и линии, но пока на номерах
-        String addressPunkta = "Цех №" + shopNumber + "\nЛиния №"
-                + equipmentNumber + "\nПункт №" + nomerPunkta;
         numOfPoints = arguments.getInt("Количество пунктов");
         startTimeMillis = arguments.getLong("startTimeMillis");
         employeeLogin = arguments.getString("Логин пользователя");
         employeePosition = arguments.getString("Должность");
         problemsCount = arguments.getInt("Количество обнаруженных проблем");
-        //ИНИЦИАЛИЗИРОВАТЬ ПЕРЕМЕННУЮ! codeToDetect, возьми данные из таблицы "QRCodes"
-        //еще не все готово!!!!!!
-        DatabaseReference codeToDetectRef = FirebaseDatabase.getInstance().getReference().child("Shops/" + QuestMainActivity.groupPositionG + "/Equipment_lines/" + QuestMainActivity.childPositionG + "/QR_codes/qr_" + nomerPunkta);
-        codeToDetectRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        surfaceView = findViewById(R.id.camerapreview);
+        textView = findViewById(R.id.textView);
+        directionsTextView = findViewById(R.id.directionsTextView);
+        directionsTextView.setVisibility(View.INVISIBLE);
+        //codeToDetect, возьми данные из таблицы "QRCodes"
+        DatabaseReference shopRef = FirebaseDatabase.getInstance().getReference().child("Shops/" + shopNumber);
+        shopRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot qrCode) {
-                codeToDetect = qrCode.getValue().toString();
-                Toast.makeText(getApplicationContext(), codeToDetect, Toast.LENGTH_LONG).show();
+            public void onDataChange(@NonNull DataSnapshot shop) {
+                String shopName = shop.child("shop_name").getValue().toString();
+                String equipmentName = shop.child("Equipment_lines/" + equipmentNumber + "/equipment_name").getValue().toString();
+                String directionsText = "Подойдите к\n" + shopName + "\n" + equipmentName + "\nПункт №" + nomerPunkta;
+                directionsTextView.setText(directionsText);
+                codeToDetect = shop.child("Equipment_lines/" + equipmentNumber + "/QR_codes/qr_" + nomerPunkta).getValue().toString();
                 directionsTextView.setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
         });
-        surfaceView = findViewById(R.id.camerapreview);
-        textView = findViewById(R.id.textView);
-        directionsTextView = findViewById(R.id.directionsTextView);
-        directionsTextView.setText("Подойдите к\n" + addressPunkta);
-        directionsTextView.setVisibility(View.INVISIBLE);
     }
 
     private void requestCameraPermission() {
@@ -179,7 +176,8 @@ public class QRScanner extends AppCompatActivity {
                                         Bundle arguments = getIntent().getExtras();
                                         String problemKey = arguments.getString("ID проблемы в таблице Problems");
                                         DatabaseReference problemRef = FirebaseDatabase.getInstance().getReference().child("Problems/" + problemKey);
-                                        problemRef.setValue(null);
+                                        problemRef.child("solved").setValue(true);
+                                        problemRef.child("solved_by").setValue(employeeLogin);
                                         Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
                                         setResult(QR_OK, openProblemsList); //Если нету extra данных
                                         startActivity(openProblemsList);
@@ -189,7 +187,6 @@ public class QRScanner extends AppCompatActivity {
                                 else
                                 {
                                     textView.setText("Вы не в том месте!\nИдите в пункт, указанный выше.");
-                                    //textView.setText("Вы не в том месте!\nИдите на пункт" + addressPunkta);
                                 }
                             }
                         }

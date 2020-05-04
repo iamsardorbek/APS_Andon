@@ -29,13 +29,15 @@ public class RepairerSeparateProblem extends AppCompatActivity {
     Button takePic, problemSolved;
     ImageView problemPic;
     Button.OnClickListener clickListener;
-    private String codeToDetect, IDOfTheProblem;
+    private String IDOfTheProblem;
     private boolean qrResultedSuccess;
     final int REQUEST_CODE_PHOTO = 1;
     private final int DIALOG_EXIT_FOR_CAMERA = 0;
 
     DatabaseReference problemsRef, thisProblemRef;
-    private int nomerPunkta, equipmentNumber, shopNumber;
+    private int nomerPunkta;
+    private String equipmentNumber, shopNumber;
+    private String employeeLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,22 +51,19 @@ public class RepairerSeparateProblem extends AppCompatActivity {
         getSupportActionBar().hide();
         problemsRef = FirebaseDatabase.getInstance().getReference().child("Проблемы");
         IDOfTheProblem = getIntent().getExtras().getString("ID проблемы в таблице Problems");
+        employeeLogin = getIntent().getExtras().getString("Логин пользователя");
         thisProblemRef = problemsRef.child(IDOfTheProblem);
         thisProblemRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot problemDataSnapshot) {
                 TextView problemDescription = findViewById(R.id.problemDescription);
                 Problem problem = problemDataSnapshot.getValue(Problem.class);
-                String probDescripText = "Информация про проблему:\nЦех: №" + problem.getShop() +
-                        "\nЛиния: №" + problem.getEquipment_line() + "\nПункт: №" + problem.getPoint()
-                        + "\nПодпункт: №" + problem.getSubpoint() + "\nОбнаружено сотрудником: " +
-                        problem.getDetected_by_employee() + "\nДата и Время обнаружения:" + problem.getDate()
-                        + " в " + problem.getTime();
+                String probDescripText = "Информация про проблему:\n" + problem.getShop_name() + "\n" + problem.getEquipment_line_name() + "\nПункт: №" + problem.getPoint()
+                        + "\nПодпункт: №" + problem.getSubpoint() + "\nОбнаружено сотрудником: " + problem.getDetected_by_employee() + "\nДата и Время обнаружения:" + problem.getDate() + " в " + problem.getTime();
                 nomerPunkta = problem.getPoint();
-                equipmentNumber = problem.getEquipment_line();
-                shopNumber = problem.getShop();
+                equipmentNumber = problem.getEquipment_line_name();
+                shopNumber = problem.getShop_name();
                 problemDescription.setText(probDescripText);
-                setCodeToDetect();
             }
 
             @Override
@@ -84,7 +83,6 @@ public class RepairerSeparateProblem extends AppCompatActivity {
                         startCameraApp();
                         break;
                     case R.id.problemSolved:
-                        thisProblemRef.child("solved").setValue(true);
                         qrStart(nomerPunkta, equipmentNumber, shopNumber);
                         finish();
                 }
@@ -103,32 +101,13 @@ public class RepairerSeparateProblem extends AppCompatActivity {
         //эта конфигурация функции работает, взял ее
     }
 
-    private void setCodeToDetect()
-    { //needs to be changed
-        //codeToDetectRef must be changed. The strings should be taken from textview.getText and parsed
-        DatabaseReference codeToDetectRef = FirebaseDatabase.getInstance().getReference()
-                .child("Shops/" + QuestMainActivity.groupPositionG + "/Equipment_lines/" + QuestMainActivity.childPositionG +
-                        "/QR_codes/qr_" + (nomerPunkta));
-        codeToDetectRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                codeToDetect = (String) dataSnapshot.getValue();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-    }
-
-    private void qrStart(int nomerPunkta, int equipmentNumber, int shopNumber) {
+    private void qrStart(int nomerPunkta, String equipmentName, String shopName) {
         Intent intent = new Intent(getApplicationContext(), QRScanner.class);
-        intent.putExtra("Номер цеха", shopNumber);
-        intent.putExtra("Номер линии", equipmentNumber);
+        intent.putExtra("Номер цеха", shopName);
+        intent.putExtra("Номер линии", equipmentName);
         intent.putExtra("Номер пункта", nomerPunkta);
-        intent.putExtra("Код пункта", codeToDetect);
         intent.putExtra("Открой PointDynamic", "нет");
+        intent.putExtra("Логин пользователя", employeeLogin);
         intent.putExtra("ID проблемы в таблице Problems", IDOfTheProblem);
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivityForResult(intent, QRScanner.CHECK_PERSON_ON_SPOT);
@@ -147,8 +126,7 @@ public class RepairerSeparateProblem extends AppCompatActivity {
                     Object obj = data.getExtras().get("data");
                     if (obj instanceof Bitmap) {
                         Bitmap bitmap = (Bitmap) obj;
-                        Log.d("Размер фотки", "bitmap " + bitmap.getWidth() + " x "
-                                + bitmap.getHeight());
+                        Log.d("Размер фотки", "bitmap " + bitmap.getWidth() + " x " + bitmap.getHeight());
                         //ivPhoto.setImageBitmap(bitmap); //вывести сделанную картинку в рамку внутри activity
                     }
                 }
