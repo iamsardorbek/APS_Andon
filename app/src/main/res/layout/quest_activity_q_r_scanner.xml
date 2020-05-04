@@ -18,7 +18,7 @@
         android:textColor="@color/text"
         android:text="@string/qr_scanner_text_top" />
 
-    <SurfaceView android:layout_height="600dp"
+    <SurfaceView android:layout_height="400dp"
         android:layout_width="match_parent"
         android:id="@+id/camerapreview"
         android:layout_weight="5" />

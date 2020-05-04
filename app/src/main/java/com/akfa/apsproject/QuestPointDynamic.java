@@ -113,7 +113,7 @@ public class QuestPointDynamic extends AppCompatActivity
         for (int i = 1; i <= numOfSubpoints; i++) {
             //creates radiobuttons for a given point with count nomerPunkta
             Context context = getApplicationContext(); //чтобы передать некоторым функциям как параметр
-            LinearLayout.LayoutParams layoutParams = new RadioGroup.LayoutParams(RadioGroup.LayoutParams.WRAP_CONTENT, RadioGroup.LayoutParams.WRAP_CONTENT);
+            LinearLayout.LayoutParams layoutParams = new RadioGroup.LayoutParams(RadioGroup.LayoutParams.MATCH_PARENT, RadioGroup.LayoutParams.WRAP_CONTENT);
             RadioGroup rg = new RadioGroup(context); //create the RadioGroup
             rg.setId(RADIO_GROUP_ID + i); // На данный момент (10.04) айдишки подпунктов варируются 5000-5020
             //Id задается чтобы к элементу можно было обратиться позже в функции AllRadiosChecked
