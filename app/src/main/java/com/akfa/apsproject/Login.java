@@ -7,10 +7,13 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +28,9 @@ public class Login extends AppCompatActivity {
     private TextView loading;
     private EditText passwordView, loginView;
     private Button enter;
+    private CheckBox rememberMe;
+    private String login, password;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,13 +45,12 @@ public class Login extends AppCompatActivity {
         enter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final String login = loginView.getText().toString();
-                final String password = passwordView.getText().toString();
+                login = loginView.getText().toString();
+                password = passwordView.getText().toString();
                 loading.setVisibility(View.VISIBLE);
                 DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("Users/" + login);
                 dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot user) {
+                    @Override public void onDataChange(@NonNull DataSnapshot user) {
                         loading.setVisibility(View.INVISIBLE);
                         if(user.exists())
                         {//3 ifs with boolean checker functions in condition: isOperator, isMaster, isRepairer
@@ -67,6 +72,18 @@ public class Login extends AppCompatActivity {
                                     openProblemsList.putExtra("Должность", user.child("position").getValue().toString());
                                     startActivity(openProblemsList);
                                 }
+                                if(rememberMe.isChecked())
+                                {
+                                    SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                                    SharedPreferences.Editor editor = sharedPrefs.edit();
+                                    editor.putString("Логин пользователя", login);
+                                    editor.putString("Должность", user.child("position").getValue().toString());
+                                    if(user.child("pultNo").getValue() != null)
+                                    {
+                                        editor.putString("Номер пульта", user.child("pultNo").getValue().toString());
+                                    }
+                                    editor.commit();
+                                }
                             }
                             else
                             {
@@ -79,10 +96,7 @@ public class Login extends AppCompatActivity {
                         }
                     }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
+                    @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
                 });
 
             }
@@ -97,5 +111,6 @@ public class Login extends AppCompatActivity {
         loading = findViewById(R.id.loading);
         getSupportActionBar().hide();
         loading.setVisibility(View.INVISIBLE);
+        rememberMe = findViewById(R.id.remember_me);
     }
 }

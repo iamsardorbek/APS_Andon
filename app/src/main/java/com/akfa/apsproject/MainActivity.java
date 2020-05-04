@@ -1,8 +1,10 @@
 package com.akfa.apsproject;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -232,6 +234,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 //                        startActivity(openAbout);
                         Toast.makeText(getApplicationContext(), "Приложение создано Akfa R&D в 2020 году в Ташкенте.",Toast.LENGTH_SHORT).show();break;
                     case R.id.log_out: //возвращение в логин page
+                        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                        SharedPreferences.Editor editor = sharedPrefs.edit();
+                        editor.clear();
+                        editor.commit();
                         Intent logOut = new Intent(getApplicationContext(), Login.class);
                         logOut.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                         startActivity(logOut);

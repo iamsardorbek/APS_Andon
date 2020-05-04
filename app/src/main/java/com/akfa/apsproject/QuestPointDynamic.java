@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 public class QuestPointDynamic extends AppCompatActivity
 {
     private final int RADIO_GROUP_ID = 5000;
-    private int nomerPunkta, numOfPoints = 0, numOfSubpoints = 0, problemsCount = 0, subpointNumForDialogTitle;
+    private int nomerPunkta, numOfPoints = 0, numOfSubpoints = 0, problemsCount, subpointNumForDialogTitle;
     private long startTimeMillis, endTimeMillis, durationMillis;
     private DialogInterface.OnClickListener dialogClickListener;
     public static String checkDuration;
@@ -58,6 +58,7 @@ public class QuestPointDynamic extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.quest_activity_point_dynamic);
         initInstances();
+        setEquipmentData();
     }
 
     private void initInstances() {
@@ -83,7 +84,6 @@ public class QuestPointDynamic extends AppCompatActivity
         scrollLinearLayout = findViewById(R.id.scrollLinearLayout);
         employeeLogin = getIntent().getExtras().getString("Логин пользователя");
         employeePosition = getIntent().getExtras().getString("Должность");
-        setEquipmentData();
     }
 
     private void setEquipmentData()
@@ -221,7 +221,7 @@ public class QuestPointDynamic extends AppCompatActivity
         return true;
     }
 
-        public void qrStart(int nomerPunkta, int equipmentNumber, int shopNumber) {
+    public void qrStart(int nomerPunkta, int equipmentNumber, int shopNumber) {
         Intent intent = new Intent(getApplicationContext(), QRScanner.class);
         intent.putExtra("Номер цеха", shopNumber);
         intent.putExtra("Номер линии", equipmentNumber);
