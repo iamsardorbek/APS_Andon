@@ -41,7 +41,6 @@ public class QuestEndOfChecking extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.quest_activity_end_of_checking);
         getSupportActionBar().hide();
-        toggle = setUpNavBar();
         shop = findViewById(R.id.shop);
         equipmentLine = findViewById(R.id.equipmentLine);
         numberOfProblems = findViewById(R.id.numberOfProblems);
@@ -50,6 +49,7 @@ public class QuestEndOfChecking extends AppCompatActivity {
         int problemsCount = arguments.getInt("Количество обнаруженных проблем");
         employeeLogin = getIntent().getExtras().getString("Логин пользователя");
         employeePosition = getIntent().getExtras().getString("Должность");
+        toggle = setUpNavBar();
 
         shop.setText(Integer.toString(QuestMainActivity.groupPositionG));
         equipmentLine.setText(Integer.toString(QuestMainActivity.childPositionG));
@@ -89,7 +89,7 @@ public class QuestEndOfChecking extends AppCompatActivity {
         final DrawerLayout drawerLayout;
         ActionBarDrawerToggle toggle;
         NavigationView navigationView;
-        drawerLayout = findViewById(R.id.quest_activity_main);
+        drawerLayout = findViewById(R.id.quest_activity_end_of_checking);
         toggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
