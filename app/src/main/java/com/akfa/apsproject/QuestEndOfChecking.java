@@ -7,8 +7,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class QuestEndOfChecking extends AppCompatActivity {
     Button newChecking;
@@ -33,10 +40,22 @@ public class QuestEndOfChecking extends AppCompatActivity {
         employeeLogin = getIntent().getExtras().getString("Логин пользователя");
         employeePosition = getIntent().getExtras().getString("Должность");
 
-        shop.setText(getString(R.string.shop) + QuestMainActivity.groupPositionG);
-        equipmentLine.setText(getString(R.string.equipmentLine) + QuestMainActivity.childPositionG);
-        numberOfProblems.setText(getString(R.string.numberOfProblems) + problemsCount);
-        checkingDuration.setText(getString(R.string.checkingDuration) + QuestPointDynamic.checkDuration);
+        shop.setText(Integer.toString(QuestMainActivity.groupPositionG));
+        equipmentLine.setText(Integer.toString(QuestMainActivity.childPositionG));
+        numberOfProblems.setText(Integer.toString(problemsCount));
+        checkingDuration.setText(QuestPointDynamic.checkDuration);
+
+        DatabaseReference equipmentRef = FirebaseDatabase.getInstance().getReference("Shops/" + QuestMainActivity.groupPositionG);
+        equipmentRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override public void onDataChange(@NonNull DataSnapshot shopSnap) {
+                shop.setText(shopSnap.child("shop_name").getValue().toString()); //название цеха записать в текствью
+                String equipmentLineName = shopSnap.child("Equipment_lines/" + QuestMainActivity.childPositionG + "/equipment_name").getValue().toString(); //название линии
+                equipmentLine.setText(equipmentLineName);
+            }
+            @Override public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
 
         newChecking = findViewById(R.id.newChecking);
         newChecking.setOnClickListener(new Button.OnClickListener() {
