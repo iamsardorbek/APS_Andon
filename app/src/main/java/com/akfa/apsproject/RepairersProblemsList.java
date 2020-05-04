@@ -43,6 +43,7 @@ public class RepairersProblemsList extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.repairers_activity_problems_list);
+        setTitle("Загрузка данных...");
         toggle = setUpNavBar();
         login = getIntent().getExtras().getString("Логин пользователя");
         position = getIntent().getExtras().getString("Должность");
@@ -67,7 +68,6 @@ public class RepairersProblemsList extends AppCompatActivity {
         //настрой actionBar
         ActionBar actionBar = getSupportActionBar();
         actionBar.show();
-        setTitle("Загрузка данных...");
         //настрой сам навигейшн бар
         final DrawerLayout drawerLayout;
         ActionBarDrawerToggle toggle;
@@ -128,6 +128,7 @@ public class RepairersProblemsList extends AppCompatActivity {
             @SuppressLint("ResourceType")
             @Override
             public void onChildAdded(@NonNull DataSnapshot problemDataSnapshot, @Nullable String prevChildKey) {
+                setTitle("Проблемы на линиях");
                 Problem problem = problemDataSnapshot.getValue(Problem.class);
                 problemIDs.add(problemDataSnapshot.getKey());
                 String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nПункт №" + problem.getPoint() + "\nПодпункт №" + problem.getSubpoint();

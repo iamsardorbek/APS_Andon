@@ -35,8 +35,8 @@ public class RepairerSeparateProblem extends AppCompatActivity {
     private final int DIALOG_EXIT_FOR_CAMERA = 0;
 
     DatabaseReference problemsRef, thisProblemRef;
-    private int nomerPunkta;
-    private String equipmentNumber, shopNumber;
+    private int nomerPunkta, equipmentNo, shopNo;
+    private String equipmentName, shopName;
     private String employeeLogin;
 
     @Override
@@ -58,11 +58,13 @@ public class RepairerSeparateProblem extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot problemDataSnapshot) {
                 TextView problemDescription = findViewById(R.id.problemDescription);
                 Problem problem = problemDataSnapshot.getValue(Problem.class);
-                String probDescripText = "Информация про проблему:\n" + problem.getShop_name() + "\n" + problem.getEquipment_line_name() + "\nПункт: №" + problem.getPoint()
-                        + "\nПодпункт: №" + problem.getSubpoint() + "\nОбнаружено сотрудником: " + problem.getDetected_by_employee() + "\nДата и Время обнаружения:" + problem.getDate() + " в " + problem.getTime();
+                String probDescripText = "Информация про проблему:\n" + problem.getShop_name() + "\n" + problem.getEquipment_line_name() + "\nПункт №" + problem.getPoint()
+                        + "\nПодпункт №" + problem.getSubpoint() + "\nОбнаружено сотрудником: " + problem.getDetected_by_employee() + "\nДата и Время обнаружения:" + problem.getDate() + " в " + problem.getTime();
                 nomerPunkta = problem.getPoint();
-                equipmentNumber = problem.getEquipment_line_name();
-                shopNumber = problem.getShop_name();
+                equipmentName = problem.getEquipment_line_name();
+                equipmentNo = problem.getEquipment_line_no();
+                shopNo = problem.getShop_no();
+                shopName = problem.getShop_name();
                 problemDescription.setText(probDescripText);
             }
 
@@ -83,7 +85,7 @@ public class RepairerSeparateProblem extends AppCompatActivity {
                         startCameraApp();
                         break;
                     case R.id.problemSolved:
-                        qrStart(nomerPunkta, equipmentNumber, shopNumber);
+                        qrStart(nomerPunkta, equipmentNo, shopNo);
                         finish();
                 }
             }
@@ -101,7 +103,7 @@ public class RepairerSeparateProblem extends AppCompatActivity {
         //эта конфигурация функции работает, взял ее
     }
 
-    private void qrStart(int nomerPunkta, String equipmentName, String shopName) {
+    private void qrStart(int nomerPunkta, int equipmentNo, int shopNo) {
         Intent intent = new Intent(getApplicationContext(), QRScanner.class);
         intent.putExtra("Номер цеха", shopName);
         intent.putExtra("Номер линии", equipmentName);

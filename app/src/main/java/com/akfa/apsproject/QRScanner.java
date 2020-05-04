@@ -136,13 +136,11 @@ public class QRScanner extends AppCompatActivity {
         });
 
         barcodeDetector.setProcessor(new Detector.Processor<Barcode>() {
-            @Override
-            public void release() {
+            @Override public void release() {
 
             }
 
-            @Override
-            public void receiveDetections(Detector.Detections<Barcode> detections) {
+            @Override public void receiveDetections(Detector.Detections<Barcode> detections) {
                 final SparseArray<Barcode> qrCodes = detections.getDetectedItems();
                 if(qrCodes.size()!=0)
                 {
