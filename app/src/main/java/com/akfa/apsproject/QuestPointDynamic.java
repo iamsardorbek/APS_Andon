@@ -122,7 +122,7 @@ public class QuestPointDynamic extends AppCompatActivity
             //-------Подпись Пункт №Х--------//
             @SuppressLint("ResourceType") String textColor = getResources().getString(R.color.text);
             TextView rgTitle = new TextView(context);
-            rgTitle.setText("Пункт № " + i);
+            rgTitle.setText("Подпункт № " + i);
             int RADIO_GROUP_ELEMENT_ID = 6000;
             rgTitle.setId(RADIO_GROUP_ELEMENT_ID + i * 10);
             rgTitle.setTextColor(Color.parseColor(textColor));

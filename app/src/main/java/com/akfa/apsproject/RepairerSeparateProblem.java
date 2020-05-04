@@ -173,6 +173,7 @@ public class RepairerSeparateProblem extends AppCompatActivity {
         //директорию "ImgVidRec файлы" предназначенную для медиафайлов этого приложения
         //это должно работать на всех Android API
         File directory = new File(
+                
                 getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Фотографии проблем");
         if (!directory.exists())
             directory.mkdirs();
