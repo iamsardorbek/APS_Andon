@@ -187,7 +187,7 @@
             android:layout_marginVertical="5sp"
             android:layout_marginHorizontal="100dp"
             android:layout_weight="0.6"
-            android:background="@drawable/edit"
+            android:background="@drawable/edit_red_accent"
             android:drawableStart="@drawable/new_revise"
             android:drawableLeft="@drawable/new_revise"
             android:layout_gravity="center"

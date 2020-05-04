@@ -20,7 +20,6 @@
             android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="@color/text"
-            android:background="@drawable/edit"
             android:text="@string/problemsListTitle"
             android:id="@+id/title" />
 

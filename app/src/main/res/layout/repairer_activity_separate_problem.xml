@@ -54,7 +54,7 @@
                 android:layout_marginLeft="5dp"
                 android:layout_marginRight="5dp"
                 android:layout_height="wrap_content"
-                android:background="@drawable/edit"
+                android:background="@drawable/edit_red_accent"
                 android:drawableRight="@drawable/camera_icon"
                 android:textColor="@color/text"
                 android:text="@string/take_pic"
@@ -65,7 +65,7 @@
 
             <Button
                 android:layout_marginTop="10dp"
-                android:background="@drawable/edit"
+                android:background="@drawable/edit_red_accent"
                 android:drawableRight="@drawable/ic_check_box_black_24dp"
                 android:id="@+id/problemSolved"
                 android:layout_width="match_parent"

@@ -63,7 +63,7 @@
                     android:layout_margin="10dp"
                     android:textColor="@color/text"
                     android:paddingRight="10dp"
-                    android:background="@drawable/edit"
+                    android:background="@drawable/edit_red_accent"
                     android:drawableRight="@drawable/next"
                     android:text="@string/next_point_button_text"
                     android:paddingEnd="10dp"
