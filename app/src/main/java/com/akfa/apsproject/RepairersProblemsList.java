@@ -134,6 +134,7 @@ public class RepairersProblemsList extends AppCompatActivity {
                 TextView problemsInfo;
                 problemsInfo = new TextView(getApplicationContext());
                 problemsInfo.setText(problemInfoFromDB);
+                problemsInfo.setPadding(25*2, 25*2, 25*2, 25*2);
                 problemsInfo.setId(ID_TEXTVIEWS + problemCount);
                 problemsInfo.setTextColor(Color.parseColor(getString(R.color.text)));
                 problemsInfo.setTextSize(15);

@@ -24,14 +24,20 @@
             android:gravity="center"
             android:layout_margin="5dp"
             android:textStyle="bold"
-            android:textSize="15sp"
-            android:text="@string/endOfChecking"
-            android:background="@drawable/edit" />
+            android:textSize="25sp"
+            android:text="@string/endOfChecking" />
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="2dp"
+            android:layout_marginBottom="5dp"
+            android:background="@color/text"/>
+
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.5"
+            android:layout_weight="1"
             android:orientation="horizontal">
 
             <TextView
@@ -42,7 +48,7 @@
                 android:padding="5dp"
                 android:layout_margin="5dp"
                 android:textStyle="bold"
-                android:textSize="15sp"
+                android:textSize="20sp"
                 android:gravity="center"
                 android:text="@string/shop"
                 tools:ignore="NestedWeights" />
@@ -57,7 +63,7 @@
                 android:gravity="center"
                 android:layout_margin="5dp"
                 android:textStyle="bold"
-                android:textSize="15sp"
+                android:textSize="25sp"
                 android:background="@drawable/edit" />
 
         </LinearLayout>
@@ -65,7 +71,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.8"
+            android:layout_weight="1"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -77,7 +83,7 @@
                 android:padding="5dp"
                 android:layout_margin="5dp"
                 android:textStyle="bold"
-                android:textSize="15sp"
+                android:textSize="20sp"
                 android:gravity="center"
                 android:text="@string/equipmentLine"
                 tools:ignore="NestedWeights" />
@@ -85,21 +91,22 @@
             <TextView
                 android:id="@+id/equipmentLine"
                 android:layout_width="0dp"
-                android:layout_weight="2"
                 android:layout_height="match_parent"
-                android:textColor="@color/text"
-                android:padding="5dp"
                 android:layout_margin="5dp"
+                android:layout_weight="2"
                 android:background="@drawable/edit"
-                android:textStyle="bold"
-                android:textSize="15sp" />
+                android:gravity="center"
+                android:padding="5dp"
+                android:textColor="@color/text"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.2"
+            android:layout_weight="1"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -111,7 +118,7 @@
                 android:padding="5dp"
                 android:layout_margin="5dp"
                 android:textStyle="bold"
-                android:textSize="15sp"
+                android:textSize="20sp"
                 android:gravity="center"
                 android:text="@string/numberOfProblems"
                 tools:ignore="NestedWeights" />
@@ -119,14 +126,14 @@
             <TextView
                 android:id="@+id/numberOfProblems"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:textColor="@color/text"
                 android:padding="5dp"
                 android:layout_weight="2"
                 android:gravity="center"
                 android:layout_margin="5dp"
                 android:textStyle="bold"
-                android:textSize="15sp"
+                android:textSize="25sp"
                 android:background="@drawable/edit" />
 
         </LinearLayout>
@@ -134,7 +141,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.2"
+            android:layout_weight="1"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -146,7 +153,7 @@
                 android:padding="5dp"
                 android:layout_margin="5dp"
                 android:textStyle="bold"
-                android:textSize="15sp"
+                android:textSize="20sp"
                 android:gravity="center"
                 android:text="@string/checkingDuration"
                 tools:ignore="NestedWeights" />
@@ -155,13 +162,13 @@
                 android:id="@+id/checkingDuration"
                 android:layout_width="0dp"
                 android:layout_weight="2"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:textColor="@color/text"
                 android:padding="5dp"
                 android:gravity="center"
                 android:layout_margin="5dp"
                 android:textStyle="bold"
-                android:textSize="15sp"
+                android:textSize="25sp"
                 android:background="@drawable/edit" />
 
         </LinearLayout>
@@ -169,17 +176,17 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="2">
+            android:layout_weight="1">
 
         </View>
 
         <Button
             android:id="@+id/newChecking"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_margin="5sp"
-            android:layout_marginHorizontal="20dp"
-            android:layout_weight="0.5"
+            android:layout_marginVertical="5sp"
+            android:layout_marginHorizontal="100dp"
+            android:layout_weight="0.6"
             android:background="@drawable/edit"
             android:drawableStart="@drawable/new_revise"
             android:drawableLeft="@drawable/new_revise"
