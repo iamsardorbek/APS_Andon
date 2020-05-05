@@ -20,32 +20,29 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/textView3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/factory_name"
-                android:layout_margin="10dp"
-                android:padding="5dp"
-                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:gravity="center"
-                android:typeface="sans"
-                android:textColor="@color/text"
-                app:fontFamily="sans-serif-light" />
-
-            <View
-                android:layout_width="wrap_content"
-                android:layout_height="2dp"
-                android:background="@color/text"/>
-
             <ExpandableListView
                 android:id="@+id/equipment_list"
                 android:layout_width="match_parent"
                 android:layout_height="600sp">
                 
             </ExpandableListView>
+
+            <Button
+                android:id="@+id/mainqrscan"
+                android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_gravity="center"
+                android:layout_marginHorizontal="50dp"
+                android:layout_marginVertical="10dp"
+                android:background="@drawable/edit_red_accent"
+                android:baselineAligned="true"
+                android:gravity="center"
+                android:padding="5dp"
+                android:text="@string/scan_qr"
+                android:textColor="@color/text"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
     </ScrollView>
