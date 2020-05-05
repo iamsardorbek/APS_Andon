@@ -23,14 +23,22 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -52,6 +60,10 @@ public class QuestPointDynamic extends AppCompatActivity
     private String employeeLogin, employeePosition;
     private String shopName;
     private String equipmentName;
+    static final int REQUEST_IMAGE_CAPTURE  = 1;
+    File currentPicFile;
+    String currentFileName;
+    private StorageReference mStorageRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +75,7 @@ public class QuestPointDynamic extends AppCompatActivity
 
     private void initInstances() {
         getSupportActionBar().hide();
+        mStorageRef = FirebaseStorage.getInstance().getReference();
         db = FirebaseDatabase.getInstance();
         shopRef = db.getReference().child("Shops/" + QuestMainActivity.groupPositionG);
         nextPoint = findViewById(R.id.nextPoint);
@@ -157,9 +170,7 @@ public class QuestPointDynamic extends AppCompatActivity
     private void initClickListeners()
     {
         nextPoint.setOnClickListener(new Button.OnClickListener(){
-        @SuppressLint("DefaultLocale")
-        @Override
-        public void onClick(View v) {
+        @SuppressLint("DefaultLocale") @Override public void onClick(View v) {
             if(nomerPunkta <= numOfPoints) {
                 //checks points' count and refreshes the activity
                 //нужна проверка: все радиогруппы были отмечены?
@@ -195,16 +206,8 @@ public class QuestPointDynamic extends AppCompatActivity
                 startActivity(intent);
             }
         }
-    });
+        });
 
-        dialogClickListener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (which == Dialog.BUTTON_POSITIVE) {
-                    startCameraApp();
-                }
-            }
-        };
     }
 
     private boolean AllRadiosChecked(int numOfRadioGroups)
@@ -246,6 +249,7 @@ public class QuestPointDynamic extends AppCompatActivity
         return true;
     }
 
+    String problemPushKey;
     @SuppressLint("ResourceType")
     private void saveCheckingData(int numOfRadioGroups)
     { //this function is called in case all radiogroups are checked and
@@ -269,9 +273,10 @@ public class QuestPointDynamic extends AppCompatActivity
                 sdf = new SimpleDateFormat("HH:mm z");
                 time = sdf.format(new Date());
                 DatabaseReference newProbRef = problemsRef.push();
+                problemPushKey = newProbRef.getKey();
                 newProbRef.setValue(new Problem(employeeLogin, date, time, shopName, equipmentName, QuestMainActivity.groupPositionG, QuestMainActivity.childPositionG, nomerPunkta, i));
                 //прямо здесь надо выводить диалог с последующим вызовом камеры
-
+                dispatchTakePictureIntent();
                 /*subpointNumForDialogTitle = i;
                 showDialog(DIALOG_EXIT_FOR_CAMERA);*/ //и дальше запустится камера и сохранит фотку в хранилище
 
@@ -282,72 +287,75 @@ public class QuestPointDynamic extends AppCompatActivity
         }
     }
 
-    @Override
-    protected Dialog onCreateDialog(int id)
-    {
-        int DIALOG_EXIT_FOR_CAMERA = 0;
-        if(id == DIALOG_EXIT_FOR_CAMERA)
-        {
-            AlertDialog.Builder adb = new AlertDialog.Builder(this);
-            adb.setTitle("Переход в приложение Камера");
-            adb.setCancelable(false);
-            adb.setMessage("Сфотографируйте проблему подпункта " + subpointNumForDialogTitle);
-            adb.setIcon(R.drawable.camera_icon);
-            adb.setPositiveButton("OK", dialogClickListener);
-            return adb.create();
-        }
-        return super.onCreateDialog(id);
+    String currentPhotoPath; //the string of uri of where file is located
+    private File createImageFile() throws IOException {
+        // Create an image file name - our case will be the id of problem
+//        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmm").format(new Date());
+        String problemKeyID = problemPushKey; //инициализируй эту переменную к unique key проблемы
+        currentFileName = problemKeyID + ".jpg";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES); //директория для пользования только твоим прилдожнием
+        File image = File.createTempFile(
+                problemKeyID,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        currentPhotoPath = image.getAbsolutePath();
+        return image;
     }
 
-    private Uri generateFileUri() {
-        //В объект File directory помещаем созданную исключительно для нашего приложения
-        //директорию "ImgVidRec файлы" предназначенную для медиафайлов этого приложения
-        //это должно работать на всех Android API
-        File directory = new File(
-                getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Фотографии проблем");
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-
-        File file = new File(directory.getPath() + "/" + "photo_"
-                + System.currentTimeMillis() + ".jpg");
-        Log.d("Сгенерированный файл:", "fileName = " + file);
-        return Uri.fromFile(file);
-    }
-
-    public void startCameraApp()
-    {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri());
-        int REQUEST_CODE_PHOTO = 1;
-        startActivityForResult(intent, REQUEST_CODE_PHOTO); //запускает активити из которого можно получить результаты
-                                                            //эта конфигурация функции работает, взял ее
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode,
-                                    Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
-        if (resultCode == RESULT_OK) {
-            if (intent == null) {
-                Log.e("Ошибка с интент", "Intent is null");
-            } else {
-                Log.d("Дир фотки", "Photo uri: " + intent.getData());
-                Bundle bundle = intent.getExtras();
-                if (bundle != null) {
-                    Object obj = intent.getExtras().get("data");
-                    if (obj instanceof Bitmap) {
-                        Bitmap bitmap = (Bitmap) obj;
-                        Log.d("Размер фотки", "bitmap " + bitmap.getWidth() + " x "
-                                + bitmap.getHeight());
-                        photographedProblem[subpointNumForDialogTitle-1] = true;
-                        //ivPhoto.setImageBitmap(bitmap); //вывести сделанную картинку в рамку внутри activity
-                    }
-                }
+    private void dispatchTakePictureIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Ensure that there's a camera activity to handle the intent
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+                Toast.makeText(getApplicationContext(), "Error creating the file", Toast.LENGTH_LONG).show();
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), "uz.akfa.cameratrial", photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                currentPicFile = photoFile;
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
         }
-        else if (resultCode == RESULT_CANCELED) {
-            photographedProblem[subpointNumForDialogTitle-1] = false;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_IMAGE_CAPTURE  && resultCode == RESULT_OK) {
+            Uri file = Uri.fromFile(new File(currentPhotoPath));
+            Log.i("File URI", file.toString());
+            StorageReference probPicRef = mStorageRef.child("problem_pictures/" + file.getLastPathSegment());
+            probPicRef.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            Toast.makeText(getApplicationContext(), "Upload success!", Toast.LENGTH_LONG).show();
+                            File picToDelete = new File(currentPhotoPath);
+                            picToDelete.delete();
+                            Log.i("Uploaded", "success");
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override public void onFailure(@NonNull Exception exception) {
+                            // Handle unsuccessful uploads
+                            exception.printStackTrace();
+                            Toast.makeText(getApplicationContext(), "Error uploading the file", Toast.LENGTH_LONG).show();
+                        }
+                    })
+                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                            double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+                            //progressbar
+                        }
+                    });
         }
     }
 }
