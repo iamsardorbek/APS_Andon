@@ -176,7 +176,7 @@ public class QRScanner extends AppCompatActivity {
                                         }
                                         finish();
                                     } else {
-                                        textView.setText("Вы не в том месте!\nИдите в пункт, указанный выше.");
+                                        textView.setText("Вы не в том месте");
                                     }
                                 }
                             }

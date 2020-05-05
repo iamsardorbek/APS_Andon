@@ -86,7 +86,7 @@ public class MainAdapter extends BaseExpandableListAdapter {
 
         TextView textView = convertView.findViewById(R.id.list_child);
         textView.setText(child);
-        textView.setTextColor(Color.parseColor("#28E4FF"));
+        textView.setTextColor(Color.BLACK);
         return convertView;
     }
 
