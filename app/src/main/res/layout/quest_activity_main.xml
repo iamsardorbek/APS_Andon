@@ -8,44 +8,47 @@
     android:background="@drawable/login_background"
     android:id="@+id/quest_activity_main"
     tools:context=".QuestMainActivity">
-
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        tools:layout_editor_absoluteX="0dp">
+        android:orientation="vertical">
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="9"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:layout_editor_absoluteX="0dp">
 
-        <LinearLayout
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <ExpandableListView
+                    android:id="@+id/equipment_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="750dp">
+                </ExpandableListView>
+
+
+            </LinearLayout>
+        </ScrollView>
+        <Button
+            android:id="@+id/start_with_qr"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <ExpandableListView
-                android:id="@+id/equipment_list"
-                android:layout_width="match_parent"
-                android:layout_height="600sp">
-                
-            </ExpandableListView>
-
-            <Button
-                android:id="@+id/start_with_qr"
-                android:layout_weight="1"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_gravity="center"
-                android:layout_marginHorizontal="50dp"
-                android:layout_marginVertical="10dp"
-                android:background="@drawable/edit_red_accent"
-                android:baselineAligned="true"
-                android:gravity="center"
-                android:padding="5dp"
-                android:text="@string/scan_qr"
-                android:textColor="@color/text"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-    </ScrollView>
+            android:layout_gravity="center"
+            android:layout_marginHorizontal="50dp"
+            android:layout_marginVertical="10dp"
+            android:background="@drawable/edit_red_accent"
+            android:baselineAligned="true"
+            android:gravity="center"
+            android:padding="5dp"
+            android:text="@string/scan_qr"
+            android:textColor="@color/text"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
     <com.google.android.material.navigation.NavigationView
         android:layout_width="wrap_content"

@@ -84,15 +84,10 @@ public class QuestMainActivity extends AppCompatActivity  {
                     groupPositionG = groupPosition;
                     childPositionG = childPosition;
                 }
-                Intent intent = new Intent(getApplicationContext(), QRScanner.class);
+                Intent intent = new Intent(getApplicationContext(), MachineLayoutActivity.class);
                 intent.putExtra("Номер цеха", QuestMainActivity.groupPositionG);
                 intent.putExtra("Номер линии", QuestMainActivity.childPositionG);
-                int INITIAL_POINT_NUMBER_FOR_QR = 1;
-                intent.putExtra("Номер пункта", INITIAL_POINT_NUMBER_FOR_QR); //1
-                intent.putExtra("Открой PointDynamic", "да");
                 intent.putExtra("Логин пользователя", login); //передавать логин пользователя взятый из Firebase
-                int problemsCount = 0;
-                intent.putExtra("Количество обнаруженных проблем", problemsCount);
                 intent.putExtra("Должность", position);
                 startActivity(intent);
                 return false;

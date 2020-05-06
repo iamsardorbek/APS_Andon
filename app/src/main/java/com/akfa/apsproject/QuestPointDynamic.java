@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -147,22 +148,27 @@ public class QuestPointDynamic extends AppCompatActivity
             int RADIO_GROUP_ELEMENT_ID = 6000;
             rgTitle.setId(RADIO_GROUP_ELEMENT_ID + i * 10);
             rgTitle.setTextColor(Color.parseColor(textColor));
-            rgTitle.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            params.gravity = Gravity.CENTER_HORIZONTAL;
+            params.setMargins(20, 20, 20, 20);
+            rgTitle.setLayoutParams(params);
             rg.addView(rgTitle, 0, layoutParams);
 
             RadioButton[] rb = new RadioButton[2];
+            LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
             //-------Radiobutton для Проблемы--------//
             rb[0] = new RadioButton(context);
             rb[0].setText("Проблема");
             rb[0].setId(RADIO_GROUP_ELEMENT_ID + (i * 10) + 1);
             rb[0].setTextColor(Color.parseColor(textColor));
-            rb[0].setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+            rb[0].setLayoutParams(buttonParams);
             //-------Radiobutton для Порядка--------//
             rb[1] = new RadioButton(context);
             rb[1].setText("Порядок");
             rb[1].setId(RADIO_GROUP_ELEMENT_ID + (i * 10) + 2);
             rb[1].setTextColor(Color.parseColor(textColor));
-            rb[1].setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            rb[1].setLayoutParams(buttonParams);
             //-------Добавим все созданные объекты в layout--------//
             rg.addView(rb[0], 1, layoutParams);
             rg.addView(rb[1], 2, layoutParams);

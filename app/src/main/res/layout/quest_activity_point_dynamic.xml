@@ -56,6 +56,14 @@
                     android:text="@string/nomer_punkta_textview"
                     android:textSize="18sp"/>
 
+                <LinearLayout
+                    android:id="@+id/scrollLinearLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                </LinearLayout>
+
                 <Button
                     android:id="@+id/nextPoint"
                     android:layout_width="match_parent"
@@ -69,14 +77,6 @@
                     android:paddingEnd="10dp"
                     tools:ignore="RtlSymmetry"
                     android:drawableEnd="@drawable/next" />
-
-                <LinearLayout
-                    android:id="@+id/scrollLinearLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                </LinearLayout>
 
             </LinearLayout>
 
