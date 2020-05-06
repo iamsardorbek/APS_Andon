@@ -30,6 +30,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 public class QRScanner extends AppCompatActivity {
     public static final int CHECK_PERSON_ON_SPOT = 1, QR_OK = 13;
@@ -38,14 +43,13 @@ public class QRScanner extends AppCompatActivity {
     TextView textView, directionsTextView;
     BarcodeDetector barcodeDetector;
     Bundle arguments;
-    private String codeToDetect;
-    private String shouldOpenPointDynamic;
-    private int equipmentNumber, shopNumber, nomerPunkta;
+    private String codeToDetect, shouldOpenPointDynamic;
+    private int equipmentNumber, shopNumber, nomerPunkta, numOfPoints, problemsCount;
     private boolean detectedOnce = false;
-    private int numOfPoints;
     private long startTimeMillis;
     private String employeeLogin, employeePosition;
-    private int problemsCount;
+    List<EquipmentLine> equipmentLineList = new ArrayList<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,21 +81,44 @@ public class QRScanner extends AppCompatActivity {
         directionsTextView = findViewById(R.id.directionsTextView);
         directionsTextView.setVisibility(View.INVISIBLE);
         //codeToDetect, возьми данные из таблицы "QRCodes"
-        DatabaseReference shopRef = FirebaseDatabase.getInstance().getReference().child("Shops/" + shopNumber);
-        shopRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot shop) {
-                String shopName = shop.child("shop_name").getValue().toString();
-                String equipmentName = shop.child("Equipment_lines/" + equipmentNumber + "/equipment_name").getValue().toString();
-                String directionsText = "Подойдите к\n" + shopName + "\n" + equipmentName + "\nПункт №" + nomerPunkta;
-                directionsTextView.setText(directionsText);
-                codeToDetect = shop.child("Equipment_lines/" + equipmentNumber + "/QR_codes/qr_" + nomerPunkta).getValue().toString();
-                directionsTextView.setVisibility(View.VISIBLE);
-            }
+        if(!shouldOpenPointDynamic.equals("другое")) {
+            DatabaseReference shopRef = FirebaseDatabase.getInstance().getReference().child("Shops/" + shopNumber);
+            shopRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot shop) {
+                    String shopName = shop.child("shop_name").getValue().toString();
+                    String equipmentName = shop.child("Equipment_lines/" + equipmentNumber + "/equipment_name").getValue().toString();
+                    String directionsText = "Подойдите к\n" + shopName + "\n" + equipmentName + "\nПункт №" + nomerPunkta;
+                    directionsTextView.setText(directionsText);
+                    codeToDetect = shop.child("Equipment_lines/" + equipmentNumber + "/QR_codes/qr_" + nomerPunkta).getValue().toString();
+                    directionsTextView.setVisibility(View.VISIBLE);
+                }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {}
-        });
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                }
+            });
+        }
+        else
+        {
+            DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference().child("Shops");
+            shopsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override public void onDataChange(@NonNull DataSnapshot shops) {
+                    for(DataSnapshot shop : shops.getChildren())
+                    {
+                        DataSnapshot shopEquipmentLines = shop.child("Equipment_lines");
+                        for(DataSnapshot equipmentLine : shopEquipmentLines.getChildren()) {
+                            String codeToDetect = equipmentLine.child("QR_codes/qr_1").getValue().toString();
+                            int shopNo = Integer.parseInt(shop.getKey().toString());
+                            int equipmentLineNo = Integer.parseInt(equipmentLine.getKey().toString());
+                            EquipmentLine equipmentLineObject = new EquipmentLine(shopNo, equipmentLineNo, codeToDetect);
+                            equipmentLineList.add(equipmentLineObject);
+                        }
+                    }
+                }
+                @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+            });
+        }
     }
 
     private void requestCameraPermission() {
@@ -107,19 +134,15 @@ public class QRScanner extends AppCompatActivity {
 
     private void qrScanCameraON()
     {
-        Log.i("qrScanCameraON", "Даю коллбэк surfaceView getholder");
-        //проблема здесь
         surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 if(ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA)
                         != PackageManager.PERMISSION_GRANTED) {
-                    Log.i("qrScanCameraON", "surfaceCreated ретурн делаю");
                     return;
                 }
                 try {
                     cameraSource.start(holder);
-                    Log.i("qrScanCameraON", "try cameraSource.start успешен");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -150,35 +173,67 @@ public class QRScanner extends AppCompatActivity {
                         public void run() {
                             {
                                 String codeFromQR = qrCodes.valueAt(0).displayValue;
-                                if(!detectedOnce) {
-                                    if (areDetectedAndPassedCodesSame(codeFromQR, codeToDetect)) {
-                                        vibration(500);
-                                        //создаем интент, в него заносим код успешного распознования
-                                        //после окончания finish(), интент сам найдет родительский активити и отдаст результат в
-                                        //onActivityResult
-                                        if (shouldOpenPointDynamic.equals("да")) { //когда идет переход Verification->QR->PointDynamic
+                                if(shouldOpenPointDynamic.equals("да") || shouldOpenPointDynamic.equals("нет")) {
+                                    if (!detectedOnce) {
+                                        if (areDetectedAndPassedCodesSame(codeFromQR, codeToDetect)) {
+                                            vibration(500);
+                                            //создаем интент, в него заносим код успешного распознования
+                                            //после окончания finish(), интент сам найдет родительский активити и отдаст результат в
+                                            //onActivityResult
+                                            if (shouldOpenPointDynamic.equals("да")) { //когда идет переход Verification->QR->PointDynamic
+                                                Intent intent = new Intent(getApplicationContext(), QuestPointDynamic.class);
+                                                intent.putExtra("Номер пункта", nomerPunkta);
+                                                intent.putExtra("Количество пунктов", numOfPoints);
+                                                intent.putExtra("startTimeMillis", startTimeMillis);
+                                                intent.putExtra("Логин пользователя", employeeLogin);
+                                                intent.putExtra("Номер цеха", shopNumber);
+                                                intent.putExtra("Номер линии", equipmentNumber);
+                                                intent.putExtra("Количество обнаруженных проблем", problemsCount);
+                                                intent.putExtra("Должность", employeePosition);
+                                                startActivity(intent);
+                                            } else if (shouldOpenPointDynamic.equals("нет")) {
+                                                Bundle arguments = getIntent().getExtras();
+                                                String problemKey = arguments.getString("ID проблемы в таблице Problems");
+                                                DatabaseReference problemRef = FirebaseDatabase.getInstance().getReference().child("Problems/" + problemKey);
+                                                problemRef.child("solved").setValue(true);
+                                                problemRef.child("solved_by").setValue(employeeLogin);
+                                                String date, time;
+                                                SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+                                                date = sdf.format(new Date());
+                                                sdf = new SimpleDateFormat("HH:mm z");
+                                                time = sdf.format(new Date());
+                                                problemRef.child("date_solved").setValue(date);
+                                                problemRef.child("time_solved").setValue(time);
+                                                Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
+                                                setResult(QR_OK, openProblemsList); //Если нету extra данных
+                                                startActivity(openProblemsList);
+                                            }
+                                            finish();
+                                        } else {
+                                            textView.setText("Вы не в том месте");
+                                        }
+                                    }
+                                }
+                                else if (shouldOpenPointDynamic.equals("другое")) {
+                                    if (!detectedOnce) {
+                                        EquipmentLine equipmentLine = detectedCodeAmongInitialPunkts(codeFromQR);
+                                        if(equipmentLine != null)
+                                        {
+                                            vibration(500);
                                             Intent intent = new Intent(getApplicationContext(), QuestPointDynamic.class);
-                                            intent.putExtra("Номер пункта", nomerPunkta);
-                                            intent.putExtra("Количество пунктов", numOfPoints);
-                                            intent.putExtra("startTimeMillis", startTimeMillis);
+                                            intent.putExtra("Номер пункта", 1);
+                                            intent.putExtra("Номер цеха", equipmentLine.getShopNo());
+                                            intent.putExtra("Номер линии", equipmentLine.getEquipmentNo());
                                             intent.putExtra("Логин пользователя", employeeLogin);
                                             intent.putExtra("Количество обнаруженных проблем", problemsCount);
-                                            Log.i("Кол-во проблем", String.valueOf(problemsCount));
                                             intent.putExtra("Должность", employeePosition);
                                             startActivity(intent);
-                                        } else if (shouldOpenPointDynamic.equals("нет")) {
-                                            Bundle arguments = getIntent().getExtras();
-                                            String problemKey = arguments.getString("ID проблемы в таблице Problems");
-                                            DatabaseReference problemRef = FirebaseDatabase.getInstance().getReference().child("Problems/" + problemKey);
-                                            problemRef.child("solved").setValue(true);
-                                            problemRef.child("solved_by").setValue(employeeLogin);
-                                            Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
-                                            setResult(QR_OK, openProblemsList); //Если нету extra данных
-                                            startActivity(openProblemsList);
+                                            finish();
                                         }
-                                        finish();
-                                    } else {
-                                        textView.setText("Вы не в том месте");
+                                        else
+                                        {
+                                            textView.setText("Подойдите к 1-пункту линии, которую вы хотите проверить");
+                                        }
                                     }
                                 }
                             }
@@ -187,6 +242,18 @@ public class QRScanner extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private EquipmentLine detectedCodeAmongInitialPunkts(String codeFromQR) {
+        for(EquipmentLine equipmentCurrent : equipmentLineList)
+        {
+            if(codeFromQR.equals(equipmentCurrent.getStartQRCode()))
+            {
+                detectedOnce = true;
+                return equipmentCurrent;
+            }
+        }
+        return null;
     }
 
     private boolean areDetectedAndPassedCodesSame(String fromQRScanner, String fromDatabase)

@@ -27,6 +27,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +46,7 @@ public class RepairersProblemsList extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.repairers_activity_problems_list);
-        setTitle("Загрузка данных...");
+        setTitle("Загрузка данных..."); //если нет проблем, надо сделать: нету проблем
         toggle = setUpNavBar();
         login = getIntent().getExtras().getString("Логин пользователя");
         position = getIntent().getExtras().getString("Должность");
@@ -128,46 +129,42 @@ public class RepairersProblemsList extends AppCompatActivity {
     }
 
     private void addProblemsFromDatabase() {
+        //setTitle("Загрузка данных...");
         //на самом деле нужно взять количество строк в таблице problems
         DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference().child("Problems");
-        problemsRef.orderByChild("solved").equalTo(false).addChildEventListener(new ChildEventListener() {
+        problemsRef.addValueEventListener(new ValueEventListener() {
             @SuppressLint("ResourceType")
             @Override
-            public void onChildAdded(@NonNull DataSnapshot problemDataSnapshot, @Nullable String prevChildKey) {
-                setTitle("Проблемы на линиях");
-                Problem problem = problemDataSnapshot.getValue(Problem.class);
-                problemIDs.add(problemDataSnapshot.getKey());
-                String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nПункт №" + problem.getPoint() + "\nПодпункт №" + problem.getSubpoint();
-                TextView problemsInfo;
-                problemsInfo = new TextView(getApplicationContext());
-                problemsInfo.setText(problemInfoFromDB);
-                problemsInfo.setPadding(25*2, 25*2, 25*2, 25*2);
-                problemsInfo.setId(ID_TEXTVIEWS + problemCount);
-                problemsInfo.setTextColor(Color.parseColor(getString(R.color.text)));
-                problemsInfo.setTextSize(15);
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                params.setMargins(25*2, 25*2, 25*2, 25*2);
-                problemsInfo.setLayoutParams(params);
-                problemsInfo.setClickable(true);
-                problemsInfo.setBackgroundResource(R.drawable.list_group_layout);
-                problemsInfo.setOnClickListener(textviewClickListener);
-                linearLayout.addView(problemsInfo);
-                problemCount++;
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
+            public void onDataChange(@NonNull DataSnapshot problemsSnap) {
+                if(problemsSnap.getValue() == null)
+                {
+                    setTitle("Все проблемы решены");
+                }
+                else
+                {
+                    setTitle("Проблемы на линиях");
+                    for(DataSnapshot problemDataSnapshot : problemsSnap.getChildren())
+                    {
+                        Problem problem = problemDataSnapshot.getValue(Problem.class);
+                        problemIDs.add(problemDataSnapshot.getKey());
+                        String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nПункт №" + problem.getPoint() + "\nПодпункт №" + problem.getSubpoint();
+                        TextView problemsInfo;
+                        problemsInfo = new TextView(getApplicationContext());
+                        problemsInfo.setText(problemInfoFromDB);
+                        problemsInfo.setPadding(25, 25, 25, 25);
+                        problemsInfo.setId(ID_TEXTVIEWS + problemCount);
+                        problemsInfo.setTextColor(Color.parseColor(getString(R.color.text)));
+                        problemsInfo.setTextSize(13);
+                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                        params.setMargins(20, 25, 20, 25);
+                        problemsInfo.setLayoutParams(params);
+                        problemsInfo.setClickable(true);
+                        problemsInfo.setBackgroundResource(R.drawable.list_group_layout);
+                        problemsInfo.setOnClickListener(textviewClickListener);
+                        linearLayout.addView(problemsInfo);
+                        problemCount++;
+                    }
+                }
             }
 
             @Override
@@ -175,5 +172,50 @@ public class RepairersProblemsList extends AppCompatActivity {
 
             }
         });
+//        problemsRef.orderByChild("solved").equalTo(false).addChildEventListener(new ChildEventListener() {
+//            @SuppressLint("ResourceType")
+//            @Override
+//            public void onChildAdded(@NonNull DataSnapshot problemDataSnapshot, @Nullable String prevChildKey) {
+//                setTitle("Проблемы на линиях");
+//                Problem problem = problemDataSnapshot.getValue(Problem.class);
+//                problemIDs.add(problemDataSnapshot.getKey());
+//                String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nПункт №" + problem.getPoint() + "\nПодпункт №" + problem.getSubpoint();
+//                TextView problemsInfo;
+//                problemsInfo = new TextView(getApplicationContext());
+//                problemsInfo.setText(problemInfoFromDB);
+//                problemsInfo.setPadding(25, 25, 25, 25);
+//                problemsInfo.setId(ID_TEXTVIEWS + problemCount);
+//                problemsInfo.setTextColor(Color.parseColor(getString(R.color.text)));
+//                problemsInfo.setTextSize(13);
+//                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+//                params.setMargins(20, 25, 20, 25);
+//                problemsInfo.setLayoutParams(params);
+//                problemsInfo.setClickable(true);
+//                problemsInfo.setBackgroundResource(R.drawable.list_group_layout);
+//                problemsInfo.setOnClickListener(textviewClickListener);
+//                linearLayout.addView(problemsInfo);
+//                problemCount++;
+//            }
+//
+//            @Override
+//            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//
+//            }
+//
+//            @Override
+//            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+//
+//            }
+//
+//            @Override
+//            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
     }
 }

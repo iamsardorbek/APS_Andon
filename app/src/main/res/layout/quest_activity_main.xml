@@ -28,7 +28,7 @@
             </ExpandableListView>
 
             <Button
-                android:id="@+id/mainqrscan"
+                android:id="@+id/start_with_qr"
                 android:layout_weight="1"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"

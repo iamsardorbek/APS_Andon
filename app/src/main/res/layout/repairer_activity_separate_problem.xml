@@ -46,7 +46,6 @@
                 android:layout_margin="5sp"
                 android:layout_gravity="center_horizontal"
                 app:srcCompat="@drawable/aps_icon"
-                tools:ignore="UnknownId"
                 android:contentDescription="@string/cameraViewDescription" />
 
             <Button

@@ -79,7 +79,8 @@ public class RepairerSeparateProblem extends AppCompatActivity {
         takePic = findViewById(R.id.takePic);
         problemSolved = findViewById(R.id.problemSolved);
         problemPic = findViewById(R.id.problemPic);
-        StorageReference mStorageRef = FirebaseStorage.getInstance().getReference();
+        StorageReference mStorageRef = FirebaseStorage.getInstance().getReference("problem_pictures");
+        Log.i("IDOfTheProblem", IDOfTheProblem);
         StorageReference singlePicRef = mStorageRef.child(IDOfTheProblem + ".jpg");
         Glide.with(getApplicationContext()).load(singlePicRef).into(problemPic); //load the pic from FB top imageview
         clickListener = new Button.OnClickListener() {

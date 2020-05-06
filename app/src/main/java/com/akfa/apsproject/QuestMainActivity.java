@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ExpandableListView;
 import android.widget.Toast;
 
@@ -34,6 +35,7 @@ public class QuestMainActivity extends AppCompatActivity  {
     static int childPositionG, groupPositionG;
 
     ExpandableListView expandableListView; //для выпадающего списка
+    Button startWithQR;
     List<String> listGroup;
     HashMap<String, List<String>> listItem;
     private MainAdapter adapter;
@@ -49,6 +51,19 @@ public class QuestMainActivity extends AppCompatActivity  {
         login = getIntent().getExtras().getString("Логин пользователя");
         position = getIntent().getExtras().getString("Должность");
         initExpandableListView(); //иницилизация выпадающего списка
+        startWithQR = findViewById(R.id.start_with_qr);
+        startWithQR.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent openQR = new Intent(getApplicationContext(), QRScanner.class);
+//                openQR.putExtra("")
+                //nedds edits, extras
+                openQR.putExtra("Открой PointDynamic", "другое");
+                openQR.putExtra("Должность", position);
+                openQR.putExtra("Логин пользователя", login); //передавать логин пользователя взятый из Firebase
+                startActivity(openQR);
+            }
+        });
         toggle = setUpNavBar();
     }
 
@@ -75,7 +90,7 @@ public class QuestMainActivity extends AppCompatActivity  {
                 int INITIAL_POINT_NUMBER_FOR_QR = 1;
                 intent.putExtra("Номер пункта", INITIAL_POINT_NUMBER_FOR_QR); //1
                 intent.putExtra("Открой PointDynamic", "да");
-                intent.putExtra("Логин пользователя", login); //передавать логин пользователя взятый из Firebase в будущем
+                intent.putExtra("Логин пользователя", login); //передавать логин пользователя взятый из Firebase
                 int problemsCount = 0;
                 intent.putExtra("Количество обнаруженных проблем", problemsCount);
                 intent.putExtra("Должность", position);
