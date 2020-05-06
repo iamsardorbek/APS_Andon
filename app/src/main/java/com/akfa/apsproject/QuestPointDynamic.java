@@ -1,12 +1,8 @@
 package com.akfa.apsproject;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -40,15 +36,16 @@ import com.google.firebase.storage.UploadTask;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class QuestPointDynamic extends AppCompatActivity
 {
     private final int RADIO_GROUP_ID = 5000;
-    private int nomerPunkta, numOfPoints = 0, numOfSubpoints = 0, problemsCount, subpointNumForDialogTitle;
+    private int nomerPunkta, numOfPoints = 0, numOfSubpoints = 0, problemsCount, problemsOnThisPunkt = 0;
     private long startTimeMillis, endTimeMillis, durationMillis;
-    private DialogInterface.OnClickListener dialogClickListener;
     public static String checkDuration;
     private LinearLayout scrollLinearLayout;
     Button nextPoint;
@@ -56,13 +53,14 @@ public class QuestPointDynamic extends AppCompatActivity
     //Firebase
     FirebaseDatabase db;
     DatabaseReference shopRef;
-    private boolean[] photographedProblem;
+    private boolean[] photographedProblems;
     private String employeeLogin, employeePosition;
     private String shopName;
     private String equipmentName;
     static final int REQUEST_IMAGE_CAPTURE  = 1;
     File currentPicFile;
     String currentFileName;
+    private int photoIterator = 0;
     private StorageReference mStorageRef;
 
     @Override
@@ -92,6 +90,7 @@ public class QuestPointDynamic extends AppCompatActivity
             Bundle arguments = getIntent().getExtras();
             startTimeMillis = arguments.getLong("startTimeMillis");
             problemsCount = arguments.getInt("Количество обнаруженных проблем");
+            Log.i("problemsCount", Integer.toString(problemsCount));
         }
         nomerPunktaTextView.setText(getString(R.string.nomer_punkta_textview) + nomerPunkta);
         scrollLinearLayout = findViewById(R.id.scrollLinearLayout);
@@ -114,7 +113,11 @@ public class QuestPointDynamic extends AppCompatActivity
                 numOfPoints = longNumOfPoints.intValue();
                 Long longNumOfSubpoints = Long.valueOf((long) equipmentSnap.child(Integer.toString(nomerPunkta)).getValue());
                 numOfSubpoints = longNumOfSubpoints.intValue();
-                photographedProblem = new boolean[numOfSubpoints];
+                photographedProblems = new boolean[numOfSubpoints];
+                for(int i = 0; i < photographedProblems.length; i++)
+                {
+                    photographedProblems[i] = true;
+                }
                 addRadioGroups();
                 initClickListeners();
             }
@@ -171,43 +174,31 @@ public class QuestPointDynamic extends AppCompatActivity
     {
         nextPoint.setOnClickListener(new Button.OnClickListener(){
         @SuppressLint("DefaultLocale") @Override public void onClick(View v) {
-            if(nomerPunkta <= numOfPoints) {
+            if (AllRadiosChecked(numOfSubpoints)) //все радиогруппы были отмечены?
+            {
+                saveCheckingData(numOfSubpoints);
                 //checks points' count and refreshes the activity
-                //нужна проверка: все радиогруппы были отмечены?
-                if(AllRadiosChecked(numOfSubpoints))
-                {
-                    saveCheckingData(numOfSubpoints);
-                    qrStart(nomerPunkta, QuestMainActivity.childPositionG, QuestMainActivity.groupPositionG);
-                    /*if(allProbsPhotographed())
-                    {
-                    }
-                    else
-                    {
-                        Toast.makeText(PointDynamic.this,
-                                "Сфоткайте все", Toast.LENGTH_SHORT).show();
-                    }*/
-                }
-                else
-                {
-                    Toast.makeText(getApplicationContext(), "Заполните состояние каждого подпункта", Toast.LENGTH_LONG).show();
+                if (nomerPunkta > numOfPoints) {
+                    Toast.makeText(getApplicationContext(), "Конец линии", Toast.LENGTH_LONG).show();
+                    //переход на новое окно - QuestEndOfChecking - итоги проверки и следующие шаги
+                    nomerPunkta = 0;
+                    endTimeMillis = System.currentTimeMillis();
+                    durationMillis = endTimeMillis - startTimeMillis;
+                    checkDuration = String.format("%02d мин, %02d сек", TimeUnit.MILLISECONDS.toMinutes(durationMillis),
+                            TimeUnit.MILLISECONDS.toSeconds(durationMillis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(durationMillis)));
+                    Intent intent = new Intent(getApplicationContext(), QuestEndOfChecking.class);
+                    intent.putExtra("Количество обнаруженных проблем", problemsCount);
+                    intent.putExtra("Должность", employeePosition);
+                    intent.putExtra("Логин пользователя", employeeLogin);
+                    startActivity(intent);
                 }
             }
-            else {
-                Toast.makeText(getApplicationContext(), "Конец линии", Toast.LENGTH_LONG).show();
-                //переход на новое окно - QuestEndOfChecking - итоги проверки и следующие шаги
-                nomerPunkta = 0;
-                endTimeMillis = System.currentTimeMillis();
-                durationMillis = endTimeMillis - startTimeMillis;
-                checkDuration = String.format("%02d мин, %02d сек", TimeUnit.MILLISECONDS.toMinutes(durationMillis),
-                        TimeUnit.MILLISECONDS.toSeconds(durationMillis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(durationMillis))
-                );
-                Intent intent = new Intent(getApplicationContext(), QuestEndOfChecking.class);
-                intent.putExtra("Количество обнаруженнных проблем", problemsCount);
-                startActivity(intent);
+            else
+            {
+                Toast.makeText(getApplicationContext(), "Заполните состояние каждого подпункта", Toast.LENGTH_LONG).show();
             }
         }
         });
-
     }
 
     private boolean AllRadiosChecked(int numOfRadioGroups)
@@ -234,22 +225,25 @@ public class QuestPointDynamic extends AppCompatActivity
         intent.putExtra("Открой PointDynamic", "да");
         intent.putExtra("Логин пользователя", employeeLogin);
         intent.putExtra("Количество обнаруженных проблем", problemsCount);
+        Log.i("problemsCount", Integer.toString(problemsCount));
+
         intent.putExtra("Должность", employeePosition);
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivity(intent);
     }
 
-    private boolean allProbsPhotographed()
+    private int numOfUnphotographedProblem()
     {
         for(int i = 0; i < numOfSubpoints; i++)
         {
-            if(!photographedProblem[i])
-                return false;
+            if(!photographedProblems[i])
+                return i;//номер пункта (они начинаются с 1, а не с 0)
         }
-        return true;
+        return -1;
     }
 
     String problemPushKey;
+    List<String> problemPushKeys = new ArrayList<>();
     @SuppressLint("ResourceType")
     private void saveCheckingData(int numOfRadioGroups)
     { //this function is called in case all radiogroups are checked and
@@ -260,9 +254,11 @@ public class QuestPointDynamic extends AppCompatActivity
         for(int i = 1; i <= numOfRadioGroups; i++)
         {
             rg = findViewById(RADIO_GROUP_ID + i);
-            if(rg.getCheckedRadioButtonId() % 10 == 1 && !photographedProblem[i-1]) //case of a problem, not photographed
+            if(rg.getCheckedRadioButtonId() % 10 == 1/* && !photographedProblems[i-1]*/) //case of a problem, not photographed
             {
+                photographedProblems[i-1] = false;
                 problemsCount++;
+                problemsOnThisPunkt++;
                 //i - номер подпункта с проблемой
                 //nomerPunkta - номер пункта
                 //QuestMainActivity.childPositionG - the number of the equipment (номер линии)
@@ -274,21 +270,24 @@ public class QuestPointDynamic extends AppCompatActivity
                 time = sdf.format(new Date());
                 DatabaseReference newProbRef = problemsRef.push();
                 problemPushKey = newProbRef.getKey();
+                problemPushKeys.add(problemPushKey);
                 newProbRef.setValue(new Problem(employeeLogin, date, time, shopName, equipmentName, QuestMainActivity.groupPositionG, QuestMainActivity.childPositionG, nomerPunkta, i));
-                //прямо здесь надо выводить диалог с последующим вызовом камеры
-                dispatchTakePictureIntent();
-                /*subpointNumForDialogTitle = i;
-                showDialog(DIALOG_EXIT_FOR_CAMERA);*/ //и дальше запустится камера и сохранит фотку в хранилище
+                //сфоткайте проблему, следующие проблемы фоткаются через запуск камеры через onActivityResult
+                if(problemsOnThisPunkt == 1) {
+                    Toast.makeText(getApplicationContext(), "Сфотографируйте проблему пункта " + i, Toast.LENGTH_LONG).show();
+                    dispatchTakePictureIntent(problemPushKey);
+                }
 
-                //надо сделать такое - если уже чувак сфоткал и результат был норм,
-                //в след нажатии "Следующий пункт", не будет херни типа сфоткайте проблему
-                //бесконечно
             }
         }
+        //если все в порядке
+        if(numOfUnphotographedProblem() == -1)   qrStart(nomerPunkta, QuestMainActivity.childPositionG, QuestMainActivity.groupPositionG);
+
+
     }
 
     String currentPhotoPath; //the string of uri of where file is located
-    private File createImageFile() throws IOException {
+    private File createImageFile(String problemPushKey) throws IOException {
         // Create an image file name - our case will be the id of problem
 //        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmm").format(new Date());
         String problemKeyID = problemPushKey; //инициализируй эту переменную к unique key проблемы
@@ -305,21 +304,21 @@ public class QuestPointDynamic extends AppCompatActivity
         return image;
     }
 
-    private void dispatchTakePictureIntent() {
+    private void dispatchTakePictureIntent(String problemPushKey) {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             // Create the File where the photo should go
             File photoFile = null;
             try {
-                photoFile = createImageFile();
+                photoFile = createImageFile(problemPushKey);
             } catch (IOException ex) {
                 // Error occurred while creating the File
                 Toast.makeText(getApplicationContext(), "Error creating the file", Toast.LENGTH_LONG).show();
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
-                Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), "uz.akfa.cameratrial", photoFile);
+                Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), getString(R.string.package_name), photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 currentPicFile = photoFile;
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
@@ -336,10 +335,9 @@ public class QuestPointDynamic extends AppCompatActivity
             StorageReference probPicRef = mStorageRef.child("problem_pictures/" + file.getLastPathSegment());
             probPicRef.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            Toast.makeText(getApplicationContext(), "Upload success!", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), "Фотография загружена успешно", Toast.LENGTH_LONG).show();
                             File picToDelete = new File(currentPhotoPath);
                             picToDelete.delete();
-                            Log.i("Uploaded", "success");
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
@@ -356,6 +354,19 @@ public class QuestPointDynamic extends AppCompatActivity
                             //progressbar
                         }
                     });
+            photographedProblems[numOfUnphotographedProblem()] = true;
+            photoIterator++;
+            if(numOfUnphotographedProblem() != -1)
+            {
+                String problemPushKey = problemPushKeys.get(photoIterator-1);
+                Toast.makeText(getApplicationContext(), "Сфотографируйте проблему пункта " + (numOfUnphotographedProblem()+1), Toast.LENGTH_LONG).show();
+                dispatchTakePictureIntent(problemPushKey);
+            }
+            else
+            {
+                qrStart(nomerPunkta, QuestMainActivity.childPositionG, QuestMainActivity.groupPositionG);
+            }
+
         }
     }
 }

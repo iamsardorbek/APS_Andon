@@ -10,5 +10,9 @@ public class MachineLayoutActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_machine_layout);
+        initInstances();
+    }
+
+    private void initInstances() {
     }
 }

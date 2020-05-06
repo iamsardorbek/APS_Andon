@@ -71,6 +71,7 @@ public class QRScanner extends AppCompatActivity {
         employeeLogin = arguments.getString("Логин пользователя");
         employeePosition = arguments.getString("Должность");
         problemsCount = arguments.getInt("Количество обнаруженных проблем");
+        Log.i("problemsCount", Integer.toString(problemsCount));
         surfaceView = findViewById(R.id.camerapreview);
         textView = findViewById(R.id.textView);
         directionsTextView = findViewById(R.id.directionsTextView);
@@ -162,6 +163,7 @@ public class QRScanner extends AppCompatActivity {
                                             intent.putExtra("startTimeMillis", startTimeMillis);
                                             intent.putExtra("Логин пользователя", employeeLogin);
                                             intent.putExtra("Количество обнаруженных проблем", problemsCount);
+                                            Log.i("Кол-во проблем", String.valueOf(problemsCount));
                                             intent.putExtra("Должность", employeePosition);
                                             startActivity(intent);
                                         } else if (shouldOpenPointDynamic.equals("нет")) {

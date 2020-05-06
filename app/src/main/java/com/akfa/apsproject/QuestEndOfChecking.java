@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -47,6 +48,7 @@ public class QuestEndOfChecking extends AppCompatActivity {
         checkingDuration = findViewById(R.id.checkingDuration);
         Bundle arguments = getIntent().getExtras();
         int problemsCount = arguments.getInt("Количество обнаруженных проблем");
+        Log.i("ENDofCHECK", "Колво проб в конце " + String.valueOf(problemsCount));
         employeeLogin = getIntent().getExtras().getString("Логин пользователя");
         employeePosition = getIntent().getExtras().getString("Должность");
         toggle = setUpNavBar();
