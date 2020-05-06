@@ -11,7 +11,7 @@
         android:id="@+id/list_parent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/edit_red_accent"
+        android:background="@drawable/edit_white"
         android:drawableEnd="@drawable/arrow_down"
         android:drawableRight="@drawable/arrow_down"
         android:paddingVertical="5dp"
