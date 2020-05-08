@@ -1,5 +1,6 @@
 package com.akfa.apsproject;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.AnimationDrawable;
@@ -18,6 +19,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.DialogFragment;
 
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.database.DataSnapshot;
@@ -52,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             login = arguments.getString("Логин пользователя");
             DatabaseReference userRef = database.getReference("Users/" + login);
             initPultRefListener();
-            userRef.addListenerForSingleValueEvent(pultRefListener);
+            userRef.addValueEventListener(pultRefListener);
       }
       else {
             Toast.makeText(getApplicationContext(), "Ошибка, постарайтесь зайти снова", Toast.LENGTH_LONG).show();
@@ -292,21 +294,25 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     //4 случая ниже - для обработки больших кнопок: ремонт, отк, сырье, мастер
                     case R.id.repair_btn:
                         btn_condition[0]++;
+                        processCallForSpecialist(0);
                         updateButton(0);
                         break;
 
                     case R.id.quality_btn:
                         btn_condition[1]++;
+                        processCallForSpecialist(1);
                         updateButton(1);
                         break;
 
                     case R.id.raw_btn:
                         btn_condition[2]++;
+                        processCallForSpecialist(2);
                         updateButton(2);
                         break;
 
                     case R.id.master_btn:
                         btn_condition[3]++;
+                        processCallForSpecialist(3);
                         updateButton(3);
                         break;
                 }
@@ -345,6 +351,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         if(btn_condition[signalTypeIndex] == 1)
         {
             //startDialogFragment
+            DialogFragment dialogFragment = new ChooseProblematicStationDialog();
+            Bundle bundle = new Bundle();
+            bundle.putString("Логин пользователя", login);
+            dialogFragment.setArguments(bundle);
+            dialogFragment.show((MainActivity.this).getSupportFragmentManager(), "Выбор участка");
         }
     }
 }
