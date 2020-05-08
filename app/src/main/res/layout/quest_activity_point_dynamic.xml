@@ -15,16 +15,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:baselineAligned="false">
-
             <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="vertical"
                 tools:ignore="UselessParent">
 
@@ -42,26 +35,25 @@
                 <View
                     android:layout_width="wrap_content"
                     android:layout_height="2dp"
-                    android:background="@color/text"/>
+                    android:background="@color/text" />
 
                 <TextView
                     android:id="@+id/nomer_punkta"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_margin="10dp"
-                    android:padding="5dp"
-                    android:gravity="center"
                     android:layout_marginBottom="20dp"
+                    android:gravity="center"
+                    android:padding="5dp"
+                    android:text="@string/nomer_punkta_textview"
                     android:textColor="@color/text"
-                    android:text="@string/nomer_station_textview"
-                    android:textSize="18sp"/>
+                    android:textSize="18sp" />
 
                 <LinearLayout
                     android:id="@+id/scrollLinearLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:gravity="center">
+                    android:orientation="vertical">
 
                 </LinearLayout>
 
@@ -69,21 +61,19 @@
                     android:id="@+id/nextPoint"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="10dp"
-                    android:layout_marginTop="40dp"
-                    android:layout_marginBottom="10dp"
-                    android:textColor="@color/text"
-                    android:paddingRight="10dp"
+                    android:layout_gravity="bottom"
+                    android:layout_margin="10dp"
                     android:background="@drawable/edit_red_accent"
+                    android:drawableEnd="@drawable/next"
                     android:drawableRight="@drawable/next"
-                    android:text="@string/next_point_button_text"
                     android:paddingEnd="10dp"
-                    tools:ignore="RtlSymmetry"
-                    android:drawableEnd="@drawable/next" />
+                    android:paddingRight="10dp"
+                    android:text="@string/next_point_button_text"
+                    android:textColor="@color/text"
+                    tools:ignore="RtlSymmetry" />
 
             </LinearLayout>
 
-        </LinearLayout>
     </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
