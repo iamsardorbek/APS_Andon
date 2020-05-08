@@ -69,7 +69,7 @@ public class RepairerSeparateProblem extends AppCompatActivity {
                 stationNo.setText(Integer.toString(problem.getPoint()));
                 pointNo.setText(Integer.toString(problem.getSubpoint()));
                 employeeLogin.setText(problem.getDetected_by_employee());
-                date.setText(problem.getDate());
+                date.setText(problem.getDate() + " " + problem.getTime());
                 nomerPunkta = problem.getPoint();
                 equipmentName = problem.getEquipment_line_name();
                 equipmentNo = problem.getEquipment_line_no();
@@ -102,14 +102,6 @@ public class RepairerSeparateProblem extends AppCompatActivity {
         problemSolved.setOnClickListener(clickListener);
     }
 
-    private void startCameraApp()
-    {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, generateFileUri());
-        startActivityForResult(intent, REQUEST_CODE_PHOTO); //запускает активити из которого можно получить результаты
-        //эта конфигурация функции работает, взял ее
-    }
-
     private void qrStart(int nomerPunkta, int equipmentNo, int shopNo) {
         Intent intent = new Intent(getApplicationContext(), QRScanner.class);
         intent.putExtra("Номер цеха", shopNo);
@@ -120,52 +112,5 @@ public class RepairerSeparateProblem extends AppCompatActivity {
         intent.putExtra("ID проблемы в таблице Problems", IDOfTheProblem);
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivityForResult(intent, QRScanner.CHECK_PERSON_ON_SPOT);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            if (data == null) {
-                Log.e("Ошибка с интент", "Intent is null");
-            } else {
-                Log.d("Дир фотки", "Photo uri: " + data.getData());
-                Bundle bndl = data.getExtras();
-                if (bndl != null) {
-                    Object obj = data.getExtras().get("data");
-                    if (obj instanceof Bitmap) {
-                        Bitmap bitmap = (Bitmap) obj;
-                        Log.d("Размер фотки", "bitmap " + bitmap.getWidth() + " x " + bitmap.getHeight());
-                        //ivPhoto.setImageBitmap(bitmap); //вывести сделанную картинку в рамку внутри activity
-                    }
-                }
-            }
-        }
-        else if(resultCode == QRScanner.QR_OK)
-        {
-            Toast.makeText(getApplicationContext(), "Проблема исправлена!", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(getApplicationContext(), RepairersProblemsList.class);
-//надо перестартовать старый таск ProblemsListForRepairers
-            startActivity(intent);
-        }
-        else
-        {
-        }
-    }
-
-    private Uri generateFileUri() {
-        //В объект File directory помещаем созданную исключительно для нашего приложения
-        //директорию "ImgVidRec файлы" предназначенную для медиафайлов этого приложения
-        //это должно работать на всех Android API
-        File directory = new File(
-                
-                getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Фотографии проблем");
-        if (!directory.exists())
-            directory.mkdirs();
-
-        File file = new File(directory.getPath() + "/" + "photo_"
-                + System.currentTimeMillis() + ".jpg");
-        Log.d("Сгенерированный файл:", "fileName = " + file);
-        return Uri.fromFile(file);
     }
 }

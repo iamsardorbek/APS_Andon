@@ -48,120 +48,132 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
       setAndonsVisibility(false);
       if(arguments != null) //был ли сделан правилно логин и возвратил ли он оттуда номер пульта
       {
-        nomerPulta = Integer.parseInt(arguments.getString("Номер пульта"));
-          position = arguments.getString("Должность");
-          login = arguments.getString("Логин пользователя");
-          pultRef = database.getReference("Pults/" + nomerPulta);
-        //инициализируем listener базы данных, чтобы считать данные оттуда
-          //пока данные не пришли с базы, в pultInfo будет показываться "Загрузка данных"
-        pultRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot messages) {
-                setTitle("Пульт " + nomerPulta);
-                for (DataSnapshot oneMessage : messages.getChildren()){
-                    // This method is called once with the initial value and again
-                    // whenever data at this location is updated.
-                    String key = "";
-                    key = oneMessage.getKey();
-                    long val;
-                    val = (long) oneMessage.getValue();
-                    int indexOfChild = 0;
-                    switch(key) //switch from keys to indices
-                    {
-                        case "repair":
-                            indexOfChild = 0;
-                            break;
-                        case "quality":
-                            indexOfChild = 1;
-                            break;
-                        case "raw":
-                            indexOfChild = 2;
-                            break;
-                        case "master":
-                            indexOfChild = 3;
-                            break;
-                    }
-                    switch(indexOfChild) //set up the button background behaviour
-                    {// behaviour depends on the button index, its condition value number
-                        //that's why there are two switch statements
-                        case 0:
-                            switch((int) val)
-                            {
-                                case 0:
-                                    andons[indexOfChild].setBackgroundResource(R.drawable.remont_button);
-                                    break;
-                                case 1:
-                                    andons[indexOfChild].setBackgroundResource(R.drawable.remont_button_animation);
-                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                    problemAlert.start();
-                                    break;
-                                case 2:
-                                    andons[indexOfChild].setBackgroundResource(R.drawable.remont_button_alert);
-                                    break;
+            position = arguments.getString("Должность");
+            login = arguments.getString("Логин пользователя");
+            DatabaseReference userRef = database.getReference("Users/" + login);
+            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot userSnap) {
+                    nomerPulta = Integer.parseInt(userSnap.child("pultNo").getValue().toString());
+                    pultRef = database.getReference("Pults/" + nomerPulta);
+                    //инициализируем listener базы данных, чтобы считать данные оттуда
+                    //пока данные не пришли с базы, в pultInfo будет показываться "Загрузка данных"
+                    pultRef.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot messages) {
+                            setTitle("Пульт " + nomerPulta);
+                            for (DataSnapshot oneMessage : messages.getChildren()){
+                                // This method is called once with the initial value and again
+                                // whenever data at this location is updated.
+                                String key = "";
+                                key = oneMessage.getKey();
+                                long val;
+                                val = (long) oneMessage.getValue();
+                                int indexOfChild = 0;
+                                switch(key) //switch from keys to indices
+                                {
+                                    case "repair":
+                                        indexOfChild = 0;
+                                        break;
+                                    case "quality":
+                                        indexOfChild = 1;
+                                        break;
+                                    case "raw":
+                                        indexOfChild = 2;
+                                        break;
+                                    case "master":
+                                        indexOfChild = 3;
+                                        break;
+                                }
+                                switch(indexOfChild) //set up the button background behaviour
+                                {// behaviour depends on the button index, its condition value number
+                                    //that's why there are two switch statements
+                                    case 0:
+                                        switch((int) val)
+                                        {
+                                            case 0:
+                                                andons[indexOfChild].setBackgroundResource(R.drawable.remont_button);
+                                                break;
+                                            case 1:
+                                                andons[indexOfChild].setBackgroundResource(R.drawable.remont_button_animation);
+                                                AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
+                                                problemAlert.start();
+                                                break;
+                                            case 2:
+                                                andons[indexOfChild].setBackgroundResource(R.drawable.remont_button_alert);
+                                                break;
+                                        }
+                                        break;
+                                    case 1:
+                                        switch((int) val)
+                                        {
+                                            case 0:
+                                                andons[indexOfChild].setBackgroundResource(R.drawable.otk_button);
+                                                break;
+                                            case 1:
+                                                andons[indexOfChild].setBackgroundResource(R.drawable.otk_button_animation);
+                                                AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
+                                                problemAlert.start();
+                                                break;
+                                            case 2:
+                                                andons[indexOfChild].setBackgroundResource(R.drawable.otk_button_alert);
+                                                break;
+                                        }
+                                        break;
+                                    case 2:
+                                        switch((int) val)
+                                        {
+                                            case 0:
+                                                andons[indexOfChild].setBackgroundResource(R.drawable.materials_button);
+                                                break;
+                                            case 1:
+                                                andons[indexOfChild].setBackgroundResource(R.drawable.materials_button_animation);
+                                                AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
+                                                problemAlert.start();
+                                                break;
+                                            case 2:
+                                                andons[indexOfChild].setBackgroundResource(R.drawable.materials_button_alert);
+                                                break;
+                                        }
+                                        break;
+                                    case 3:
+                                        switch((int) val)
+                                        {
+                                            case 0:
+                                                andons[indexOfChild].setBackgroundResource(R.drawable.master_button);
+                                                break;
+                                            case 1:
+                                                andons[indexOfChild].setBackgroundResource(R.drawable.master_button_animation);
+                                                AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
+                                                problemAlert.start();
+                                                break;
+                                            case 2:
+                                                andons[indexOfChild].setBackgroundResource(R.drawable.master_button_alert);
+                                                break;
+                                        }
+                                        break;
+                                }
+                                btn_condition[indexOfChild] = (int) val;
+                                Log.d("FB Listener",  key + " " + val);
                             }
-                            break;
-                        case 1:
-                            switch((int) val)
-                            {
-                                case 0:
-                                    andons[indexOfChild].setBackgroundResource(R.drawable.otk_button);
-                                    break;
-                                case 1:
-                                    andons[indexOfChild].setBackgroundResource(R.drawable.otk_button_animation);
-                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                    problemAlert.start();
-                                    break;
-                                case 2:
-                                    andons[indexOfChild].setBackgroundResource(R.drawable.otk_button_alert);
-                                    break;
-                            }
-                            break;
-                        case 2:
-                            switch((int) val)
-                            {
-                                case 0:
-                                    andons[indexOfChild].setBackgroundResource(R.drawable.materials_button);
-                                    break;
-                                case 1:
-                                    andons[indexOfChild].setBackgroundResource(R.drawable.materials_button_animation);
-                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                    problemAlert.start();
-                                    break;
-                                case 2:
-                                    andons[indexOfChild].setBackgroundResource(R.drawable.materials_button_alert);
-                                    break;
-                            }
-                            break;
-                        case 3:
-                            switch((int) val)
-                            {
-                                case 0:
-                                    andons[indexOfChild].setBackgroundResource(R.drawable.master_button);
-                                    break;
-                                case 1:
-                                    andons[indexOfChild].setBackgroundResource(R.drawable.master_button_animation);
-                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                    problemAlert.start();
-                                    break;
-                                case 2:
-                                    andons[indexOfChild].setBackgroundResource(R.drawable.master_button_alert);
-                                    break;
-                            }
-                            break;
-                    }
-                    btn_condition[indexOfChild] = (int) val;
-                    Log.d("FB Listener",  key + " " + val);
-                }
-                //сделать элементы видимыми, когда уже считали все данные с БД
-                setAndonsVisibility(true);
-            }
+                            //сделать элементы видимыми, когда уже считали все данные с БД
+                            setAndonsVisibility(true);
+                        }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                // Failed to read value
-                Log.e("БАЗА ДАННЫХ", "Ошибка работы с базой данных", error.toException());
-            }
-        });
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+                            // Failed to read value
+                            Log.e("БАЗА ДАННЫХ", "Ошибка работы с базой данных", error.toException());
+                        }
+                    });
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+
       }
       else {
         Toast.makeText(getApplicationContext(), "Ошибка, постарайтесь зайти снова", Toast.LENGTH_LONG).show();

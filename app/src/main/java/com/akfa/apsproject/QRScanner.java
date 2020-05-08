@@ -94,7 +94,7 @@ public class QRScanner extends AppCompatActivity {
                 public void onDataChange(@NonNull DataSnapshot shop) {
                     String shopName = shop.child("shop_name").getValue().toString();
                     String equipmentName = shop.child("Equipment_lines/" + equipmentNumber + "/equipment_name").getValue().toString();
-                    String directionsText = "Подойдите к\n" + shopName + "\n" + equipmentName + "\nПункт №" + nomerPunkta;
+                    String directionsText = "Подойдите к\n" + shopName + "\n" + equipmentName + "\nУчасток №" + nomerPunkta;
                     directionsTextView.setText(directionsText);
                     codeToDetect = shop.child("Equipment_lines/" + equipmentNumber + "/QR_codes/qr_" + nomerPunkta).getValue().toString();
                     directionsTextView.setVisibility(View.VISIBLE);
@@ -211,9 +211,9 @@ public class QRScanner extends AppCompatActivity {
                                                 time = sdf.format(new Date());
                                                 problemRef.child("date_solved").setValue(date);
                                                 problemRef.child("time_solved").setValue(time);
-                                                Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
-                                                setResult(QR_OK, openProblemsList); //Если нету extra данных
-                                                startActivity(openProblemsList);
+                                                Intent openRepairerTakePhoto = new Intent(getApplicationContext(), RepairerTakePhoto.class);
+                                                openRepairerTakePhoto.putExtra("ID проблемы в таблице Problems", problemKey);
+                                                startActivity(openRepairerTakePhoto);
                                             }
                                             finish();
                                         } else {
@@ -240,7 +240,7 @@ public class QRScanner extends AppCompatActivity {
                                         }
                                         else
                                         {
-                                            textView.setText("Подойдите к 1-пункту линии, которую вы хотите проверить");
+                                            textView.setText("Подойдите к 1-участку линии, которую вы хотите проверить");
                                         }
                                     }
                                 }

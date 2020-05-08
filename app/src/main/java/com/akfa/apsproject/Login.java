@@ -57,7 +57,7 @@ public class Login extends AppCompatActivity {
                             if(user.child("password").getValue().toString().equals(password)) {
                                 if (user.child("position").getValue().toString().equals("operator")) {
                                     Intent openPult = new Intent(getApplicationContext(), MainActivity.class);
-                                    openPult.putExtra("Номер пульта", user.child("pultNo").getValue().toString());
+//                                    openPult.putExtra("Номер пульта", user.child("pultNo").getValue().toString());
                                     openPult.putExtra("Логин пользователя", login);
                                     openPult.putExtra("Должность", user.child("position").getValue().toString());
                                     startActivity(openPult);
