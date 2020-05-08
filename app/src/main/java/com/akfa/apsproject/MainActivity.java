@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference pultRef;
     private ActionBarDrawerToggle toggle;
-
+    ValueEventListener pultRefListener;
 
   @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,133 +51,134 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             position = arguments.getString("Должность");
             login = arguments.getString("Логин пользователя");
             DatabaseReference userRef = database.getReference("Users/" + login);
-            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot userSnap) {
-                    nomerPulta = Integer.parseInt(userSnap.child("pultNo").getValue().toString());
-                    pultRef = database.getReference("Pults/" + nomerPulta);
-                    //инициализируем listener базы данных, чтобы считать данные оттуда
-                    //пока данные не пришли с базы, в pultInfo будет показываться "Загрузка данных"
-                    pultRef.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot messages) {
-                            setTitle("Пульт " + nomerPulta);
-                            for (DataSnapshot oneMessage : messages.getChildren()){
-                                // This method is called once with the initial value and again
-                                // whenever data at this location is updated.
-                                String key = "";
-                                key = oneMessage.getKey();
-                                long val;
-                                val = (long) oneMessage.getValue();
-                                int indexOfChild = 0;
-                                switch(key) //switch from keys to indices
-                                {
-                                    case "repair":
-                                        indexOfChild = 0;
-                                        break;
-                                    case "quality":
-                                        indexOfChild = 1;
-                                        break;
-                                    case "raw":
-                                        indexOfChild = 2;
-                                        break;
-                                    case "master":
-                                        indexOfChild = 3;
-                                        break;
-                                }
-                                switch(indexOfChild) //set up the button background behaviour
-                                {// behaviour depends on the button index, its condition value number
-                                    //that's why there are two switch statements
-                                    case 0:
-                                        switch((int) val)
-                                        {
-                                            case 0:
-                                                andons[indexOfChild].setBackgroundResource(R.drawable.remont_button);
-                                                break;
-                                            case 1:
-                                                andons[indexOfChild].setBackgroundResource(R.drawable.remont_button_animation);
-                                                AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                                problemAlert.start();
-                                                break;
-                                            case 2:
-                                                andons[indexOfChild].setBackgroundResource(R.drawable.remont_button_alert);
-                                                break;
-                                        }
-                                        break;
-                                    case 1:
-                                        switch((int) val)
-                                        {
-                                            case 0:
-                                                andons[indexOfChild].setBackgroundResource(R.drawable.otk_button);
-                                                break;
-                                            case 1:
-                                                andons[indexOfChild].setBackgroundResource(R.drawable.otk_button_animation);
-                                                AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                                problemAlert.start();
-                                                break;
-                                            case 2:
-                                                andons[indexOfChild].setBackgroundResource(R.drawable.otk_button_alert);
-                                                break;
-                                        }
-                                        break;
-                                    case 2:
-                                        switch((int) val)
-                                        {
-                                            case 0:
-                                                andons[indexOfChild].setBackgroundResource(R.drawable.materials_button);
-                                                break;
-                                            case 1:
-                                                andons[indexOfChild].setBackgroundResource(R.drawable.materials_button_animation);
-                                                AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                                problemAlert.start();
-                                                break;
-                                            case 2:
-                                                andons[indexOfChild].setBackgroundResource(R.drawable.materials_button_alert);
-                                                break;
-                                        }
-                                        break;
-                                    case 3:
-                                        switch((int) val)
-                                        {
-                                            case 0:
-                                                andons[indexOfChild].setBackgroundResource(R.drawable.master_button);
-                                                break;
-                                            case 1:
-                                                andons[indexOfChild].setBackgroundResource(R.drawable.master_button_animation);
-                                                AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                                problemAlert.start();
-                                                break;
-                                            case 2:
-                                                andons[indexOfChild].setBackgroundResource(R.drawable.master_button_alert);
-                                                break;
-                                        }
-                                        break;
-                                }
-                                btn_condition[indexOfChild] = (int) val;
-                                Log.d("FB Listener",  key + " " + val);
-                            }
-                            //сделать элементы видимыми, когда уже считали все данные с БД
-                            setAndonsVisibility(true);
-                        }
-
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {
-                            // Failed to read value
-                            Log.e("БАЗА ДАННЫХ", "Ошибка работы с базой данных", error.toException());
-                        }
-                    });
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                }
-            });
-
+            initPultRefListener();
+            userRef.addListenerForSingleValueEvent(pultRefListener);
       }
       else {
-        Toast.makeText(getApplicationContext(), "Ошибка, постарайтесь зайти снова", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "Ошибка, постарайтесь зайти снова", Toast.LENGTH_LONG).show();
       }
+    }
+
+    private void initPultRefListener() {
+        pultRefListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot userSnap) {
+                nomerPulta = Integer.parseInt(userSnap.child("pultNo").getValue().toString());
+                pultRef = database.getReference("Pults/" + nomerPulta);
+                //инициализируем listener базы данных, чтобы считать данные оттуда
+                //пока данные не пришли с базы, в pultInfo будет показываться "Загрузка данных"
+                pultRef.addValueEventListener(
+                        new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot messages) {
+                                setTitle("Пульт " + nomerPulta);
+                                for (DataSnapshot oneMessage : messages.getChildren()){
+                                    // This method is called once with the initial value and again
+                                    // whenever data at this location is updated.
+                                    String key = "";
+                                    key = oneMessage.getKey();
+                                    long val;
+                                    val = (long) oneMessage.getValue();
+                                    int indexOfChild = 0;
+                                    switch(key) //switch from keys to indices
+                                    {
+                                        case "repair":
+                                            indexOfChild = 0;
+                                            break;
+                                        case "quality":
+                                            indexOfChild = 1;
+                                            break;
+                                        case "raw":
+                                            indexOfChild = 2;
+                                            break;
+                                        case "master":
+                                            indexOfChild = 3;
+                                            break;
+                                    }
+                                    switch(indexOfChild) //set up the button background behaviour
+                                    {// behaviour depends on the button index, its condition value number
+                                        //that's why there are two switch statements
+                                        case 0:
+                                            switch((int) val)
+                                            {
+                                                case 0:
+                                                    andons[indexOfChild].setBackgroundResource(R.drawable.remont_button);
+                                                    break;
+                                                case 1:
+                                                    andons[indexOfChild].setBackgroundResource(R.drawable.remont_button_animation);
+                                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
+                                                    problemAlert.start();
+                                                    break;
+                                                case 2:
+                                                    andons[indexOfChild].setBackgroundResource(R.drawable.remont_button_alert);
+                                                    break;
+                                            }
+                                            break;
+                                        case 1:
+                                            switch((int) val)
+                                            {
+                                                case 0:
+                                                    andons[indexOfChild].setBackgroundResource(R.drawable.otk_button);
+                                                    break;
+                                                case 1:
+                                                    andons[indexOfChild].setBackgroundResource(R.drawable.otk_button_animation);
+                                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
+                                                    problemAlert.start();
+                                                    break;
+                                                case 2:
+                                                    andons[indexOfChild].setBackgroundResource(R.drawable.otk_button_alert);
+                                                    break;
+                                            }
+                                            break;
+                                        case 2:
+                                            switch((int) val)
+                                            {
+                                                case 0:
+                                                    andons[indexOfChild].setBackgroundResource(R.drawable.materials_button);
+                                                    break;
+                                                case 1:
+                                                    andons[indexOfChild].setBackgroundResource(R.drawable.materials_button_animation);
+                                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
+                                                    problemAlert.start();
+                                                    break;
+                                                case 2:
+                                                    andons[indexOfChild].setBackgroundResource(R.drawable.materials_button_alert);
+                                                    break;
+                                            }
+                                            break;
+                                        case 3:
+                                            switch((int) val)
+                                            {
+                                                case 0:
+                                                    andons[indexOfChild].setBackgroundResource(R.drawable.master_button);
+                                                    break;
+                                                case 1:
+                                                    andons[indexOfChild].setBackgroundResource(R.drawable.master_button_animation);
+                                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
+                                                    problemAlert.start();
+                                                    break;
+                                                case 2:
+                                                    andons[indexOfChild].setBackgroundResource(R.drawable.master_button_alert);
+                                                    break;
+                                            }
+                                            break;
+                                    }
+                                    btn_condition[indexOfChild] = (int) val;
+                                    Log.d("FB Listener",  key + " " + val);
+                                }
+                                //сделать элементы видимыми, когда уже считали все данные с БД
+                                setAndonsVisibility(true);
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+                                // Failed to read value
+                                Log.e("БАЗА ДАННЫХ", "Ошибка работы с базой данных", error.toException());
+                            }
+                        });
+            }
+            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+        };
     }
 
     private void setAndonsVisibility(boolean visible) {
@@ -193,7 +194,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
       }
     }
 
-
     // find all variables
 
     protected void find_objects(){ //инициализация всех объектов layout
@@ -204,9 +204,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
         // set on click listener for variables
         for(Button andon : andons)
-        {
             andon.setOnTouchListener(this);
-        }
+
     }
 
     private ActionBarDrawerToggle setUpNavBar() {
@@ -266,10 +265,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        if(toggle.onOptionsItemSelected(item))
-            return true;
-
-        return super.onOptionsItemSelected(item);
+        if(toggle.onOptionsItemSelected(item)) return true;
+        else return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -320,7 +317,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     //запиши в базу данныъ новое состояние одной конкретной кнопки
 
     private void updateButton(int signalTypeIndex)
-    {
+    { //signalTypeIndex - тип сигнала (Ремонт, мастер, отк, сырье)
         // check status and drop for 0 if more than 2
         if ((btn_condition[signalTypeIndex] >= 3)){ //всего 3 состояния, если больше 2, переведи в 0
                 btn_condition[signalTypeIndex]=0;
@@ -341,5 +338,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 break;
         }
 
+    }
+
+    private void processCallForSpecialist(int signalTypeIndex)
+    {
+        if(btn_condition[signalTypeIndex] == 1)
+        {
+            //startDialogFragment
+        }
     }
 }
