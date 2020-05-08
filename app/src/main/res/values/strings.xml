@@ -33,7 +33,7 @@
     <string name="numberOfProblems">Обнаружено проблем: </string>
     <string name="checkingDuration">Время проверки: </string>
     <string name="equipment_name_textview">Название линии:</string>
-    <string name="nomer_punkta_textview">"Номер пункта: "</string>
+    <string name="nomer_station_textview">"Номер участка: "</string>
     <string name="next_point_button_text">Следующий пункт</string>
     <string name="qr_text_below_scanner">Поднесите камеру к QR коду</string>
     <string name="capture_image">Сфоткать проблему</string>

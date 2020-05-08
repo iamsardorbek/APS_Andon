@@ -61,8 +61,8 @@ public class RepairerSeparateProblem extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot problemDataSnapshot) {
                 TextView problemDescription = findViewById(R.id.problemDescription);
                 Problem problem = problemDataSnapshot.getValue(Problem.class);
-                String probDescripText = "Информация про проблему:\n" + problem.getShop_name() + "\n" + problem.getEquipment_line_name() + "\nПункт №" + problem.getPoint()
-                        + "\nПодпункт №" + problem.getSubpoint() + "\nОбнаружено сотрудником: " + problem.getDetected_by_employee() + "\nДата и Время обнаружения:" + problem.getDate() + " в " + problem.getTime();
+                String probDescripText = "Информация про проблему:\n" + problem.getShop_name() + "\n" + problem.getEquipment_line_name() + "\nУчасток №" + problem.getPoint()
+                        + "\nПункт №" + problem.getSubpoint() + "\nОбнаружено сотрудником: " + problem.getDetected_by_employee() + "\nДата и Время обнаружения:" + problem.getDate() + " в " + problem.getTime();
                 nomerPunkta = problem.getPoint();
                 equipmentName = problem.getEquipment_line_name();
                 equipmentNo = problem.getEquipment_line_no();
@@ -112,8 +112,10 @@ public class RepairerSeparateProblem extends AppCompatActivity {
 
     private void qrStart(int nomerPunkta, int equipmentNo, int shopNo) {
         Intent intent = new Intent(getApplicationContext(), QRScanner.class);
-        intent.putExtra("Номер цеха", shopName);
-        intent.putExtra("Номер линии", equipmentName);
+        intent.putExtra("Номер цеха", shopNo);
+        intent.putExtra("Номер линии", equipmentNo);
+        Log.w("SepProb shopNo", String.valueOf(shopNo));
+        Log.w("SepProb equiNo", String.valueOf(equipmentNo));
         intent.putExtra("Номер пункта", nomerPunkta);
         intent.putExtra("Открой PointDynamic", "нет");
         intent.putExtra("Логин пользователя", employeeLogin);

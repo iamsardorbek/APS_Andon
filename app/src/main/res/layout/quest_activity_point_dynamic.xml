@@ -53,14 +53,15 @@
                     android:gravity="center"
                     android:layout_marginBottom="20dp"
                     android:textColor="@color/text"
-                    android:text="@string/nomer_punkta_textview"
+                    android:text="@string/nomer_station_textview"
                     android:textSize="18sp"/>
 
                 <LinearLayout
                     android:id="@+id/scrollLinearLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:gravity="center">
 
                 </LinearLayout>
 
@@ -68,7 +69,9 @@
                     android:id="@+id/nextPoint"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
+                    android:layout_marginHorizontal="10dp"
+                    android:layout_marginTop="40dp"
+                    android:layout_marginBottom="10dp"
                     android:textColor="@color/text"
                     android:paddingRight="10dp"
                     android:background="@drawable/edit_red_accent"

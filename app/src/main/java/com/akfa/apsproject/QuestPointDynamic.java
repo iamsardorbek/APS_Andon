@@ -2,6 +2,7 @@ package com.akfa.apsproject;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
@@ -10,15 +11,19 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ViewAnimator;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
@@ -31,6 +36,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
@@ -45,7 +51,8 @@ import java.util.concurrent.TimeUnit;
 public class QuestPointDynamic extends AppCompatActivity
 {
     private final int RADIO_GROUP_ID = 5000;
-    private int nomerPunkta, numOfPoints = 0, numOfSubpoints = 0, problemsCount, problemsOnThisPunkt = 0, shopNo, equipmentNo;
+    //"station" - "участок"
+    private int stationNo, numOfStations = 0, numOfPunkts = 0, problemsCount, problemsOnThisStation = 0, shopNo, equipmentNo, photoIterator = 0;
     private long startTimeMillis, endTimeMillis, durationMillis;
     public static String checkDuration;
     private LinearLayout scrollLinearLayout;
@@ -55,14 +62,11 @@ public class QuestPointDynamic extends AppCompatActivity
     FirebaseDatabase db;
     DatabaseReference shopRef;
     private boolean[] photographedProblems;
-    private String employeeLogin, employeePosition;
-    private String shopName;
-    private String equipmentName;
+    private String employeeLogin, employeePosition, shopName, equipmentName, currentFileName;
     static final int REQUEST_IMAGE_CAPTURE  = 1;
     File currentPicFile;
-    String currentFileName;
-    private int photoIterator = 0;
     private StorageReference mStorageRef;
+    List<String> problemPushKeysOfTheWholeCheck;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,19 +84,21 @@ public class QuestPointDynamic extends AppCompatActivity
         nextPoint = findViewById(R.id.nextPoint);
         equipmentNameTextView = findViewById(R.id.equipmentName);
         nomerPunktaTextView = findViewById(R.id.nomer_punkta);
-        nomerPunkta = getIntent().getExtras().getInt("Номер пункта");
-        if(nomerPunkta == 1)
+        stationNo = getIntent().getExtras().getInt("Номер пункта");
+        if(stationNo == 1)
         {
             startTimeMillis = System.currentTimeMillis(); //эта фигня работает только для последнего активити
             problemsCount = 0;
+            problemPushKeysOfTheWholeCheck = new ArrayList<>();
         }
         else
         {
             Bundle arguments = getIntent().getExtras();
             startTimeMillis = arguments.getLong("startTimeMillis");
             problemsCount = arguments.getInt("Количество обнаруженных проблем");
+            problemPushKeysOfTheWholeCheck = arguments.getStringArrayList("Коды проблем");
         }
-        nomerPunktaTextView.setText(getString(R.string.nomer_punkta_textview) + nomerPunkta);
+        nomerPunktaTextView.setText(getString(R.string.nomer_station_textview) + stationNo);
         scrollLinearLayout = findViewById(R.id.scrollLinearLayout);
         employeeLogin = getIntent().getExtras().getString("Логин пользователя");
         employeePosition = getIntent().getExtras().getString("Должность");
@@ -112,10 +118,10 @@ public class QuestPointDynamic extends AppCompatActivity
                 equipmentNameTextView.setText(getString(R.string.equipment_name_textview) + " " + equipmentName);
                 //простое кастование не получается, поэтому приходится писать больше кода
                 Long longNumOfPoints = new Long((long) equipmentSnap.child("number_of_punkts").getValue());
-                numOfPoints = longNumOfPoints.intValue();
-                Long longNumOfSubpoints = Long.valueOf((long) equipmentSnap.child(Integer.toString(nomerPunkta)).getValue());
-                numOfSubpoints = longNumOfSubpoints.intValue();
-                photographedProblems = new boolean[numOfSubpoints];
+                numOfStations = longNumOfPoints.intValue();
+                Long longNumOfSubpoints = Long.valueOf((long) equipmentSnap.child(Integer.toString(stationNo)).getValue());
+                numOfPunkts = longNumOfSubpoints.intValue();
+                photographedProblems = new boolean[numOfPunkts];
                 for(int i = 0; i < photographedProblems.length; i++)
                 {
                     photographedProblems[i] = true;
@@ -132,63 +138,92 @@ public class QuestPointDynamic extends AppCompatActivity
     }
 
     private void addRadioGroups() {
-        for (int i = 1; i <= numOfSubpoints; i++) {
-            //creates radiobuttons for a given point with count nomerPunkta
+        for (int i = 1; i <= numOfPunkts; i++) {
+            //creates radiobuttons for a given point with count stationNo
             Context context = getApplicationContext(); //чтобы передать некоторым функциям как параметр
-            LinearLayout.LayoutParams layoutParams = new RadioGroup.LayoutParams(RadioGroup.LayoutParams.WRAP_CONTENT, RadioGroup.LayoutParams.WRAP_CONTENT);
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+            layoutParams.setMargins(20, 0, 20, 0);
             RadioGroup rg = new RadioGroup(context); //create the RadioGroup
-            rg.setId(RADIO_GROUP_ID + i); // На данный момент (10.04) айдишки подпунктов варируются 5000-5020
+            rg.setId(RADIO_GROUP_ID + i); // На данный момент (10.04) айдишки пунктов варируются 5000-5020
             //Id задается чтобы к элементу можно было обратиться позже в функции AllRadiosChecked
             rg.setOrientation(RadioGroup.HORIZONTAL);//or RadioGroup.VERTICAL
+            rg.setGravity(Gravity.CENTER_HORIZONTAL);
+            rg.setWeightSum(2);
+            rg.setPadding(50, 20, 50, 20);
 
             //-------Подпись Пункт №Х--------//
             @SuppressLint("ResourceType") String textColor = getResources().getString(R.color.text);
             TextView rgTitle = new TextView(context);
-            rgTitle.setText("Подпункт № " + i);
+            rgTitle.setText("Пункт № " + i);
             int RADIO_GROUP_ELEMENT_ID = 6000;
             rgTitle.setId(RADIO_GROUP_ELEMENT_ID + i * 10);
-            rgTitle.setTextColor(Color.parseColor(textColor));
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            rgTitle.setTextColor(Color.parseColor("#1F1C26"));
+            rgTitle.setBackgroundColor(Color.parseColor(textColor));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
             params.gravity = Gravity.CENTER_HORIZONTAL;
-            params.setMargins(20, 20, 20, 20);
+            params.setMargins(0, 0, 0, 0);
             rgTitle.setLayoutParams(params);
-            rg.addView(rgTitle, 0, layoutParams);
+            rgTitle.setGravity(Gravity.CENTER);
+            rgTitle.setPadding(0, 30, 0, 30);
+            scrollLinearLayout.addView(rgTitle);
 
             RadioButton[] rb = new RadioButton[2];
-            LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            buttonParams.setMargins(300, 0, 300, 0);
             //-------Radiobutton для Проблемы--------//
-            rb[0] = new RadioButton(context);
-            rb[0].setText("Проблема");
+            buttonParams.weight = 1;
+            LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            rb[0] = (RadioButton) inflater.inflate(R.layout.problem_radiobutton, null);
+            rb[0].setText("ПРОБЛЕМА");
             rb[0].setId(RADIO_GROUP_ELEMENT_ID + (i * 10) + 1);
-            rb[0].setTextColor(Color.parseColor(textColor));
-
             rb[0].setLayoutParams(buttonParams);
+            rb[0].setTextSize(15);
             //-------Radiobutton для Порядка--------//
-            rb[1] = new RadioButton(context);
-            rb[1].setText("Порядок");
+//            rb[1] = new RadioButton(context);
+            rb[1] = (RadioButton) inflater.inflate(R.layout.no_problem_radiobutton, null);
+            rb[1].setText("ПОРЯДОК");
+            rb[1].setTextSize(15);
             rb[1].setId(RADIO_GROUP_ELEMENT_ID + (i * 10) + 2);
-            rb[1].setTextColor(Color.parseColor(textColor));
             rb[1].setLayoutParams(buttonParams);
             //-------Добавим все созданные объекты в layout--------//
-            rg.addView(rb[0], 1, layoutParams);
-            rg.addView(rb[1], 2, layoutParams);
+            rg.addView(rb[0], 0, layoutParams);
+            rg.addView(rb[1], 1, layoutParams);
+            rg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(RadioGroup group, int checkedId) {
+                    if(checkedId % 10 == 1)
+                    {
+                        RadioButton rbProblem = findViewById(checkedId), rbNoProblem = findViewById(checkedId+1);
+                        rbProblem.setBackground(getDrawable(R.drawable.problem_radiobutton_checked));
+                        rbNoProblem.setBackground(getDrawable(R.drawable.no_problem_radiobutton));
+                    }
+                    else
+                    {
+                        RadioButton rbProblem = findViewById(checkedId-1), rbNoProblem = findViewById(checkedId);
+                        rbProblem.setBackground(getDrawable(R.drawable.problem_radiobutton));
+                        rbNoProblem.setBackground(getDrawable(R.drawable.no_problem_radiobutton_checked));
+
+                    }
+                }
+            });
             scrollLinearLayout.addView(rg);
         }
-        nomerPunkta++; //подготовим для следующего окна PointDynamic
+        stationNo++; //подготовим для следующего окна PointDynamic
     }
 
     private void initClickListeners()
     {
         nextPoint.setOnClickListener(new Button.OnClickListener(){
         @SuppressLint("DefaultLocale") @Override public void onClick(View v) {
-            if (AllRadiosChecked(numOfSubpoints)) //все радиогруппы были отмечены?
+            if (AllRadiosChecked(numOfPunkts)) //все радиогруппы были отмечены?
             {
-                saveCheckingData(numOfSubpoints);
+                saveCheckingData(numOfPunkts);
                 //checks points' count and refreshes the activity
-                if (nomerPunkta > numOfPoints) {
+                if (stationNo > numOfStations) {
                     Toast.makeText(getApplicationContext(), "Конец линии", Toast.LENGTH_LONG).show();
                     //переход на новое окно - QuestEndOfChecking - итоги проверки и следующие шаги
-                    nomerPunkta = 0;
+                    stationNo = 0;
                     endTimeMillis = System.currentTimeMillis();
                     durationMillis = endTimeMillis - startTimeMillis;
                     checkDuration = String.format("%02d мин, %02d сек", TimeUnit.MILLISECONDS.toMinutes(durationMillis),
@@ -198,18 +233,61 @@ public class QuestPointDynamic extends AppCompatActivity
                     intent.putExtra("Должность", employeePosition);
                     intent.putExtra("Логин пользователя", employeeLogin);
                     startActivity(intent);
+                    finish();
                 }
             }
             else
             {
-                Toast.makeText(getApplicationContext(), "Заполните состояние каждого подпункта", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "Заполните состояние каждого пункта", Toast.LENGTH_LONG).show();
             }
         }
         });
     }
 
+    @Override
+    public void onBackPressed() {
+        if(stationNo > 1) {
+            AlertDialog diaBox = AskOption();
+            diaBox.show();
+        }
+        else
+        {
+            super.onBackPressed();
+        }
+    }
+
+    private AlertDialog AskOption()
+    {
+        AlertDialog myQuittingDialogBox = new AlertDialog.Builder(this).setTitle("Закончить проверку").setMessage("Вы уверены, что хотите закончить проверку? Данные не будут сохранены.")
+                .setIcon(R.drawable.close)
+                .setPositiveButton("Да", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference("Problems");
+                        StorageReference problemsPicRef = mStorageRef.child("problem_pictures");
+                        for(String problemPushKey : problemPushKeysOfTheWholeCheck)
+                        {
+                            problemsRef.child(problemPushKey).setValue(null);
+                            StorageReference problemPicRef = mStorageRef.child("problem_pictures/" + problemPushKey + ".jpg");
+                            problemPicRef.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    //file deleted successfully
+                                }
+                            });
+                            finish();
+                    }}
+                })
+                .setNegativeButton("Нет", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .create();
+        return myQuittingDialogBox;
+    }
+
     private boolean AllRadiosChecked(int numOfRadioGroups)
-    { //проверка: все подпункты должны быть отмечены
+    { //проверка: все пункты должны быть отмечены
         RadioGroup rg;
         for(int i = 1; i <= numOfRadioGroups; i++)
         {
@@ -222,24 +300,26 @@ public class QuestPointDynamic extends AppCompatActivity
         return true;
     }
 
-    public void qrStart(int nomerPunkta, int equipmentNumber, int shopNumber) {
+    public void qrStart(int stationNo, int equipmentNumber, int shopNumber) {
         Intent intent = new Intent(getApplicationContext(), QRScanner.class);
         intent.putExtra("Номер цеха", shopNumber);
         intent.putExtra("Номер линии", equipmentNumber);
-        intent.putExtra("Номер пункта", nomerPunkta);
-        intent.putExtra("Количество пунктов", numOfPoints);
+        intent.putExtra("Номер пункта", stationNo);
+        intent.putExtra("Количество пунктов", numOfStations);
         intent.putExtra("startTimeMillis", startTimeMillis);
         intent.putExtra("Открой PointDynamic", "да");
         intent.putExtra("Логин пользователя", employeeLogin);
         intent.putExtra("Количество обнаруженных проблем", problemsCount);
         intent.putExtra("Должность", employeePosition);
+        intent.putStringArrayListExtra("Коды проблем", (ArrayList<String>) problemPushKeysOfTheWholeCheck);
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivity(intent);
+        finish();
     }
 
     private int numOfUnphotographedProblem()
     {
-        for(int i = 0; i < numOfSubpoints; i++)
+        for(int i = 0; i < numOfPunkts; i++)
         {
             if(!photographedProblems[i])
                 return i;//номер пункта (они начинаются с 1, а не с 0)
@@ -263,23 +343,24 @@ public class QuestPointDynamic extends AppCompatActivity
             {
                 photographedProblems[i-1] = false;
                 problemsCount++;
-                problemsOnThisPunkt++;
-                //i - номер подпункта с проблемой
-                //nomerPunkta - номер пункта
+                problemsOnThisStation++;
+                //i - номер пункта с проблемой
+                //stationNo - номер участка
                 //QuestMainActivity.childPositionG - the number of the equipment (номер линии)
                 //QuestMainActivity.groupPositionG - the number of the shop (номер цеха)
                 String date, time;
                 SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
                 date = sdf.format(new Date());
-                sdf = new SimpleDateFormat("HH:mm z");
+                sdf = new SimpleDateFormat("HH:mm");
                 time = sdf.format(new Date());
                 DatabaseReference newProbRef = problemsRef.push();
                 problemPushKey = newProbRef.getKey();
                 problemPushKeys.add(problemPushKey);
+                problemPushKeysOfTheWholeCheck.add(problemPushKey);
                 Log.i("MMp problemPushKey", problemPushKey);
-                newProbRef.setValue(new Problem(employeeLogin, date, time, shopName, equipmentName, QuestMainActivity.groupPositionG, QuestMainActivity.childPositionG, nomerPunkta, i));
+                newProbRef.setValue(new Problem(employeeLogin, date, time, shopName, equipmentName, QuestMainActivity.groupPositionG, QuestMainActivity.childPositionG, stationNo, i));
                 //сфоткайте проблему, следующие проблемы фоткаются через запуск камеры через onActivityResult
-                if(problemsOnThisPunkt == 1) {
+                if(problemsOnThisStation == 1) {
                     Toast.makeText(getApplicationContext(), "Сфотографируйте проблему пункта " + i, Toast.LENGTH_LONG).show();
                     dispatchTakePictureIntent(problemPushKey);
                 }
@@ -287,7 +368,7 @@ public class QuestPointDynamic extends AppCompatActivity
             }
         }
         //если все в порядке
-        if(numOfUnphotographedProblem() == -1)   qrStart(nomerPunkta, QuestMainActivity.childPositionG, QuestMainActivity.groupPositionG);
+        if(numOfUnphotographedProblem() == -1)   qrStart(stationNo, equipmentNo, shopNo);
 
 
     }
@@ -364,7 +445,7 @@ public class QuestPointDynamic extends AppCompatActivity
             }
             else
             {
-                qrStart(nomerPunkta, QuestMainActivity.childPositionG, QuestMainActivity.groupPositionG);
+                qrStart(stationNo, equipmentNo, shopNo);
             }
 
         }

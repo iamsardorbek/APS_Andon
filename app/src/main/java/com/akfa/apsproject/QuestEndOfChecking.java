@@ -48,7 +48,6 @@ public class QuestEndOfChecking extends AppCompatActivity {
         checkingDuration = findViewById(R.id.checkingDuration);
         Bundle arguments = getIntent().getExtras();
         int problemsCount = arguments.getInt("Количество обнаруженных проблем");
-        Log.i("ENDofCHECK", "Колво проб в конце " + String.valueOf(problemsCount));
         employeeLogin = getIntent().getExtras().getString("Логин пользователя");
         employeePosition = getIntent().getExtras().getString("Должность");
         toggle = setUpNavBar();
@@ -76,6 +75,9 @@ public class QuestEndOfChecking extends AppCompatActivity {
             public void onClick(View v) {
                 //Возвратиться на главное окно
                 Intent intent = new Intent(getApplicationContext(), QuestMainActivity.class);
+                intent.putExtra("Логин пользователя", employeeLogin);
+                intent.putExtra("Должность", employeePosition);
+
                 startActivity(intent);
             }
         });

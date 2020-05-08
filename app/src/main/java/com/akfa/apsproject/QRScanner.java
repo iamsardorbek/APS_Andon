@@ -2,6 +2,7 @@ package com.akfa.apsproject;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -15,10 +16,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
@@ -28,13 +31,14 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 public class QRScanner extends AppCompatActivity {
     public static final int CHECK_PERSON_ON_SPOT = 1, QR_OK = 13;
@@ -49,7 +53,7 @@ public class QRScanner extends AppCompatActivity {
     private long startTimeMillis;
     private String employeeLogin, employeePosition;
     List<EquipmentLine> equipmentLineList = new ArrayList<>();
-
+    List<String> problemPushKeysOfTheWholeCheck;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +71,8 @@ public class QRScanner extends AppCompatActivity {
         arguments = getIntent().getExtras();
         equipmentNumber = arguments.getInt("Номер линии");
         shopNumber = arguments.getInt("Номер цеха");
+        Log.w("QRScanner equiNo", String.valueOf(equipmentNumber));
+        Log.w("QRScanner shopNo", String.valueOf(shopNumber));
         nomerPunkta = arguments.getInt("Номер пункта");
         shouldOpenPointDynamic = arguments.getString("Открой PointDynamic");
         //на самом деле в адрес пункта нужно заложить полные названия цеха и линии, но пока на номерах
@@ -75,7 +81,7 @@ public class QRScanner extends AppCompatActivity {
         employeeLogin = arguments.getString("Логин пользователя");
         employeePosition = arguments.getString("Должность");
         problemsCount = arguments.getInt("Количество обнаруженных проблем");
-        Log.i("problemsCount", Integer.toString(problemsCount));
+        problemPushKeysOfTheWholeCheck = arguments.getStringArrayList("Коды проблем");
         surfaceView = findViewById(R.id.camerapreview);
         textView = findViewById(R.id.textView);
         directionsTextView = findViewById(R.id.directionsTextView);
@@ -190,6 +196,7 @@ public class QRScanner extends AppCompatActivity {
                                                 intent.putExtra("Номер линии", equipmentNumber);
                                                 intent.putExtra("Количество обнаруженных проблем", problemsCount);
                                                 intent.putExtra("Должность", employeePosition);
+                                                intent.putStringArrayListExtra("Коды проблем", (ArrayList<String>) problemPushKeysOfTheWholeCheck);
                                                 startActivity(intent);
                                             } else if (shouldOpenPointDynamic.equals("нет")) {
                                                 Bundle arguments = getIntent().getExtras();
@@ -227,6 +234,7 @@ public class QRScanner extends AppCompatActivity {
                                             intent.putExtra("Логин пользователя", employeeLogin);
                                             intent.putExtra("Количество обнаруженных проблем", problemsCount);
                                             intent.putExtra("Должность", employeePosition);
+                                            intent.putStringArrayListExtra("Коды проблем", (ArrayList<String>) problemPushKeysOfTheWholeCheck);
                                             startActivity(intent);
                                             finish();
                                         }
@@ -242,6 +250,50 @@ public class QRScanner extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(nomerPunkta > 1) {
+            AlertDialog diaBox = AskOption();
+            diaBox.show();
+        }
+        else
+        {
+            super.onBackPressed();
+        }
+    }
+
+    private AlertDialog AskOption()
+    {
+        AlertDialog myQuittingDialogBox = new AlertDialog.Builder(this).setTitle("Закончить проверку").setMessage("Вы уверены, что хотите закончить проверку? Данные не будут сохранены.")
+                .setIcon(R.drawable.close)
+                .setPositiveButton("Да", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference("Problems");
+                        for(String problemPushKey : problemPushKeysOfTheWholeCheck)
+                        {
+                            problemsRef.child(problemPushKey).setValue(null);
+                            StorageReference mStorageRef = FirebaseStorage.getInstance().getReference();
+                            StorageReference problemPicRef = mStorageRef.child("problem_pictures/" + problemPushKey + ".jpg");
+                            problemPicRef.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    //file deleted successfully
+                                }
+                            });
+                            finish();
+                        }
+                        finish();
+                    }
+                })
+                .setNegativeButton("Нет", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .create();
+        return myQuittingDialogBox;
     }
 
     private EquipmentLine detectedCodeAmongInitialPunkts(String codeFromQR) {

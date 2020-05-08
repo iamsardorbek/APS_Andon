@@ -6,4 +6,18 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
+    <style name="ProblemRadiobutton" parent="Widget.AppCompat.CompoundButton.RadioButton">
+        <item name="android:colorControlNormal">#000000</item>
+        <item name="android:colorControlActivated">#FFFFFF</item>
+        <item name="android:colorControlHighlight">#76373737</item>
+        <item name="android:textColorPrimaryDisableOnly">@color/white</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat</item>
+    </style>
+    <style name="NoProblemRadiobutton" parent="Widget.AppCompat.CompoundButton.RadioButton">
+        <item name="android:colorControlNormal">#000000</item>
+        <item name="android:colorControlActivated">#FFFFFF</item>
+        <item name="android:colorControlHighlight">#76373737</item>
+        <item name="android:textColorPrimaryDisableOnly">@color/white</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat</item>
+    </style>
 </resources>
