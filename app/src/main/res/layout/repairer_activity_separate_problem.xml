@@ -29,6 +29,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                android:orientation="horizontal"
                 android:layout_weight="2">
 
                 <TextView
@@ -219,7 +220,6 @@
             <Button
                 android:layout_marginTop="10dp"
                 android:background="@drawable/edit_red_accent"
-                android:drawableRight="@drawable/ic_check_box_black_24dp"
                 android:id="@+id/problemSolved"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -228,7 +228,6 @@
                 android:text="@string/problem_solved"
                 android:drawableEnd="@drawable/ic_check_box_black_24dp"
                 android:paddingEnd="10dp"
-                android:paddingRight="10dp"
                 tools:ignore="RtlSymmetry" />
 
         </LinearLayout>

@@ -76,4 +76,7 @@
     <string name="repairerProblemPointNumber">Пункт №:</string>
     <string name="repairerProblemEmployeeName">Обнаружено сотрудником:</string>
     <string name="repairerProblemTime">Время обнаружения:</string>
+    <string name="problematicStationDialog">Выберете участок на котором появилась проблема</string>
+    <string name="cancelButton">Отмена</string>
+    <string name="acceptButton">Подтвердить</string>
 </resources>
