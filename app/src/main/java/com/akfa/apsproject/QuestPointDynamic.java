@@ -4,14 +4,17 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -23,12 +26,17 @@ import android.widget.Toast;
 import android.widget.ViewAnimator;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -67,6 +75,7 @@ public class QuestPointDynamic extends AppCompatActivity
     File currentPicFile;
     private StorageReference mStorageRef;
     List<String> problemPushKeysOfTheWholeCheck;
+    ActionBarDrawerToggle toggle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +83,7 @@ public class QuestPointDynamic extends AppCompatActivity
         setContentView(R.layout.quest_activity_point_dynamic);
         initInstances();
         setEquipmentData();
+        toggle = setUpNavBar();
     }
 
     private void initInstances() {
@@ -104,6 +114,126 @@ public class QuestPointDynamic extends AppCompatActivity
         employeePosition = getIntent().getExtras().getString("Должность");
         shopNo = getIntent().getExtras().getInt("Номер цеха");
         equipmentNo = getIntent().getExtras().getInt("Номер линии");
+    }
+
+    private ActionBarDrawerToggle setUpNavBar() {
+        //---------код связанный с nav bar---------//
+        //настрой actionBar
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.show();
+        setTitle("Проверка линий");
+        //настрой сам навигейшн бар
+        final DrawerLayout drawerLayout;
+        ActionBarDrawerToggle toggle;
+        NavigationView navigationView;
+        drawerLayout = findViewById(R.id.quest_activity_point_dynamic);
+        toggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        navigationView = findViewById(R.id.nv);
+//        здесь адаптируем меню в нав баре в зависимости от уровня доступа пользователя: мастер/оператор, у ремонтника нет прав проверки
+        navigationView.getMenu().clear();
+        switch(employeePosition){
+            case "operator":
+                navigationView.inflateMenu(R.menu.operator_menu);
+                break;
+            case "master":
+                navigationView.inflateMenu(R.menu.master_menu);
+                break;
+            //other positions shouldn't be able to access checking page at all
+            //if some changes, u can add a case
+        }
+
+        //ниже действия, выполняемые при нажатиях на элементы нав бара
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+                if (id == R.id.check_equipment)
+                {
+                    drawerLayout.closeDrawer(GravityCompat.START); //когда нажали на саму проверку, нав бар просто закрывается
+                    Toast.makeText(getApplicationContext(), "Проверка линии уже в процессе", Toast.LENGTH_SHORT).show();
+                }
+                else
+                {
+                    AlertDialog diaBox = askOptionOnNavigationBarClicked(id, drawerLayout);
+                    diaBox.show();
+                }
+                return true;
+            }
+        });
+        return toggle;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        if(toggle.onOptionsItemSelected(item))
+            return true;
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private AlertDialog askOptionOnNavigationBarClicked(final int menuItemId, final DrawerLayout drawerLayout)
+    {
+        AlertDialog myQuittingDialogBox = new AlertDialog.Builder(this).setTitle("Закончить проверку").setMessage("Вы уверены, что хотите закончить проверку? Данные не будут сохранены.")
+                .setIcon(R.drawable.close)
+                .setPositiveButton("Да", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference("Problems");
+                        StorageReference problemsPicRef = mStorageRef.child("problem_pictures");
+                        for(String problemPushKey : problemPushKeysOfTheWholeCheck)
+                        {
+                            problemsRef.child(problemPushKey).setValue(null);
+                            StorageReference problemPicRef = mStorageRef.child("problem_pictures/" + problemPushKey + ".jpg");
+                            problemPicRef.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    //file deleted successfully
+                                }
+                            });
+
+                        }
+                        switch(menuItemId)
+                        {
+                            case R.id.pult:
+                                Intent openMainActivity = new Intent(getApplicationContext(), MainActivity.class);
+                                openMainActivity.putExtra("Логин пользователя", employeeLogin);
+                                openMainActivity.putExtra("Должность", employeePosition);
+                                startActivity(openMainActivity);
+                                break;
+                            case R.id.web_monitoring:
+                                Intent openFactoryCondition = new Intent(getApplicationContext(), FactoryCondition.class);
+                                openFactoryCondition.putExtra("Логин пользователя", employeeLogin);
+                                openFactoryCondition.putExtra("Должность", employeePosition);
+                                startActivity(openFactoryCondition);
+                                break;
+                            case R.id.about: //инфа про приложение и компанию и иинструкции может
+//                        Intent openAbout = new Intent(getApplicationContext(), About.class);
+//                        startActivity(openAbout);
+                                Toast.makeText(getApplicationContext(), "Приложение создано Akfa R&D в 2020 году в Ташкенте.",Toast.LENGTH_SHORT).show();
+                                break;
+                            case R.id.log_out: //возвращение в логин page
+                                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                                SharedPreferences.Editor editor = sharedPrefs.edit();
+                                editor.clear();
+                                editor.commit();
+                                Intent logOut = new Intent(getApplicationContext(), Login.class);
+                                logOut.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                                startActivity(logOut);
+                                break;
+                        }
+                        finish();
+                    }
+                })
+                .setNegativeButton("Нет", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .create();
+        return myQuittingDialogBox;
     }
 
     private void setEquipmentData()
@@ -246,12 +376,13 @@ public class QuestPointDynamic extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        if(stationNo > 1) {
+        if((stationNo-1) > 1) {
             AlertDialog diaBox = AskOption();
             diaBox.show();
         }
         else
         {
+            finish();
             super.onBackPressed();
         }
     }

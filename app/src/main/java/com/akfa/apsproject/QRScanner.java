@@ -254,7 +254,7 @@ public class QRScanner extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(nomerPunkta > 1) {
+        if(nomerPunkta > 1 && !shouldOpenPointDynamic.equals("нет")) {
             AlertDialog diaBox = AskOption();
             diaBox.show();
         }
