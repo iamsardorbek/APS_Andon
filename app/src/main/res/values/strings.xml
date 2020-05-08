@@ -71,7 +71,7 @@
     <string name="package_name">com.akfa.apsproject</string>
     <string name="scan_qr">Сканировать QR Код</string>
     <string name="repairerProblemShopName">Цех:</string>
-    <string name="repairerProblemMachineName">Оборудование:</string>
+    <string name="repairerProblemMachineName">Линия:</string>
     <string name="repairerProblemStationNumber">Участок №:</string>
     <string name="repairerProblemPointNumber">Пункт №:</string>
     <string name="repairerProblemEmployeeName">Обнаружено сотрудником:</string>

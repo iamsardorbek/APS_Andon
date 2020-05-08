@@ -29,13 +29,11 @@ import com.google.firebase.storage.StorageReference;
 import java.io.File;
 
 public class RepairerSeparateProblem extends AppCompatActivity {
-    Button takePic, problemSolved;
+    Button problemSolved;
     ImageView problemPic;
     Button.OnClickListener clickListener;
     private String IDOfTheProblem;
-    private boolean qrResultedSuccess;
     final int REQUEST_CODE_PHOTO = 1;
-    private final int DIALOG_EXIT_FOR_CAMERA = 0;
 
     DatabaseReference problemsRef, thisProblemRef;
     private int nomerPunkta, equipmentNo, shopNo;
@@ -59,16 +57,24 @@ public class RepairerSeparateProblem extends AppCompatActivity {
         thisProblemRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot problemDataSnapshot) {
-                TextView problemDescription = findViewById(R.id.problemDescription);
                 Problem problem = problemDataSnapshot.getValue(Problem.class);
-                String probDescripText = "Информация про проблему:\n" + problem.getShop_name() + "\n" + problem.getEquipment_line_name() + "\nУчасток №" + problem.getPoint()
-                        + "\nПункт №" + problem.getSubpoint() + "\nОбнаружено сотрудником: " + problem.getDetected_by_employee() + "\nДата и Время обнаружения:" + problem.getDate() + " в " + problem.getTime();
+                TextView shopNameTextView = findViewById(R.id.shop_name);
+                TextView equipmentNameTextView = findViewById(R.id.equipment_name);
+                TextView stationNo = findViewById(R.id.station_no);
+                TextView pointNo = findViewById(R.id.point_no);
+                TextView employeeLogin = findViewById(R.id.employee_login);
+                TextView date = findViewById(R.id.date);
+                shopNameTextView.setText(problem.getShop_name());
+                equipmentNameTextView.setText(problem.getEquipment_line_name());
+                stationNo.setText(Integer.toString(problem.getPoint()));
+                pointNo.setText(Integer.toString(problem.getSubpoint()));
+                employeeLogin.setText(problem.getDetected_by_employee());
+                date.setText(problem.getDate());
                 nomerPunkta = problem.getPoint();
                 equipmentName = problem.getEquipment_line_name();
                 equipmentNo = problem.getEquipment_line_no();
                 shopNo = problem.getShop_no();
                 shopName = problem.getShop_name();
-                problemDescription.setText(probDescripText);
             }
 
             @Override
@@ -76,7 +82,6 @@ public class RepairerSeparateProblem extends AppCompatActivity {
 
             }
         });
-        takePic = findViewById(R.id.takePic);
         problemSolved = findViewById(R.id.problemSolved);
         problemPic = findViewById(R.id.problemPic);
         StorageReference mStorageRef = FirebaseStorage.getInstance().getReference("problem_pictures");
@@ -88,9 +93,6 @@ public class RepairerSeparateProblem extends AppCompatActivity {
             public void onClick(View v) {
                 switch(v.getId())
                 {
-                    case R.id.takePic:
-                        startCameraApp();
-                        break;
                     case R.id.problemSolved:
                         qrStart(nomerPunkta, equipmentNo, shopNo);
                         finish();
@@ -98,8 +100,6 @@ public class RepairerSeparateProblem extends AppCompatActivity {
             }
         };
         problemSolved.setOnClickListener(clickListener);
-        takePic.setOnClickListener(clickListener);
-        qrResultedSuccess = false;
     }
 
     private void startCameraApp()
@@ -114,8 +114,6 @@ public class RepairerSeparateProblem extends AppCompatActivity {
         Intent intent = new Intent(getApplicationContext(), QRScanner.class);
         intent.putExtra("Номер цеха", shopNo);
         intent.putExtra("Номер линии", equipmentNo);
-        Log.w("SepProb shopNo", String.valueOf(shopNo));
-        Log.w("SepProb equiNo", String.valueOf(equipmentNo));
         intent.putExtra("Номер пункта", nomerPunkta);
         intent.putExtra("Открой PointDynamic", "нет");
         intent.putExtra("Логин пользователя", employeeLogin);
@@ -145,7 +143,6 @@ public class RepairerSeparateProblem extends AppCompatActivity {
         }
         else if(resultCode == QRScanner.QR_OK)
         {
-            qrResultedSuccess = true;
             Toast.makeText(getApplicationContext(), "Проблема исправлена!", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(getApplicationContext(), RepairersProblemsList.class);
 //надо перестартовать старый таск ProblemsListForRepairers
@@ -153,7 +150,6 @@ public class RepairerSeparateProblem extends AppCompatActivity {
         }
         else
         {
-            qrResultedSuccess = false;
         }
     }
 
