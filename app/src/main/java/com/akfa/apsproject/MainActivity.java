@@ -328,6 +328,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     }
     //запиши в базу данныъ новое состояние одной конкретной кнопки
 
+
     private void updateButton(int signalTypeIndex)
     { //signalTypeIndex - тип сигнала (Ремонт, мастер, отк, сырье)
         // check status and drop for 0 if more than 2
@@ -364,24 +365,52 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             dialogFragment.setArguments(bundle);
             dialogFragment.show(getSupportFragmentManager(), "Выбор участка");
         }
+        else if(btnBlocked[signalTypeIndex])
+        {
+            //если кнопка заблокирована(спец еще не пришел), высветить QR Code
+            btn_condition[signalTypeIndex]--; //вернуть в состояние "специалист не пришел, ПРОБЛЕМА"
+            //Открыть диалог с QR Кодом
+            DialogFragment dialogFragment = new QRCodeDialog();
+            Bundle bundle = new Bundle();
+            bundle.putString("Код", qrRandomCode);
+            dialogFragment.setArguments(bundle);
+            dialogFragment.show(getSupportFragmentManager(), "QR Код");
+        }
     }
 
+    String qrRandomCode;
     @Override
-    public void submitStationNo(int stationNo, String equipmentLineName, String shopName, String operatorLogin, int whoIsNeededIndex) {
-        //generate QR put in relevant ImageView
-        //block relevant button
-        //create a node for this urgent problem in database with whoWasCalledPosition, QRValueRandom, LineName, Shopname, StationNo, loginOperator
+    public void submitStationNo(int stationNo, String equipmentLineName, String shopName, String operatorLogin, final int whoIsNeededIndex) {
+        //вбить экстренную проблему в базу, QR генерируется внутри самого диалога
         DatabaseReference dbRef = database.getReference();
         DatabaseReference thisUrgentProblem = dbRef.child("Urgent_problems").push();
-        String qrRandomCode = GenerateRandomString.randomString(3);
+        qrRandomCode = GenerateRandomString.randomString(3);
         thisUrgentProblem.setValue(new UrgentProblem(stationNo, equipmentLineName, shopName, operatorLogin, positionTypes[whoIsNeededIndex], qrRandomCode));
-        DialogFragment dialogFragment = new QRCodeDialog();
-        Bundle bundle = new Bundle();
-        bundle.putString("Код", qrRandomCode);
-        dialogFragment.setArguments(bundle);
-        dialogFragment.show(getSupportFragmentManager(), "QR Код");
+        //задать состояние кнопки блокированным
+        btnBlocked[whoIsNeededIndex] = true;
+        thisUrgentProblem.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot thisUrgentProblemSnap) {
+                if(!thisUrgentProblemSnap.exists())
+                {
+                    btnBlocked[whoIsNeededIndex] = false;
+                    andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+        if(whoIsNeededIndex % 2 == 0)
+        {
+            andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(R.drawable.qrcode_drawable, 0, 0, 0);
+        }
+        else
+        {
+            andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.qrcode_drawable, 0);
+        }
     }
-
-
-
 }
