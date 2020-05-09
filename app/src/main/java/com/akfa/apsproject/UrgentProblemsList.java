@@ -101,16 +101,17 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
         toggle.syncState();
         actionBar.setDisplayHomeAsUpEnabled(true);
         navigationView = findViewById(R.id.nv);
-    switch(employeePosition){
-        case "operator":
-            navigationView.inflateMenu(R.menu.operator_menu);
-            break;
-        case "master":
-            navigationView.inflateMenu(R.menu.master_menu);
-            break;
+        navigationView.getMenu().clear();
+        switch(employeePosition){
+            case "operator":
+                navigationView.inflateMenu(R.menu.operator_menu);
+                break;
+            case "master":
+                navigationView.inflateMenu(R.menu.master_menu);
+                break;
         //other positions shouldn't be able to access checking page at all
         //if some changes, u can add a case
-    }
+        }
         //ниже действия, выполняемые при нажатиях на элементы нав бара
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
