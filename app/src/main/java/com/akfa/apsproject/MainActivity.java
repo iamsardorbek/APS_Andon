@@ -1,8 +1,8 @@
 package com.akfa.apsproject;
 
-import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -27,13 +27,20 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.journeyapps.barcodescanner.BarcodeEncoder;
 
-public class MainActivity extends AppCompatActivity implements View.OnTouchListener { //здесь пульты
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener, ChooseProblematicStationDialog.ChooseProblematicStationDialogListener { //здесь пульты
     // all variables
     int numOfButtons = 4;
     private Button[] andons = new Button[numOfButtons];
-    private int nomerPulta = 0;
     public Integer[] btn_condition = new Integer[numOfButtons];
+    private boolean[] btnBlocked = new boolean[numOfButtons];
+    private String[] positionTypes = {"repair", "quality", "raw", "master"};
+    private int nomerPulta = 0;
     private String login, position; //inter-activity strings
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference pultRef;
@@ -189,7 +196,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
           visibilityState = View.VISIBLE;
       else
           visibilityState = View.INVISIBLE;
-
       for(Button andon : andons)
       {
           andon.setVisibility(visibilityState);
@@ -322,6 +328,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     }
     //запиши в базу данныъ новое состояние одной конкретной кнопки
 
+
     private void updateButton(int signalTypeIndex)
     { //signalTypeIndex - тип сигнала (Ремонт, мастер, отк, сырье)
         // check status and drop for 0 if more than 2
@@ -354,8 +361,56 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             DialogFragment dialogFragment = new ChooseProblematicStationDialog();
             Bundle bundle = new Bundle();
             bundle.putString("Логин пользователя", login);
+            bundle.putInt("Вызвать специалиста", signalTypeIndex);
             dialogFragment.setArguments(bundle);
-            dialogFragment.show((MainActivity.this).getSupportFragmentManager(), "Выбор участка");
+            dialogFragment.show(getSupportFragmentManager(), "Выбор участка");
+        }
+        else if(btnBlocked[signalTypeIndex])
+        {
+            //если кнопка заблокирована(спец еще не пришел), высветить QR Code
+            btn_condition[signalTypeIndex]--; //вернуть в состояние "специалист не пришел, ПРОБЛЕМА"
+            //Открыть диалог с QR Кодом
+            DialogFragment dialogFragment = new QRCodeDialog();
+            Bundle bundle = new Bundle();
+            bundle.putString("Код", qrRandomCode);
+            dialogFragment.setArguments(bundle);
+            dialogFragment.show(getSupportFragmentManager(), "QR Код");
+        }
+    }
+
+    String qrRandomCode;
+    @Override
+    public void submitStationNo(int stationNo, String equipmentLineName, String shopName, String operatorLogin, final int whoIsNeededIndex) {
+        //вбить экстренную проблему в базу, QR генерируется внутри самого диалога
+        DatabaseReference dbRef = database.getReference();
+        DatabaseReference thisUrgentProblem = dbRef.child("Urgent_problems").push();
+        qrRandomCode = GenerateRandomString.randomString(3);
+        thisUrgentProblem.setValue(new UrgentProblem(stationNo, equipmentLineName, shopName, operatorLogin, positionTypes[whoIsNeededIndex], qrRandomCode));
+        //задать состояние кнопки блокированным
+        btnBlocked[whoIsNeededIndex] = true;
+        thisUrgentProblem.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot thisUrgentProblemSnap) {
+                if(!thisUrgentProblemSnap.exists())
+                {
+                    btnBlocked[whoIsNeededIndex] = false;
+                    andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+        if(whoIsNeededIndex % 2 == 0)
+        {
+            andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(R.drawable.qrcode_drawable, 0, 0, 0);
+        }
+        else
+        {
+            andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.qrcode_drawable, 0);
         }
     }
 }

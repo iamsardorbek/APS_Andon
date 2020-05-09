@@ -11,24 +11,26 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:background="@drawable/login_background">
+
         <Button
             android:id="@+id/repair_btn"
-            android:layout_weight="1.35"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="5dp"
+            android:layout_weight="5"
             android:background="@drawable/remont_button"
+            android:paddingLeft="50dp"
+            android:drawableLeft="@drawable/qrcode_drawable"
             android:text="@string/remoteButtonRed"
             android:textAlignment="center"
             android:textColor="@color/remoteButtonTextColor"
             android:textSize="40sp"
             android:textStyle="bold"
-            tools:ignore="RtlCompat"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="5dp" />
+            tools:ignore="RtlCompat" />
 
         <Button
             android:id="@+id/quality_btn"
-            android:layout_weight="1.35"
+            android:layout_weight="5"
             android:layout_marginRight="5dp"
             android:layout_marginTop="20dp"
             android:background="@drawable/otk_button"
@@ -38,6 +40,7 @@
             android:textSize="40sp"
             android:textStyle="bold"
             tools:ignore="RtlCompat"
+            android:paddingRight="50dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginEnd="5dp" />
@@ -45,8 +48,9 @@
         <Button
             android:layout_marginTop="20dp"
             android:id="@+id/raw_btn"
+            android:paddingLeft="50dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1.35"
+            android:layout_weight="5"
             android:layout_gravity="top"
             android:layout_marginLeft="5dp"
             android:background="@drawable/materials_button"
@@ -62,7 +66,8 @@
         <Button
             android:id="@+id/master_btn"
             android:layout_height="wrap_content"
-            android:layout_weight="1.35"
+            android:layout_weight="5"
+            android:paddingRight="50dp"
             android:layout_gravity="top"
             android:layout_marginRight="5dp"
             android:layout_marginTop="20dp"
