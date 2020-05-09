@@ -19,6 +19,10 @@ public class UrgentProblem {
         this.whoIsNeededLogin = whoIsNeededLogin;
     }
 
+    public int getStationNo() {
+        return stationNo;
+    }
+
     public String getShopName() {
         return shopName;
     }

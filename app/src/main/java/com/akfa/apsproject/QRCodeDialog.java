@@ -1,6 +1,7 @@
 package com.akfa.apsproject;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.Image;
 import android.os.Bundle;
@@ -25,13 +26,15 @@ import com.journeyapps.barcodescanner.BarcodeEncoder;
 public class QRCodeDialog extends DialogFragment {
     ImageView qrCode;
     Button back;
-
+    private QRCodeDialogListener listener;
+    private int whoIsNeededIndex;
     @SuppressLint("ClickableViewAccessibility")
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.dialog_qr_code, container, false);
         qrCode = view.findViewById(R.id.qr_code);
         back = view.findViewById(R.id.back);
         String qrCodeString = getArguments().getString("Код"); //encode in the QR code
+        whoIsNeededIndex = getArguments().getInt("Вызвать специалиста");
         Log.i("TAG", "Encoded text" + qrCodeString);
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
         try {
@@ -52,6 +55,7 @@ public class QRCodeDialog extends DialogFragment {
 
                         break;
                     case MotionEvent.ACTION_UP:
+                        listener.onQRCodeDialogCanceled(whoIsNeededIndex);
                         getDialog().dismiss();
                         break;
                 }
@@ -59,5 +63,20 @@ public class QRCodeDialog extends DialogFragment {
             }
         });
         return view;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        try {
+            listener = (QRCodeDialog.QRCodeDialogListener) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString() + "must implement QRCodeDialogListener");
+        }
+    }
+
+    public interface QRCodeDialogListener {
+        void onQRCodeDialogCanceled(int whoIsNeededIndex);
     }
 }

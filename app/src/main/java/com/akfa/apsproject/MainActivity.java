@@ -27,13 +27,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.MultiFormatWriter;
-import com.google.zxing.WriterException;
-import com.google.zxing.common.BitMatrix;
-import com.journeyapps.barcodescanner.BarcodeEncoder;
 
-public class MainActivity extends AppCompatActivity implements View.OnTouchListener, ChooseProblematicStationDialog.ChooseProblematicStationDialogListener { //здесь пульты
+//----------------PULT----------------//
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener, ChooseProblematicStationDialog.ChooseProblematicStationDialogListener, QRCodeDialog.QRCodeDialogListener { //здесь пульты
     // all variables
     int numOfButtons = 4;
     private Button[] andons = new Button[numOfButtons];
@@ -60,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             position = arguments.getString("Должность");
             login = arguments.getString("Логин пользователя");
             DatabaseReference userRef = database.getReference("Users/" + login);
+            setAndonStates();
             initPultRefListener();
             userRef.addValueEventListener(pultRefListener);
       }
@@ -103,6 +100,18 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                                         case "master":
                                             indexOfChild = 3;
                                             break;
+                                    }
+                                    if(val == 1) {
+                                        if (indexOfChild % 2 == 0) {
+                                            andons[indexOfChild].setCompoundDrawablesWithIntrinsicBounds(R.drawable.qrcode_drawable, 0, 0, 0);
+                                        } else {
+                                            andons[indexOfChild].setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.qrcode_drawable, 0);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        andons[indexOfChild].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+
                                     }
                                     switch(indexOfChild) //set up the button background behaviour
                                     {// behaviour depends on the button index, its condition value number
@@ -190,6 +199,74 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         };
     }
 
+    private void setAndonStates()
+    {
+        DatabaseReference urgentProblemsRef = FirebaseDatabase.getInstance().getReference("Urgent_problems");
+        urgentProblemsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot urgentProblemsSnap) {
+                for(DataSnapshot urgentProblemSnap : urgentProblemsSnap.getChildren())
+                {
+                    UrgentProblem urgentProblem = urgentProblemSnap.getValue(UrgentProblem.class);
+                    String operatorLogin = urgentProblem.getOperatorLogin();
+                    if(operatorLogin.equals(login))
+                    {
+                        String whoIsNeededLogin = urgentProblem.getWhoIsNeededLogin();
+                        int whoIsNeededIndex = 0;
+                        switch(whoIsNeededLogin) //switch from keys to indices
+                        {
+                            case "repair":
+                                whoIsNeededIndex = 0;
+                                break;
+                            case "quality":
+                                whoIsNeededIndex = 1;
+                                break;
+                            case "raw":
+                                whoIsNeededIndex = 2;
+                                break;
+                            case "master":
+                                whoIsNeededIndex = 3;
+                                break;
+                        }
+                        qrRandomCode[whoIsNeededIndex] = urgentProblem.getQrRandomCode();
+                        btnBlocked[whoIsNeededIndex] = true;
+                        btn_condition[whoIsNeededIndex] = 1;
+                        DatabaseReference thisUrgentProblem =  FirebaseDatabase.getInstance().getReference("Urgent_problems/" + urgentProblemSnap.getKey());
+                        final int finalWhoIsNeededIndex = whoIsNeededIndex;
+                        thisUrgentProblem.addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot thisUrgentProblemSnap) {
+                                if(!thisUrgentProblemSnap.exists())
+                                {
+                                    btnBlocked[finalWhoIsNeededIndex] = false;
+                                    btn_condition[finalWhoIsNeededIndex]++;
+                                    updateButton(finalWhoIsNeededIndex);
+                                    andons[finalWhoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        });
+                        if (whoIsNeededIndex % 2 == 0) {
+                            andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(R.drawable.qrcode_drawable, 0, 0, 0);
+                        } else {
+                            andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.qrcode_drawable, 0);
+                        }
+
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
     private void setAndonsVisibility(boolean visible) {
       int visibilityState;
       if(visible)
@@ -213,7 +290,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         // set on click listener for variables
         for(Button andon : andons)
             andon.setOnTouchListener(this);
-
     }
 
     private ActionBarDrawerToggle setUpNavBar() {
@@ -372,20 +448,20 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             //Открыть диалог с QR Кодом
             DialogFragment dialogFragment = new QRCodeDialog();
             Bundle bundle = new Bundle();
-            bundle.putString("Код", qrRandomCode);
+            bundle.putString("Код", qrRandomCode[signalTypeIndex]);
             dialogFragment.setArguments(bundle);
             dialogFragment.show(getSupportFragmentManager(), "QR Код");
         }
     }
 
-    String qrRandomCode;
+    String[] qrRandomCode = new String[numOfButtons];
     @Override
     public void submitStationNo(int stationNo, String equipmentLineName, String shopName, String operatorLogin, final int whoIsNeededIndex) {
         //вбить экстренную проблему в базу, QR генерируется внутри самого диалога
         DatabaseReference dbRef = database.getReference();
         DatabaseReference thisUrgentProblem = dbRef.child("Urgent_problems").push();
-        qrRandomCode = GenerateRandomString.randomString(3);
-        thisUrgentProblem.setValue(new UrgentProblem(stationNo, equipmentLineName, shopName, operatorLogin, positionTypes[whoIsNeededIndex], qrRandomCode));
+        qrRandomCode[whoIsNeededIndex] = GenerateRandomString.randomString(3);
+        thisUrgentProblem.setValue(new UrgentProblem(stationNo, equipmentLineName, shopName, operatorLogin, positionTypes[whoIsNeededIndex], qrRandomCode[whoIsNeededIndex]));
         //задать состояние кнопки блокированным
         btnBlocked[whoIsNeededIndex] = true;
         thisUrgentProblem.addValueEventListener(new ValueEventListener() {
@@ -395,7 +471,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 {
                     btnBlocked[whoIsNeededIndex] = false;
                     andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
-
+                    btn_condition[whoIsNeededIndex]++;
+                    updateButton(whoIsNeededIndex);
                 }
             }
 
@@ -412,5 +489,20 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         {
             andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.qrcode_drawable, 0);
         }
+    }
+
+    @Override
+    public void onDialogCanceled(int whoIsNeededIndex) {
+        btn_condition[whoIsNeededIndex]--;
+        updateButton(whoIsNeededIndex);
+//        andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+    }
+
+    @Override
+    public void onQRCodeDialogCanceled(int whoIsNeededIndex) {
+        btn_condition[whoIsNeededIndex]--;
+        updateButton(whoIsNeededIndex);
+        btn_condition[whoIsNeededIndex]++;
+        updateButton(whoIsNeededIndex);
     }
 }

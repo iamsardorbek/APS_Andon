@@ -18,7 +18,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup">
-        <activity android:name=".UrgentProblems"></activity>
+        <activity android:name=".UrgentProblemsList"></activity>
         <activity android:name=".RepairerTakePhoto" />
         <activity android:name=".MachineLayoutActivity" />
         <activity

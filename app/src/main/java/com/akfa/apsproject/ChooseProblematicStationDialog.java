@@ -106,6 +106,7 @@ public class ChooseProblematicStationDialog extends DialogFragment implements Vi
                 {
                     case R.id.cancel:
                         Log.i("TAG", "Confirmed");
+                        listener.onDialogCanceled(whoIsNeededIndex);
                         getDialog().dismiss();
                         break;
                     case R.id.confirm:
@@ -142,5 +143,6 @@ public class ChooseProblematicStationDialog extends DialogFragment implements Vi
 
     public interface ChooseProblematicStationDialogListener {
         void submitStationNo(int stationNo, String equipmentLineName, String shopName, String operatorLogin, int whoIsNeededIndex);
+        void onDialogCanceled(int whoIsNeededIndex);
     }
 }

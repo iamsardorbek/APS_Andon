@@ -77,6 +77,12 @@ public class FactoryCondition extends AppCompatActivity{
                 int id = item.getItemId();
                 switch(id)
                 {
+                    case R.id.urgent_problems:
+                        Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class);
+                        openUrgentProblemsList.putExtra("Логин пользователя", login);
+                        openUrgentProblemsList.putExtra("Должность", position);
+                        startActivity(openUrgentProblemsList);
+                        break;
                     case R.id.problems_list:
                         Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
                         openProblemsList.putExtra("Логин пользователя", login);

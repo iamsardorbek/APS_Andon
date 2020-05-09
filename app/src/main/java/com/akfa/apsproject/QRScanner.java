@@ -87,7 +87,7 @@ public class QRScanner extends AppCompatActivity {
         directionsTextView = findViewById(R.id.directionsTextView);
         directionsTextView.setVisibility(View.INVISIBLE);
         //codeToDetect, возьми данные из таблицы "QRCodes"
-        if(!shouldOpenPointDynamic.equals("другое")) {
+        if(shouldOpenPointDynamic.equals("да") || shouldOpenPointDynamic.equals("нет")) {
             DatabaseReference shopRef = FirebaseDatabase.getInstance().getReference().child("Shops/" + shopNumber);
             shopRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
@@ -178,7 +178,7 @@ public class QRScanner extends AppCompatActivity {
                         @Override
                         public void run() {
                             {
-                                String codeFromQR = qrCodes.valueAt(0).displayValue;
+                                final String codeFromQR = qrCodes.valueAt(0).displayValue;
                                 if(shouldOpenPointDynamic.equals("да") || shouldOpenPointDynamic.equals("нет")) {
                                     if (!detectedOnce) {
                                         if (areDetectedAndPassedCodesSame(codeFromQR, codeToDetect)) {
@@ -241,6 +241,56 @@ public class QRScanner extends AppCompatActivity {
                                         else
                                         {
                                             textView.setText("Подойдите к 1-участку линии, которую вы хотите проверить");
+                                        }
+                                    }
+                                }
+                                else if(shouldOpenPointDynamic.equals("срочная проблема"))
+                                {
+                                    if (!detectedOnce) {
+                                        //go through the qr codes of urgent probs
+                                        //create a dbref for that, take all qrs and compare. In case you find similarity, delete that node
+                                        final DatabaseReference urgentProbsRef = FirebaseDatabase.getInstance().getReference("Urgent_problems");
+                                        urgentProbsRef.addValueEventListener(new ValueEventListener() {
+                                            @Override
+                                            public void onDataChange(@NonNull DataSnapshot urgentProbsSnap) {
+                                                for(DataSnapshot singleUrgentProbSnap : urgentProbsSnap.getChildren())
+                                                {
+                                                    String codeToDetect = singleUrgentProbSnap.child("qrRandomCode").getValue().toString();
+                                                    if(codeFromQR.equals(codeToDetect))
+                                                    {
+                                                        String urgentProblemKey = singleUrgentProbSnap.getKey().toString();
+                                                        urgentProbsRef.child(urgentProblemKey).removeValue();
+                                                        detectedOnce = true;
+                                                        Toast.makeText(getApplicationContext(), "Специалист на месте", Toast.LENGTH_SHORT).show();
+                                                        finish();
+                                                        return;
+                                                    }
+                                                }
+                                            }
+
+                                            @Override
+                                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                            }
+                                        });
+                                        EquipmentLine equipmentLine = detectedCodeAmongInitialPunkts(codeFromQR);
+                                        if(equipmentLine != null)
+                                        {
+                                            vibration(500);
+                                            Intent intent = new Intent(getApplicationContext(), QuestPointDynamic.class);
+                                            intent.putExtra("Номер пункта", 1);
+                                            intent.putExtra("Номер цеха", equipmentLine.getShopNo());
+                                            intent.putExtra("Номер линии", equipmentLine.getEquipmentNo());
+                                            intent.putExtra("Логин пользователя", employeeLogin);
+                                            intent.putExtra("Количество обнаруженных проблем", problemsCount);
+                                            intent.putExtra("Должность", employeePosition);
+                                            intent.putStringArrayListExtra("Коды проблем", (ArrayList<String>) problemPushKeysOfTheWholeCheck);
+                                            startActivity(intent);
+                                            finish();
+                                        }
+                                        else
+                                        {
+                                            textView.setText("Отсканируйте код, сгенерированный на устройстве оператора, который сообщил о данной проблеме.");
                                         }
                                     }
                                 }

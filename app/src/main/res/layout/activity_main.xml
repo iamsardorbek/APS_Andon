@@ -20,7 +20,6 @@
             android:layout_weight="5"
             android:background="@drawable/remont_button"
             android:paddingLeft="50dp"
-            android:drawableLeft="@drawable/qrcode_drawable"
             android:text="@string/remoteButtonRed"
             android:textAlignment="center"
             android:textColor="@color/remoteButtonTextColor"

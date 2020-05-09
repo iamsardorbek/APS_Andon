@@ -1,5 +1,12 @@
 package com.akfa.apsproject;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -7,63 +14,76 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
-
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.ArrayList;
 import java.util.List;
 
-
-public class RepairersProblemsList extends AppCompatActivity {
+public class UrgentProblemsList extends AppCompatActivity implements View.OnTouchListener {
     private final int ID_TEXTVIEWS = 5000;
     private int problemCount = 0;
     private List<String> problemIDs;
-    private String login, position;
-    LinearLayout linearLayout;
-    View.OnClickListener textviewClickListener;
+    private Button qrScan;
     ActionBarDrawerToggle toggle;
+    LinearLayout linearLayout;
+    String employeeLogin, employeePosition;
+    View.OnClickListener textviewClickListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.repairers_activity_problems_list);
-        setTitle("Загрузка данных..."); //если нет проблем, надо сделать: нету проблем
-        toggle = setUpNavBar();
-        login = getIntent().getExtras().getString("Логин пользователя");
-        position = getIntent().getExtras().getString("Должность");
+        setContentView(R.layout.activity_urgent_problems_list);
+        qrScan = findViewById(R.id.qr_scan);
         linearLayout = findViewById(R.id.linearLayout);
-        problemIDs = new ArrayList<>();
+        qrScan.setOnTouchListener(this);
+        employeeLogin = getIntent().getExtras().getString("Логин пользователя");
+        employeePosition = getIntent().getExtras().getString("Должность");
+        toggle = setUpNavBar();
         textviewClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int nomerProblemy = v.getId() - ID_TEXTVIEWS;
-                Intent intent = new Intent(getApplicationContext(), RepairerSeparateProblem.class);
-                String IDOfSelectedProblem = problemIDs.get(nomerProblemy);
-                intent.putExtra("ID проблемы в таблице Problems", IDOfSelectedProblem);
-                intent.putExtra("Логин пользователя", login);
-                startActivity(intent);
+//                int nomerProblemy = v.getId() - ID_TEXTVIEWS;
+//                Intent intent = new Intent(getApplicationContext(), RepairerSeparateProblem.class);
+//                String IDOfSelectedProblem = problemIDs.get(nomerProblemy);
+//                intent.putExtra("ID проблемы в таблице Problems", IDOfSelectedProblem);
+//                intent.putExtra("Логин пользователя", employeeLogin);
+//                startActivity(intent);
+                Intent openQR = new Intent(getApplicationContext(), QRScanner.class);
+                openQR.putExtra("Открой PointDynamic", "срочная проблема");
+                openQR.putExtra("Должность", employeePosition);
+                openQR.putExtra("Логин пользователя", employeeLogin); //передавать логин пользователя взятый из Firebase
+                startActivity(openQR);
             }
         };
         addProblemsFromDatabase();
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        switch(event.getAction())
+        {
+            case MotionEvent.ACTION_DOWN:
+                break;
+            case MotionEvent.ACTION_UP:
+                Intent openQR = new Intent(getApplicationContext(), QRScanner.class);
+                openQR.putExtra("Открой PointDynamic", "срочная проблема");
+                openQR.putExtra("Должность", employeePosition);
+                openQR.putExtra("Логин пользователя", employeeLogin); //передавать логин пользователя взятый из Firebase
+                startActivity(openQR);
+                break;
+        }
+        return false;
     }
 
     private ActionBarDrawerToggle setUpNavBar() {
@@ -75,12 +95,22 @@ public class RepairersProblemsList extends AppCompatActivity {
         final DrawerLayout drawerLayout;
         ActionBarDrawerToggle toggle;
         NavigationView navigationView;
-        drawerLayout = findViewById(R.id.repairers_activity);
+        drawerLayout = findViewById(R.id.activity_urgent_problems_list);
         toggle = new ActionBarDrawerToggle(this, drawerLayout,R.string.open, R.string.close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
         actionBar.setDisplayHomeAsUpEnabled(true);
         navigationView = findViewById(R.id.nv);
+    switch(employeePosition){
+        case "operator":
+            navigationView.inflateMenu(R.menu.operator_menu);
+            break;
+        case "master":
+            navigationView.inflateMenu(R.menu.master_menu);
+            break;
+        //other positions shouldn't be able to access checking page at all
+        //if some changes, u can add a case
+    }
         //ниже действия, выполняемые при нажатиях на элементы нав бара
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -89,18 +119,23 @@ public class RepairersProblemsList extends AppCompatActivity {
                 switch(id)
                 {
                     case R.id.urgent_problems:
-                        Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                        openUrgentProblemsList.putExtra("Логин пользователя", login);
-                        openUrgentProblemsList.putExtra("Должность", position);
-                        startActivity(openUrgentProblemsList);
-                        break;
-                    case R.id.problems_list:
                         drawerLayout.closeDrawer(GravityCompat.START); //когда нажали на сам пульт, нав бар просто закрывается
+                    case R.id.problems_list:
+                        Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
+                        openProblemsList.putExtra("Логин пользователя", employeeLogin);
+                        openProblemsList.putExtra("Должность", employeePosition);
+                        startActivity(openProblemsList); //когда нажали на сам пульт, нав бар просто закрывается
+                        break;
+                    case R.id.check_equipment: //переход в модуль проверки
+                        Intent openQuest = new Intent(getApplicationContext(), QuestMainActivity.class);
+                        openQuest.putExtra("Логин пользователя", employeeLogin);
+                        openQuest.putExtra("Должность", employeePosition);
+                        startActivity(openQuest);
                         break;
                     case R.id.web_monitoring: //переход в модуль проверки
                         Intent openFactoryCondition = new Intent(getApplicationContext(), FactoryCondition.class);
-                        openFactoryCondition.putExtra("Логин пользователя", login);
-                        openFactoryCondition.putExtra("Должность", position);
+                        openFactoryCondition.putExtra("Логин пользователя", employeeLogin);
+                        openFactoryCondition.putExtra("Должность", employeePosition);
                         startActivity(openFactoryCondition);
                         break;
                     case R.id.about: //инфа про приложение и компанию и иинструкции может
@@ -136,22 +171,22 @@ public class RepairersProblemsList extends AppCompatActivity {
 
     private void addProblemsFromDatabase() {
         //на самом деле нужно взять количество строк в таблице problems
-        DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference().child("Problems");
-        problemsRef.addValueEventListener(new ValueEventListener() {
+        DatabaseReference urgentProblemsRef = FirebaseDatabase.getInstance().getReference().child("Urgent_problems");
+        urgentProblemsRef.addValueEventListener(new ValueEventListener() {
             @SuppressLint("ResourceType")
-            @Override public void onDataChange(@NonNull DataSnapshot problemsSnap) {
-                if(problemsSnap.getValue() == null)
+            @Override public void onDataChange(@NonNull DataSnapshot urgentProblemsSnap) {
+                if(urgentProblemsSnap.getValue() == null)
                 {
                     setTitle("Все проблемы решены");
                 }
                 else
                 {
-                    setTitle("Проблемы на линиях");
-                    for(DataSnapshot problemDataSnapshot : problemsSnap.getChildren())
+                    setTitle("Срочные проблемы на линиях");
+                    for(DataSnapshot urgentProblemSnap : urgentProblemsSnap.getChildren())
                     {
-                        Problem problem = problemDataSnapshot.getValue(Problem.class);
-                        problemIDs.add(problemDataSnapshot.getKey());
-                        String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nУчасток №" + problem.getPoint() + "\nПункт №" + problem.getSubpoint();
+                        UrgentProblem urgentProblem = urgentProblemSnap.getValue(UrgentProblem.class);
+//                        problemIDs.add(urgentProblemSnap.getKey());
+                        String problemInfoFromDB = "Цех: " + urgentProblem.getShopName() + "\nОборудование: " + urgentProblem.getEquipmentName() + "\nУчасток №" + urgentProblem.getStationNo();
                         TextView problemsInfo;
                         problemsInfo = new TextView(getApplicationContext());
                         problemsInfo.setText(problemInfoFromDB);
