@@ -79,4 +79,6 @@
     <string name="problematicStationDialog">Выберите участок на котором появилась проблема</string>
     <string name="cancelButton">Отмена</string>
     <string name="acceptButton">ОК</string>
+    <string name="dialog_qr_code_instruction">Дождитесь прихода специалиста. Вы сможете изменить состояние кнопки после того, как специалист отсканирует ваш QR код.</string>
+    <string name="back_button">Назад</string>
 </resources>

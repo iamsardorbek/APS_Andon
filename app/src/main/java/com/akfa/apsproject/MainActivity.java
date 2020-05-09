@@ -1,8 +1,8 @@
 package com.akfa.apsproject;
 
-import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -27,13 +27,20 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.journeyapps.barcodescanner.BarcodeEncoder;
 
-public class MainActivity extends AppCompatActivity implements View.OnTouchListener { //здесь пульты
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener, ChooseProblematicStationDialog.ChooseProblematicStationDialogListener { //здесь пульты
     // all variables
     int numOfButtons = 4;
     private Button[] andons = new Button[numOfButtons];
-    private int nomerPulta = 0;
     public Integer[] btn_condition = new Integer[numOfButtons];
+    private boolean[] btnBlocked = new boolean[numOfButtons];
+    private String[] positionTypes = {"repair", "quality", "raw", "master"};
+    private int nomerPulta = 0;
     private String login, position; //inter-activity strings
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference pultRef;
@@ -189,7 +196,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
           visibilityState = View.VISIBLE;
       else
           visibilityState = View.INVISIBLE;
-
       for(Button andon : andons)
       {
           andon.setVisibility(visibilityState);
@@ -354,8 +360,28 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             DialogFragment dialogFragment = new ChooseProblematicStationDialog();
             Bundle bundle = new Bundle();
             bundle.putString("Логин пользователя", login);
+            bundle.putInt("Вызвать специалиста", signalTypeIndex);
             dialogFragment.setArguments(bundle);
-            dialogFragment.show((MainActivity.this).getSupportFragmentManager(), "Выбор участка");
+            dialogFragment.show(getSupportFragmentManager(), "Выбор участка");
         }
     }
+
+    @Override
+    public void submitStationNo(int stationNo, String equipmentLineName, String shopName, String operatorLogin, int whoIsNeededIndex) {
+        //generate QR put in relevant ImageView
+        //block relevant button
+        //create a node for this urgent problem in database with whoWasCalledPosition, QRValueRandom, LineName, Shopname, StationNo, loginOperator
+        DatabaseReference dbRef = database.getReference();
+        DatabaseReference thisUrgentProblem = dbRef.child("Urgent_problems").push();
+        String qrRandomCode = GenerateRandomString.randomString(3);
+        thisUrgentProblem.setValue(new UrgentProblem(stationNo, equipmentLineName, shopName, operatorLogin, positionTypes[whoIsNeededIndex], qrRandomCode));
+        DialogFragment dialogFragment = new QRCodeDialog();
+        Bundle bundle = new Bundle();
+        bundle.putString("Код", qrRandomCode);
+        dialogFragment.setArguments(bundle);
+        dialogFragment.show(getSupportFragmentManager(), "QR Код");
+    }
+
+
+
 }
