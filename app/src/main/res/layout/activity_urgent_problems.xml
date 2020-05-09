@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/login_background"
+    android:orientation="vertical"
+    tools:context=".UrgentProblems">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_weight="50"
+        android:layout_height="0dp">
+
+    </ScrollView>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/urgentProblemsButton"
+        android:textColor="@color/text"
+        android:textStyle="bold"
+        android:layout_weight="1"
+        android:textSize="16sp"
+        android:layout_marginHorizontal="40dp"
+        android:layout_marginVertical="10dp"
+        android:padding="10dp"
+        android:gravity="center"
+        android:drawableStart="@drawable/camera_for_qr"
+        android:background="@drawable/edit_red_accent"/>
+
+</LinearLayout>

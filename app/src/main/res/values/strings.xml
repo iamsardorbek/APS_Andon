@@ -76,7 +76,8 @@
     <string name="repairerProblemPointNumber">Пункт №:</string>
     <string name="repairerProblemEmployeeName">Обнаружено сотрудником:</string>
     <string name="repairerProblemTime">Время обнаружения:</string>
-    <string name="problematicStationDialog">Выберите участок на котором появилась проблема</string>
+    <string name="problematicStationDialog">Выберете участок на котором появилась проблема</string>
     <string name="cancelButton">Отмена</string>
     <string name="acceptButton">ОК</string>
+    <string name="urgentProblemsButton">Сканировать QR код</string>
 </resources>

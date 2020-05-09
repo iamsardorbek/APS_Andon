@@ -18,8 +18,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup">
-        <activity android:name=".RepairerTakePhoto"></activity>
-        <activity android:name=".MachineLayoutActivity"></activity>
+        <activity android:name=".UrgentProblems"></activity>
+        <activity android:name=".RepairerTakePhoto" />
+        <activity android:name=".MachineLayoutActivity" />
         <activity
             android:name=".SplashNew"
             android:configChanges="orientation"
