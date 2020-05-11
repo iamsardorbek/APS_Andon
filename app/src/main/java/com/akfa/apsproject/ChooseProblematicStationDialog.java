@@ -1,5 +1,6 @@
 package com.akfa.apsproject;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
@@ -105,7 +106,6 @@ public class ChooseProblematicStationDialog extends DialogFragment implements Vi
                 switch (button.getId())
                 {
                     case R.id.cancel:
-                        Log.i("TAG", "Confirmed");
                         listener.onDialogCanceled(whoIsNeededIndex);
                         getDialog().dismiss();
                         break;
@@ -128,6 +128,17 @@ public class ChooseProblematicStationDialog extends DialogFragment implements Vi
         }
 
         return false;
+    }
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        return new Dialog(getActivity(), getTheme()){
+            @Override
+            public void onBackPressed() {
+                listener.onDialogCanceled(whoIsNeededIndex);
+                getDialog().dismiss();
+            }
+        };
     }
 
     @Override

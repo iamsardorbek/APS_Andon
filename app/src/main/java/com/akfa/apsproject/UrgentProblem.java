@@ -1,45 +1,56 @@
 package com.akfa.apsproject;
 
 public class UrgentProblem {
-    public String shopName, equipmentName, qrRandomCode, operatorLogin, whoIsNeededLogin;
-    public int stationNo;
+    public String shop_name, equipment_name, qr_random_code, operator_login, who_is_needed_login, date_detected, time_detected;
+    public int station_no;
 
     public UrgentProblem()
     {
 
     }
 
-    public UrgentProblem(int stationNo, String equipmentName, String shopName, String operatorLogin, String whoIsNeededLogin, String qrRandomCode)
+    public UrgentProblem(int stationNo, String equipmentName, String shopName, String operatorLogin, String whoIsNeededLogin, String qrRandomCode,
+                         String dateTimeDetected, String time_detected)
     {
-        this.stationNo = stationNo;
-        this.shopName = shopName;
-        this.equipmentName = equipmentName;
-        this.qrRandomCode = qrRandomCode;
-        this.operatorLogin = operatorLogin;
-        this.whoIsNeededLogin = whoIsNeededLogin;
+        this.station_no = stationNo;
+        this.shop_name = shopName;
+        this.equipment_name = equipmentName;
+        this.qr_random_code = qrRandomCode;
+        this.operator_login = operatorLogin;
+        this.who_is_needed_login = whoIsNeededLogin;
+        this.date_detected = dateTimeDetected;
+        this.time_detected = time_detected;
     }
 
-    public int getStationNo() {
-        return stationNo;
+    public int getStation_no() {
+        return station_no;
     }
 
-    public String getShopName() {
-        return shopName;
+    public String getShop_name() {
+        return shop_name;
     }
 
-    public String getEquipmentName() {
-        return equipmentName;
+    public String getEquipment_name() {
+        return equipment_name;
     }
 
-    public String getQrRandomCode() {
-        return qrRandomCode;
+    public String getQr_random_code() {
+        return qr_random_code;
     }
 
-    public String getOperatorLogin() {
-        return operatorLogin;
+    public String getOperator_login() {
+        return operator_login;
     }
 
-    public String getWhoIsNeededLogin() {
-        return whoIsNeededLogin;
+    public String getWho_is_needed_login() {
+        return who_is_needed_login;
+    }
+
+    public String getDate_detected() {
+        return date_detected;
+    }
+
+    public String getTime_detected() {
+        return time_detected;
     }
 }

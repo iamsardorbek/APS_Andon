@@ -176,6 +176,7 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
         urgentProblemsRef.addValueEventListener(new ValueEventListener() {
             @SuppressLint("ResourceType")
             @Override public void onDataChange(@NonNull DataSnapshot urgentProblemsSnap) {
+                linearLayout.removeAllViews(); //для обновления данных удали все результаты предыдущего поиска
                 if(urgentProblemsSnap.getValue() == null)
                 {
                     setTitle("Все проблемы решены");
@@ -187,7 +188,8 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
                     {
                         UrgentProblem urgentProblem = urgentProblemSnap.getValue(UrgentProblem.class);
 //                        problemIDs.add(urgentProblemSnap.getKey());
-                        String problemInfoFromDB = "Цех: " + urgentProblem.getShopName() + "\nОборудование: " + urgentProblem.getEquipmentName() + "\nУчасток №" + urgentProblem.getStationNo();
+                        String problemInfoFromDB = "Цех: " + urgentProblem.getShop_name() + "\nОборудование: " + urgentProblem.getEquipment_name() + "\nУчасток №" + urgentProblem.getStation_no()
+                                                        + "\nДата и время обнаружения: " + urgentProblem.getDate_detected() + " " + urgentProblem.getTime_detected();
                         TextView problemsInfo;
                         problemsInfo = new TextView(getApplicationContext());
                         problemsInfo.setText(problemInfoFromDB);

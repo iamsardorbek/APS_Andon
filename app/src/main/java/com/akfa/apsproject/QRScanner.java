@@ -1,6 +1,7 @@
 package com.akfa.apsproject;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -255,11 +256,19 @@ public class QRScanner extends AppCompatActivity {
                                             public void onDataChange(@NonNull DataSnapshot urgentProbsSnap) {
                                                 for(DataSnapshot singleUrgentProbSnap : urgentProbsSnap.getChildren())
                                                 {
-                                                    String codeToDetect = singleUrgentProbSnap.child("qrRandomCode").getValue().toString();
+                                                    String codeToDetect = singleUrgentProbSnap.child("qr_random_code").getValue().toString();
                                                     if(codeFromQR.equals(codeToDetect))
                                                     {
-                                                        String urgentProblemKey = singleUrgentProbSnap.getKey().toString();
-                                                        urgentProbsRef.child(urgentProblemKey).removeValue();
+                                                        String urgentProblemKey = singleUrgentProbSnap.getKey();
+                                                        final String dateSolved;
+                                                        @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+                                                        dateSolved = sdf.format(new Date());
+                                                        final String timeSolved;
+                                                        @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
+                                                        timeSolved = sdf1.format(new Date());
+                                                        urgentProbsRef.child(urgentProblemKey).child("date_specialist_came").setValue(dateSolved);
+                                                        urgentProbsRef.child(urgentProblemKey).child("time_specialist_came").setValue(timeSolved);
+//                                                        urgentProbsRef.child(urgentProblemKey).removeValue();
                                                         detectedOnce = true;
                                                         Toast.makeText(getApplicationContext(), "Специалист на месте", Toast.LENGTH_SHORT).show();
                                                         finish();

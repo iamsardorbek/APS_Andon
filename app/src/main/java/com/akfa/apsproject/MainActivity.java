@@ -1,8 +1,8 @@
 package com.akfa.apsproject;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -28,6 +28,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 //----------------PULT----------------//
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener, ChooseProblematicStationDialog.ChooseProblematicStationDialogListener, QRCodeDialog.QRCodeDialogListener { //здесь пульты
     // all variables
@@ -42,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     DatabaseReference pultRef;
     private ActionBarDrawerToggle toggle;
     ValueEventListener pultRefListener;
+    String[] qrRandomCode = new String[numOfButtons]; //для сохранения актуальных QR кодов
 
   @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -208,10 +212,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 for(DataSnapshot urgentProblemSnap : urgentProblemsSnap.getChildren())
                 {
                     UrgentProblem urgentProblem = urgentProblemSnap.getValue(UrgentProblem.class);
-                    String operatorLogin = urgentProblem.getOperatorLogin();
-                    if(operatorLogin.equals(login))
+                    String operatorLogin = urgentProblem.getOperator_login();
+                    if(operatorLogin.equals(login) && !urgentProblemSnap.child("date_specialist_came").exists())
                     {
-                        String whoIsNeededLogin = urgentProblem.getWhoIsNeededLogin();
+                        String whoIsNeededLogin = urgentProblem.getWho_is_needed_login();
                         int whoIsNeededIndex = 0;
                         switch(whoIsNeededLogin) //switch from keys to indices
                         {
@@ -228,7 +232,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                                 whoIsNeededIndex = 3;
                                 break;
                         }
-                        qrRandomCode[whoIsNeededIndex] = urgentProblem.getQrRandomCode();
+                        qrRandomCode[whoIsNeededIndex] = urgentProblem.getQr_random_code();
                         btnBlocked[whoIsNeededIndex] = true;
                         btn_condition[whoIsNeededIndex] = 1;
                         DatabaseReference thisUrgentProblem =  FirebaseDatabase.getInstance().getReference("Urgent_problems/" + urgentProblemSnap.getKey());
@@ -260,10 +264,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 }
             }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
+            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
     }
 
@@ -429,11 +430,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
     }
 
-    private void processCallForSpecialist(int signalTypeIndex)
+    private void processCallForSpecialist(final int signalTypeIndex)
     {
-        if(btn_condition[signalTypeIndex] == 1)
-        {
-            //startDialogFragment
+        if(btn_condition[signalTypeIndex] == 1 && !btnBlocked[signalTypeIndex])
+        {//хочет вызвать специалиста
+            //startDialogFragment для выбора проблемного участка и вызова специалиста
             DialogFragment dialogFragment = new ChooseProblematicStationDialog();
             Bundle bundle = new Bundle();
             bundle.putString("Логин пользователя", login);
@@ -441,33 +442,70 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             dialogFragment.setArguments(bundle);
             dialogFragment.show(getSupportFragmentManager(), "Выбор участка");
         }
-        else if(btnBlocked[signalTypeIndex])
+        else if(btnBlocked[signalTypeIndex] && btn_condition[signalTypeIndex] == 2)
         {
             //если кнопка заблокирована(спец еще не пришел), высветить QR Code
             btn_condition[signalTypeIndex]--; //вернуть в состояние "специалист не пришел, ПРОБЛЕМА"
             //Открыть диалог с QR Кодом
             DialogFragment dialogFragment = new QRCodeDialog();
             Bundle bundle = new Bundle();
-            bundle.putString("Код", qrRandomCode[signalTypeIndex]);
+            bundle.putString("Код", qrRandomCode[signalTypeIndex]); //
             dialogFragment.setArguments(bundle);
             dialogFragment.show(getSupportFragmentManager(), "QR Код");
         }
+        else if(btn_condition[signalTypeIndex] == 0 && !btnBlocked[signalTypeIndex])
+        {
+            //хочет нажать для индикации того, что проблема решена (Из горящего состояния перевести в нейтральное)
+            Log.i("TAG", "Problem reported SOLVED!");
+            final String dateSolved;
+            @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+            dateSolved = sdf.format(new Date());
+            final String timeSolved;
+            @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
+            timeSolved = sdf1.format(new Date());
+            final DatabaseReference urgentProblemsRef = database.getReference("Urgent_problems");
+            urgentProblemsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot urgentProblemsSnap) {
+                    for(DataSnapshot urgentProblemSnap : urgentProblemsSnap.getChildren())
+                    {
+                        String operatorLogin = urgentProblemSnap.child("operator_login").getValue(String.class);
+                        String whoIsNeededlogin = urgentProblemSnap.child("who_is_needed_login").getValue(String.class);
+                        //проверка (Query) выбор срочной проблемы с тем же логином оператора, специалиста и проблема, которая не решена еще
+                        if(operatorLogin.equals(login) && whoIsNeededlogin.equals(positionTypes[signalTypeIndex]) && !urgentProblemSnap.child("date_solved").exists()) {
+                            String thisProbKey = urgentProblemSnap.getKey();
+                            urgentProblemsRef.child(thisProbKey).child("date_solved").setValue(dateSolved);
+                            urgentProblemsRef.child(thisProbKey).child("time_solved").setValue(timeSolved);
+                            return;
+                        }
+                    }
+                }
+                @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+            });
+        }
     }
 
-    String[] qrRandomCode = new String[numOfButtons];
     @Override
     public void submitStationNo(int stationNo, String equipmentLineName, String shopName, String operatorLogin, final int whoIsNeededIndex) {
+      //интерфейс функция которая вызывается при успешном сообщении о существовании проблемы
         //вбить экстренную проблему в базу, QR генерируется внутри самого диалога
         DatabaseReference dbRef = database.getReference();
         DatabaseReference thisUrgentProblem = dbRef.child("Urgent_problems").push();
         qrRandomCode[whoIsNeededIndex] = GenerateRandomString.randomString(3);
-        thisUrgentProblem.setValue(new UrgentProblem(stationNo, equipmentLineName, shopName, operatorLogin, positionTypes[whoIsNeededIndex], qrRandomCode[whoIsNeededIndex]));
+        final String dateSolved;
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+        dateSolved = sdf.format(new Date());
+        final String timeSolved;
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
+        timeSolved = sdf1.format(new Date());
+        thisUrgentProblem.setValue(new UrgentProblem(stationNo, equipmentLineName, shopName, operatorLogin, positionTypes[whoIsNeededIndex], qrRandomCode[whoIsNeededIndex], dateSolved, timeSolved));
         //задать состояние кнопки блокированным
         btnBlocked[whoIsNeededIndex] = true;
+        //здесь же добавить БД слушатель, чтобы реагировал позднее на изменения в БД
         thisUrgentProblem.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot thisUrgentProblemSnap) {
-                if(!thisUrgentProblemSnap.exists())
+                if(thisUrgentProblemSnap.child("date_specialist_came").exists())
                 {
                     btnBlocked[whoIsNeededIndex] = false;
                     andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
@@ -493,6 +531,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
     @Override
     public void onDialogCanceled(int whoIsNeededIndex) {
+      //если диалог выбора проблемного участка отменили/закрыли
+        //возврати мигающую кнопку в нейтральное состояние
         btn_condition[whoIsNeededIndex]--;
         updateButton(whoIsNeededIndex);
 //        andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
@@ -500,6 +540,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
     @Override
     public void onQRCodeDialogCanceled(int whoIsNeededIndex) {
+        //чтобы кнопка не  зависла в состоянии ACTION_DOWN (серый фон при нажатии), переключим ее состояние на один вперед и обратно, чтобы
+        //pultRefListener отреагировал и вернул кнопку в нормализованное незажатое состояние
         btn_condition[whoIsNeededIndex]--;
         updateButton(whoIsNeededIndex);
         btn_condition[whoIsNeededIndex]++;

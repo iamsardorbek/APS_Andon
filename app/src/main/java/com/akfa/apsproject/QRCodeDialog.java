@@ -1,6 +1,7 @@
 package com.akfa.apsproject;
 
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.media.Image;
@@ -63,6 +64,17 @@ public class QRCodeDialog extends DialogFragment {
             }
         });
         return view;
+    }
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        return new Dialog(getActivity(), getTheme()){
+            @Override
+            public void onBackPressed() {
+                listener.onQRCodeDialogCanceled(whoIsNeededIndex);
+                getDialog().dismiss();
+            }
+        };
     }
 
     @Override
