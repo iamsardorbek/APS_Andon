@@ -71,7 +71,13 @@ public class Login extends AppCompatActivity {
                                     openProblemsList.putExtra("Логин пользователя", login);
                                     openProblemsList.putExtra("Должность", user.child("position").getValue().toString());
                                     startActivity(openProblemsList);
+                                } else if(user.child("position").getValue().toString().equals("raw") || user.child("position").getValue().toString().equals("quality")) {
+                                    Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class);
+                                    openUrgentProblemsList.putExtra("Логин пользователя", login);
+                                    openUrgentProblemsList.putExtra("Должность", user.child("position").getValue().toString());
+                                    startActivity(openUrgentProblemsList);
                                 }
+
                                 if(rememberMe.isChecked())
                                 {
                                     SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());

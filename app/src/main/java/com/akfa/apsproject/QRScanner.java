@@ -268,7 +268,6 @@ public class QRScanner extends AppCompatActivity {
                                                         timeSolved = sdf1.format(new Date());
                                                         urgentProbsRef.child(urgentProblemKey).child("date_specialist_came").setValue(dateSolved);
                                                         urgentProbsRef.child(urgentProblemKey).child("time_specialist_came").setValue(timeSolved);
-//                                                        urgentProbsRef.child(urgentProblemKey).removeValue();
                                                         detectedOnce = true;
                                                         Toast.makeText(getApplicationContext(), "Специалист на месте", Toast.LENGTH_SHORT).show();
                                                         finish();

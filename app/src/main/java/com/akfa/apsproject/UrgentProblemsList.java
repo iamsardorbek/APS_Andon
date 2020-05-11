@@ -109,6 +109,12 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
             case "master":
                 navigationView.inflateMenu(R.menu.master_menu);
                 break;
+            case "raw":
+                navigationView.inflateMenu(R.menu.raw_menu);
+                break;
+            case "quality":
+                navigationView.inflateMenu(R.menu.quality_menu);
+                break;
         //other positions shouldn't be able to access checking page at all
         //if some changes, u can add a case
         }
@@ -121,23 +127,27 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
                 {
                     case R.id.urgent_problems:
                         drawerLayout.closeDrawer(GravityCompat.START); //когда нажали на сам пульт, нав бар просто закрывается
+                        break;
                     case R.id.problems_list:
                         Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
                         openProblemsList.putExtra("Логин пользователя", employeeLogin);
                         openProblemsList.putExtra("Должность", employeePosition);
                         startActivity(openProblemsList); //когда нажали на сам пульт, нав бар просто закрывается
+                        finish();
                         break;
                     case R.id.check_equipment: //переход в модуль проверки
                         Intent openQuest = new Intent(getApplicationContext(), QuestMainActivity.class);
                         openQuest.putExtra("Логин пользователя", employeeLogin);
                         openQuest.putExtra("Должность", employeePosition);
                         startActivity(openQuest);
+                        finish();
                         break;
                     case R.id.web_monitoring: //переход в модуль проверки
                         Intent openFactoryCondition = new Intent(getApplicationContext(), FactoryCondition.class);
                         openFactoryCondition.putExtra("Логин пользователя", employeeLogin);
                         openFactoryCondition.putExtra("Должность", employeePosition);
                         startActivity(openFactoryCondition);
+                        finish();
                         break;
                     case R.id.about: //инфа про приложение и компанию и иинструкции может
 //                        Intent openAbout = new Intent(getApplicationContext(), About.class);
@@ -186,25 +196,29 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
                     setTitle("Срочные проблемы на линиях");
                     for(DataSnapshot urgentProblemSnap : urgentProblemsSnap.getChildren())
                     {
+
                         UrgentProblem urgentProblem = urgentProblemSnap.getValue(UrgentProblem.class);
+                        String whoIsNeededPosition = urgentProblem.getWho_is_needed_login();
+                        if(whoIsNeededPosition.equals(employeePosition) && !urgentProblemSnap.child("date_specialist_came").exists()) {
 //                        problemIDs.add(urgentProblemSnap.getKey());
-                        String problemInfoFromDB = "Цех: " + urgentProblem.getShop_name() + "\nОборудование: " + urgentProblem.getEquipment_name() + "\nУчасток №" + urgentProblem.getStation_no()
-                                                        + "\nДата и время обнаружения: " + urgentProblem.getDate_detected() + " " + urgentProblem.getTime_detected();
-                        TextView problemsInfo;
-                        problemsInfo = new TextView(getApplicationContext());
-                        problemsInfo.setText(problemInfoFromDB);
-                        problemsInfo.setPadding(25, 25, 25, 25);
-                        problemsInfo.setId(ID_TEXTVIEWS + problemCount);
-                        problemsInfo.setTextColor(Color.parseColor(getString(R.color.text)));
-                        problemsInfo.setTextSize(13);
-                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                        params.setMargins(20, 25, 20, 25);
-                        problemsInfo.setLayoutParams(params);
-                        problemsInfo.setClickable(true);
-                        problemsInfo.setBackgroundResource(R.drawable.list_group_layout);
-                        problemsInfo.setOnClickListener(textviewClickListener);
-                        linearLayout.addView(problemsInfo);
-                        problemCount++;
+                            String problemInfoFromDB = "Цех: " + urgentProblem.getShop_name() + "\nОборудование: " + urgentProblem.getEquipment_name() + "\nУчасток №" + urgentProblem.getStation_no()
+                                    + "\nДата и время обнаружения: " + urgentProblem.getDate_detected() + " " + urgentProblem.getTime_detected();
+                            TextView problemsInfo;
+                            problemsInfo = new TextView(getApplicationContext());
+                            problemsInfo.setText(problemInfoFromDB);
+                            problemsInfo.setPadding(25, 25, 25, 25);
+                            problemsInfo.setId(ID_TEXTVIEWS + problemCount);
+                            problemsInfo.setTextColor(Color.parseColor(getString(R.color.text)));
+                            problemsInfo.setTextSize(13);
+                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                            params.setMargins(20, 25, 20, 25);
+                            problemsInfo.setLayoutParams(params);
+                            problemsInfo.setClickable(true);
+                            problemsInfo.setBackgroundResource(R.drawable.list_group_layout);
+                            problemsInfo.setOnClickListener(textviewClickListener);
+                            linearLayout.addView(problemsInfo);
+                            problemCount++;
+                        }
                     }
                 }
             }

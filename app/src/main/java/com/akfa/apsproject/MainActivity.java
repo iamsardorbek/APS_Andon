@@ -36,230 +36,115 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     // all variables
     int numOfButtons = 4;
     private Button[] andons = new Button[numOfButtons];
-    public Integer[] btn_condition = new Integer[numOfButtons];
+    public Integer[] btnCondition = new Integer[numOfButtons];
     private boolean[] btnBlocked = new boolean[numOfButtons];
     private String[] positionTypes = {"repair", "quality", "raw", "master"};
-    private int nomerPulta = 0;
+    private String nomerPulta;
     private String login, position; //inter-activity strings
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference pultRef;
     private ActionBarDrawerToggle toggle;
     ValueEventListener pultRefListener;
     String[] qrRandomCode = new String[numOfButtons]; //для сохранения актуальных QR кодов
+    private int [][] andonDrawableReferences = {{R.drawable.remont_button, R.drawable.remont_button_animation, R.drawable.remont_button_alert},
+            {R.drawable.otk_button, R.drawable.otk_button_animation, R.drawable.otk_button_alert},
+            {R.drawable.materials_button, R.drawable.materials_button_animation, R.drawable.materials_button_alert},
+            {R.drawable.master_button, R.drawable.master_button_animation, R.drawable.master_button_alert}};
 
   @Override
     protected void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
       setContentView(R.layout.activity_main);
-      Bundle arguments = getIntent().getExtras();
-      find_objects(); //инициализация всех layout элементов
+      Bundle arguments = getIntent().getExtras(); //аргументы переданные с других активити
+      initInstances(); //инициализация всех layout элементов
       toggle = setUpNavBar(); //setUpNavBar выполняет все действия и возвращает toggle, которые используется в функции onOptionsItemSelected()
-      setAndonsVisibility(false);
-      if(arguments != null) //был ли сделан правилно логин и возвратил ли он оттуда номер пульта
+      setAndonsVisibility(false); //спрятать все кнопки-андоны
+      if(arguments != null) //был ли сделан правилно логин и возвратил ли он оттуда номер пульта, или передал ли предыдущий активити аргументы
       {
             position = arguments.getString("Должность");
             login = arguments.getString("Логин пользователя");
+            //создать ссылку на ветку пользователя для получения номера пульта
             DatabaseReference userRef = database.getReference("Users/" + login);
-            setAndonStates();
-            initPultRefListener();
+            initPultRefListener(); //инициализировать valuelistener для пульта этого юзера
             userRef.addValueEventListener(pultRefListener);
+            setAndonStates();
       }
-      else {
-            Toast.makeText(getApplicationContext(), "Ошибка, постарайтесь зайти снова", Toast.LENGTH_LONG).show();
-      }
+      else Toast.makeText(getApplicationContext(), "Ошибка, постарайтесь зайти снова", Toast.LENGTH_LONG).show();
     }
 
-    private void initPultRefListener() {
+    @SuppressLint("ClickableViewAccessibility")
+    protected void initInstances(){
+        //инициализация всех объектов layout и их listeners
+        andons[0] = findViewById(R.id.repair_btn);
+        andons[1] = findViewById(R.id.quality_btn);
+        andons[2] = findViewById(R.id.raw_btn);
+        andons[3] = findViewById(R.id.master_btn);
+
+        // set on click listener for variables
+        for(Button andon : andons)
+            andon.setOnTouchListener(this);
+    }
+
+    //нужна ли эта функция вообще?
+    private void initPultRefListener() { //инициализирует листенер состояний кнопок в БД в ветки "Pults"
         pultRefListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot userSnap) {
-                nomerPulta = Integer.parseInt(userSnap.child("pultNo").getValue().toString());
-                pultRef = database.getReference("Pults/" + nomerPulta);
-                //инициализируем listener базы данных, чтобы считать данные оттуда
+            @Override public void onDataChange(@NonNull DataSnapshot userSnap) {
+                nomerPulta = userSnap.child("pultNo").getValue().toString(); //считать номер пульта юзера, концепт номера пульта надо менять
+                Log.i("TAQ", "nomerPulta " + nomerPulta);
+                //инициализируем listener базы данных именно этого пульта, чтобы считать оттуда данные
                 //пока данные не пришли с базы, в pultInfo будет показываться "Загрузка данных"
-                pultRef.addValueEventListener(
-                        new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot messages) {
-                                setTitle("Пульт " + nomerPulta);
-                                for (DataSnapshot oneMessage : messages.getChildren()){
-                                    // This method is called once with the initial value and again
-                                    // whenever data at this location is updated.
-                                    String key = "";
-                                    key = oneMessage.getKey();
-                                    long val;
-                                    val = (long) oneMessage.getValue();
-                                    int indexOfChild = 0;
-                                    switch(key) //switch from keys to indices
-                                    {
-                                        case "repair":
-                                            indexOfChild = 0;
-                                            break;
-                                        case "quality":
-                                            indexOfChild = 1;
-                                            break;
-                                        case "raw":
-                                            indexOfChild = 2;
-                                            break;
-                                        case "master":
-                                            indexOfChild = 3;
-                                            break;
-                                    }
-                                    if(val == 1) {
-                                        if (indexOfChild % 2 == 0) {
-                                            andons[indexOfChild].setCompoundDrawablesWithIntrinsicBounds(R.drawable.qrcode_drawable, 0, 0, 0);
-                                        } else {
-                                            andons[indexOfChild].setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.qrcode_drawable, 0);
-                                        }
-                                    }
-                                    else
-                                    {
-                                        andons[indexOfChild].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+                pultRef = database.getReference("Pults/" + nomerPulta); //ссылка именно к этому пульту
+                pultRef.addValueEventListener(new ValueEventListener() {
+                    @Override public void onDataChange(@NonNull DataSnapshot pultButtonStates) {
+                        setTitle("Пульт " + nomerPulta); //app bar текст задаем. напр.: "Пульт 1"
+                        //цикл ниже пройдется по каждой кнопке этого пульта
+                        for (DataSnapshot buttonStateSnap : pultButtonStates.getChildren()){
+                            //ветка отдельной кнопки (мастер, ремонт, отк, сырье) именно этого пульта
+                            String whoIsNeededPosition = buttonStateSnap.getKey();
+                            int whoIsNeededIndex = renderWhoIsNeededIndex(whoIsNeededPosition);
+                            Log.i("TAQ", "whoIsNeededIndex " + whoIsNeededIndex);
+                            int buttonState = Integer.parseInt(buttonStateSnap.getValue().toString());
+                            Log.i("TAQ", "buttonState " + buttonState);
 
-                                    }
-                                    switch(indexOfChild) //set up the button background behaviour
-                                    {// behaviour depends on the button index, its condition value number
-                                        //that's why there are two switch statements
-                                        case 0:
-                                            switch((int) val)
-                                            {
-                                                case 0:
-                                                    andons[indexOfChild].setBackgroundResource(R.drawable.remont_button);
-                                                    break;
-                                                case 1:
-                                                    andons[indexOfChild].setBackgroundResource(R.drawable.remont_button_animation);
-                                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                                    problemAlert.start();
-                                                    break;
-                                                case 2:
-                                                    andons[indexOfChild].setBackgroundResource(R.drawable.remont_button_alert);
-                                                    break;
-                                            }
-                                            break;
-                                        case 1:
-                                            switch((int) val)
-                                            {
-                                                case 0:
-                                                    andons[indexOfChild].setBackgroundResource(R.drawable.otk_button);
-                                                    break;
-                                                case 1:
-                                                    andons[indexOfChild].setBackgroundResource(R.drawable.otk_button_animation);
-                                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                                    problemAlert.start();
-                                                    break;
-                                                case 2:
-                                                    andons[indexOfChild].setBackgroundResource(R.drawable.otk_button_alert);
-                                                    break;
-                                            }
-                                            break;
-                                        case 2:
-                                            switch((int) val)
-                                            {
-                                                case 0:
-                                                    andons[indexOfChild].setBackgroundResource(R.drawable.materials_button);
-                                                    break;
-                                                case 1:
-                                                    andons[indexOfChild].setBackgroundResource(R.drawable.materials_button_animation);
-                                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                                    problemAlert.start();
-                                                    break;
-                                                case 2:
-                                                    andons[indexOfChild].setBackgroundResource(R.drawable.materials_button_alert);
-                                                    break;
-                                            }
-                                            break;
-                                        case 3:
-                                            switch((int) val)
-                                            {
-                                                case 0:
-                                                    andons[indexOfChild].setBackgroundResource(R.drawable.master_button);
-                                                    break;
-                                                case 1:
-                                                    andons[indexOfChild].setBackgroundResource(R.drawable.master_button_animation);
-                                                    AnimationDrawable problemAlert = (AnimationDrawable) andons[indexOfChild].getBackground();
-                                                    problemAlert.start();
-                                                    break;
-                                                case 2:
-                                                    andons[indexOfChild].setBackgroundResource(R.drawable.master_button_alert);
-                                                    break;
-                                            }
-                                            break;
-                                    }
-                                    btn_condition[indexOfChild] = (int) val;
-                                    Log.d("FB Listener",  key + " " + val);
-                                }
-                                //сделать элементы видимыми, когда уже считали все данные с БД
-                                setAndonsVisibility(true);
-                            }
+                            setAndonBackground(whoIsNeededIndex, buttonState); //синхронизовать внешнее состояние данной кнопки с состоянием в БД
+                        }
+                        setAndonsVisibility(true); //когда уже считали все данные с БД, сделать элементы видимыми
 
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {
-                                // Failed to read value
-                                Log.e("БАЗА ДАННЫХ", "Ошибка работы с базой данных", error.toException());
-                            }
-                        });
+                    }
+                    @Override public void onCancelled(@NonNull DatabaseError error) { }
+                });
             }
             @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
         };
     }
-
+//can you merge these two function listeners?
     private void setAndonStates()
     {
-        DatabaseReference urgentProblemsRef = FirebaseDatabase.getInstance().getReference("Urgent_problems");
+        //функция срабатывает при запуске активити единожды, ОДНАКО имеется внутри асинхронный листенер
+        //инициализируй состояния кнопок в зависимости от ветки Urgent_problems
+        DatabaseReference urgentProblemsRef = database.getReference("Urgent_problems"); //ссылка на все срочные проблемы
         urgentProblemsRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot urgentProblemsSnap) {
+            @Override public void onDataChange(@NonNull DataSnapshot urgentProblemsSnap) {
                 for(DataSnapshot urgentProblemSnap : urgentProblemsSnap.getChildren())
-                {
-                    UrgentProblem urgentProblem = urgentProblemSnap.getValue(UrgentProblem.class);
+                { //рассмотрим по одному каждую проблему (aka Query)
+                    UrgentProblem urgentProblem = urgentProblemSnap.getValue(UrgentProblem.class); //считать ветку в объект срочная проблема
                     String operatorLogin = urgentProblem.getOperator_login();
                     if(operatorLogin.equals(login) && !urgentProblemSnap.child("date_specialist_came").exists())
-                    {
+                    { //если проблема относится к данному пользователю, но специалист еще не пришел (состояние 1), но оператор сообщил  о проблеме уже до этого
                         String whoIsNeededLogin = urgentProblem.getWho_is_needed_login();
-                        int whoIsNeededIndex = 0;
-                        switch(whoIsNeededLogin) //switch from keys to indices
-                        {
-                            case "repair":
-                                whoIsNeededIndex = 0;
-                                break;
-                            case "quality":
-                                whoIsNeededIndex = 1;
-                                break;
-                            case "raw":
-                                whoIsNeededIndex = 2;
-                                break;
-                            case "master":
-                                whoIsNeededIndex = 3;
-                                break;
-                        }
-                        qrRandomCode[whoIsNeededIndex] = urgentProblem.getQr_random_code();
-                        btnBlocked[whoIsNeededIndex] = true;
-                        btn_condition[whoIsNeededIndex] = 1;
-                        DatabaseReference thisUrgentProblem =  FirebaseDatabase.getInstance().getReference("Urgent_problems/" + urgentProblemSnap.getKey());
-                        final int finalWhoIsNeededIndex = whoIsNeededIndex;
-                        thisUrgentProblem.addValueEventListener(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot thisUrgentProblemSnap) {
-                                if(!thisUrgentProblemSnap.exists())
-                                {
-                                    btnBlocked[finalWhoIsNeededIndex] = false;
-                                    btn_condition[finalWhoIsNeededIndex]++;
-                                    updateButton(finalWhoIsNeededIndex);
-                                    andons[finalWhoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
-                                }
-                            }
+                        int whoIsNeededIndex = renderWhoIsNeededIndex(whoIsNeededLogin); //какая кнопка было нажата (кого вызвали?)
 
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError databaseError) {
+                        qrRandomCode[whoIsNeededIndex] = urgentProblem.getQr_random_code(); //считай с БД qr code этой срочной проблемы для reality check (мастер на самом деле подходит на линию и ознакамливается?)
+                        btnBlocked[whoIsNeededIndex] = true; //заблокируй кнопку
+                        btnCondition[whoIsNeededIndex] = 1; //смени состояние кнопки в мигающее
+                        updateButton(whoIsNeededIndex);
+                        //если update button значок QR сам соотвественно появится, потому что вызовется pultRef Listener
+//                        setQRIconOnAndonButton(1, whoIsNeededIndex); //поставь значок QR в край кнопки (значит кнопка в мигающем состоянии)
 
-                            }
-                        });
-                        if (whoIsNeededIndex % 2 == 0) {
-                            andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(R.drawable.qrcode_drawable, 0, 0, 0);
-                        } else {
-                            andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.qrcode_drawable, 0);
-                        }
-
+                        //---- ВНИМАНИЕ, НИЖЕ ОБЪЯВЛЯЕТСЯ АСИНХРОННЫЙ СЛУШАТЕЛЬ ИЗМЕНЕНИЙ ИМЕННО НА ВЕТКЕ ЭТОЙ СРОЧНОЙ ПРОБЛЕМЫ, ПРИ ПРИХОДЕ СПЕЦИАЛИСТА, ----//
+                        //---- СЛУШАТЕЛЬ (LISTENER) ПЕРЕВОДИТ КНОПКУ В СОСТОЯНИЕ 2, РАБЛОКИРУЕТ ЕЕ И ОБНОВЛЯЕТ БД ----//
+                        DatabaseReference thisUrgentProblem =  database.getReference("Urgent_problems/" + urgentProblemSnap.getKey());
+                        thisUrgentProblem.addValueEventListener(getUrgentProblemListener(whoIsNeededIndex));
                     }
                 }
             }
@@ -268,7 +153,61 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         });
     }
 
+    private int renderWhoIsNeededIndex(String whoIsNeededLogin)
+    {//переход от названий должностей в номера
+        switch(whoIsNeededLogin)
+        {
+            case "repair":
+                return 0;
+            case "quality":
+                return 1;
+            case "raw":
+                return 2;
+            case "master":
+                return 3;
+        }
+        return 0;
+    }
+
+    private void setAndonBackground(int andonIndex, int buttonState)
+    {//set up the button background behaviour
+        // behaviour depends on the button index, its condition value number
+        //that's why there are two switch statements
+        int drawableReference = andonDrawableReferences[andonIndex][buttonState];
+        switch(buttonState)
+        {
+            case 0:
+            case 2:
+                andons[andonIndex].setBackgroundResource(drawableReference);
+                setQRIconOnAndonButton(buttonState, andonIndex); //в зависимости от состояния кнопки, вставь/убери иконку QR
+                break;
+            case 1:
+                andons[andonIndex].setBackgroundResource(drawableReference);
+                AnimationDrawable problemAlert = (AnimationDrawable) andons[andonIndex].getBackground();
+                problemAlert.start();
+                setQRIconOnAndonButton(buttonState, andonIndex); //в зависимости от состояния кнопки, вставь/убери иконку QR
+                break;
+        }
+        btnCondition[andonIndex] = buttonState;
+    }
+
+    private void setQRIconOnAndonButton(int buttonState, int whoIsNeededIndex)
+    {       //в зависимости от buttonState состояния кнопки, вставить/убрать код QR
+        if(buttonState == 1) {
+            //следующие 4 строки определяют, куда поставить значок QR - справа или слева (зависит от четности)
+            if (whoIsNeededIndex % 2 == 0) //четный слева
+                andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(R.drawable.qrcode_drawable, 0, 0, 0);
+            else //нечетный справа
+                andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.qrcode_drawable, 0);
+        }
+        else
+        {
+            andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+        }
+    }
+
     private void setAndonsVisibility(boolean visible) {
+      //измени видимость кнопок
       int visibilityState;
       if(visible)
           visibilityState = View.VISIBLE;
@@ -280,17 +219,24 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
       }
     }
 
-    // find all variables
-
-    protected void find_objects(){ //инициализация всех объектов layout
-        andons[0] = findViewById(R.id.repair_btn);
-        andons[1] = findViewById(R.id.quality_btn);
-        andons[2] = findViewById(R.id.raw_btn);
-        andons[3] = findViewById(R.id.master_btn);
-
-        // set on click listener for variables
-        for(Button andon : andons)
-            andon.setOnTouchListener(this);
+    private ValueEventListener getUrgentProblemListener(final int whoIsNeededIndex)
+    {
+        ValueEventListener urgentProblemListener = new ValueEventListener() {
+            @Override public void onDataChange(@NonNull DataSnapshot thisUrgentProblemSnap) {
+                if(thisUrgentProblemSnap.child("date_specialist_came").exists()) //если специалист пришел
+                {
+                    btnBlocked[whoIsNeededIndex] = false; //разблокируй кнопку
+                    btnCondition[whoIsNeededIndex]++; //итерируй состояние кнопки в состояние "специалист пришел"
+                    updateButton(whoIsNeededIndex); //внеси изменения в БД
+                    //убери значок QR с кнопки
+                    //автоматом уберется в pultRef Listener
+//                    setQRIconOnAndonButton(2, whoIsNeededIndex);
+                }
+            }
+            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+        };
+        return urgentProblemListener;
+        //----КОНЕЦ ОБЪЯВЛЕНИЯ АСИНХРОННОГО СЛУШАТЕЛЯ БД----//
     }
 
     private ActionBarDrawerToggle setUpNavBar() {
@@ -324,6 +270,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         openQuest.putExtra("Логин пользователя", login);
                         openQuest.putExtra("Должность", position);
                         startActivity(openQuest);
+                        finish();
                         break;
                     case R.id.about: //инфа про приложение и компанию и иинструкции может
 //                        Intent openAbout = new Intent(getApplicationContext(), About.class);
@@ -347,15 +294,15 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         return toggle;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
+    @Override public boolean onOptionsItemSelected(MenuItem item) {
+      //связано с навигейшн бар
         if(toggle.onOptionsItemSelected(item)) return true;
         else return super.onOptionsItemSelected(item);
     }
 
     @Override
     public boolean onTouch(View button, MotionEvent event) {
+      //обработка касаний - зажато (DOWN для красоты) , отпущено (UP)
         switch(event.getAction())
         {
             case MotionEvent.ACTION_DOWN:
@@ -365,7 +312,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     case R.id.raw_btn:
                         button.setBackgroundResource(R.drawable.pressed_even_button);
                         break;
-
                     case R.id.quality_btn:
                     case R.id.master_btn:
                         button.setBackgroundResource(R.drawable.pressed_odd_button);
@@ -376,25 +322,25 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 switch(button.getId()) {
                     //4 случая ниже - для обработки больших кнопок: ремонт, отк, сырье, мастер
                     case R.id.repair_btn:
-                        btn_condition[0]++;
+                        btnCondition[0]++;
                         processCallForSpecialist(0);
                         updateButton(0);
                         break;
 
                     case R.id.quality_btn:
-                        btn_condition[1]++;
+                        btnCondition[1]++;
                         processCallForSpecialist(1);
                         updateButton(1);
                         break;
 
                     case R.id.raw_btn:
-                        btn_condition[2]++;
+                        btnCondition[2]++;
                         processCallForSpecialist(2);
                         updateButton(2);
                         break;
 
                     case R.id.master_btn:
-                        btn_condition[3]++;
+                        btnCondition[3]++;
                         processCallForSpecialist(3);
                         updateButton(3);
                         break;
@@ -403,76 +349,65 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         }
         return true;
     }
-    //запиши в базу данныъ новое состояние одной конкретной кнопки
 
-
-    private void updateButton(int signalTypeIndex)
-    { //signalTypeIndex - тип сигнала (Ремонт, мастер, отк, сырье)
+    private void updateButton(int whoIsNeededIndex)
+    { //запиши в базу данных новое состояние одной конкретной кнопки
+        //whoIsNeededIndex - тип сигнала (Ремонт, мастер, отк, сырье)
         // check status and drop for 0 if more than 2
-        if ((btn_condition[signalTypeIndex] >= 3)){ //всего 3 состояния, если больше 2, переведи в 0
-                btn_condition[signalTypeIndex]=0;
-        }
-        // Write a message to the database
-        switch (signalTypeIndex){
-            case 0:
-                pultRef.child("repair").setValue(btn_condition[0]);
-                break;
-            case 1:
-                pultRef.child("quality").setValue(btn_condition[1]);
-                break;
-            case 2:
-                pultRef.child("raw").setValue(btn_condition[2]);
-                break;
-            case 3:
-                pultRef.child("master").setValue(btn_condition[3]);
-                break;
-        }
+        if ((btnCondition[whoIsNeededIndex] >= 3)) //всего 3 состояния (нейтральное - порядок, мигает - срочная проблема ждет решения, горит - специалист работает
+            //если больше 2, переведи в 0
+            btnCondition[whoIsNeededIndex]=0;
 
+        //занеси новое состояние в базу данных
+        pultRef.child(positionTypes[whoIsNeededIndex]).setValue(btnCondition[whoIsNeededIndex]);
     }
 
-    private void processCallForSpecialist(final int signalTypeIndex)
-    {
-        if(btn_condition[signalTypeIndex] == 1 && !btnBlocked[signalTypeIndex])
+    private void processCallForSpecialist(final int whoIsNeededIndex)
+    {//обработай нажатие на кнопку, проверяя заблокирована ли она, и реши, какой диалог показать или что дальше
+        if(btnCondition[whoIsNeededIndex] == 1 /*&& !btnBlocked[whoIsNeededIndex]*/)
         {//хочет вызвать специалиста
             //startDialogFragment для выбора проблемного участка и вызова специалиста
             DialogFragment dialogFragment = new ChooseProblematicStationDialog();
             Bundle bundle = new Bundle();
             bundle.putString("Логин пользователя", login);
-            bundle.putInt("Вызвать специалиста", signalTypeIndex);
+            bundle.putInt("Вызвать специалиста", whoIsNeededIndex);
             dialogFragment.setArguments(bundle);
             dialogFragment.show(getSupportFragmentManager(), "Выбор участка");
         }
-        else if(btnBlocked[signalTypeIndex] && btn_condition[signalTypeIndex] == 2)
+        else if(btnBlocked[whoIsNeededIndex] && btnCondition[whoIsNeededIndex] == 2)
         {
             //если кнопка заблокирована(спец еще не пришел), высветить QR Code
-            btn_condition[signalTypeIndex]--; //вернуть в состояние "специалист не пришел, ПРОБЛЕМА"
+            btnCondition[whoIsNeededIndex]--; //вернуть в состояние "специалист не пришел, ПРОБЛЕМА"
             //Открыть диалог с QR Кодом
             DialogFragment dialogFragment = new QRCodeDialog();
             Bundle bundle = new Bundle();
-            bundle.putString("Код", qrRandomCode[signalTypeIndex]); //
+            bundle.putString("Код", qrRandomCode[whoIsNeededIndex]); //
             dialogFragment.setArguments(bundle);
             dialogFragment.show(getSupportFragmentManager(), "QR Код");
         }
-        else if(btn_condition[signalTypeIndex] == 0 && !btnBlocked[signalTypeIndex])
+        else if(btnCondition[whoIsNeededIndex] == 0 && !btnBlocked[whoIsNeededIndex])
         {
             //хочет нажать для индикации того, что проблема решена (Из горящего состояния перевести в нейтральное)
             Log.i("TAG", "Problem reported SOLVED!");
+
+            //---получить данные о дате и времени---//
             final String dateSolved;
             @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
             dateSolved = sdf.format(new Date());
             final String timeSolved;
             @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
             timeSolved = sdf1.format(new Date());
+            //---конец данные о дате и времени---//
+
             final DatabaseReference urgentProblemsRef = database.getReference("Urgent_problems");
             urgentProblemsRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot urgentProblemsSnap) {
+                @Override public void onDataChange(@NonNull DataSnapshot urgentProblemsSnap) {
                     for(DataSnapshot urgentProblemSnap : urgentProblemsSnap.getChildren())
                     {
-                        String operatorLogin = urgentProblemSnap.child("operator_login").getValue(String.class);
-                        String whoIsNeededlogin = urgentProblemSnap.child("who_is_needed_login").getValue(String.class);
+                        String operatorLogin = urgentProblemSnap.child("operator_login").getValue().toString();
+                        String whoIsNeededLogin = urgentProblemSnap.child("who_is_needed_login").getValue().toString();
                         //проверка (Query) выбор срочной проблемы с тем же логином оператора, специалиста и проблема, которая не решена еще
-                        if(operatorLogin.equals(login) && whoIsNeededlogin.equals(positionTypes[signalTypeIndex]) && !urgentProblemSnap.child("date_solved").exists()) {
+                        if(operatorLogin.equals(login) && whoIsNeededLogin.equals(positionTypes[whoIsNeededIndex]) && !urgentProblemSnap.child("date_solved").exists()) {
                             String thisProbKey = urgentProblemSnap.getKey();
                             urgentProblemsRef.child(thisProbKey).child("date_solved").setValue(dateSolved);
                             urgentProblemsRef.child(thisProbKey).child("time_solved").setValue(timeSolved);
@@ -487,53 +422,35 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
     @Override
     public void submitStationNo(int stationNo, String equipmentLineName, String shopName, String operatorLogin, final int whoIsNeededIndex) {
-      //интерфейс функция которая вызывается при успешном сообщении о существовании проблемы
+      //состояние btnCondition[whoIsNeededIndex] уже задано
+        //интерфейс функция которая вызывается при успешном сообщении о существовании проблемы
         //вбить экстренную проблему в базу, QR генерируется внутри самого диалога
         DatabaseReference dbRef = database.getReference();
         DatabaseReference thisUrgentProblem = dbRef.child("Urgent_problems").push();
         qrRandomCode[whoIsNeededIndex] = GenerateRandomString.randomString(3);
-        final String dateSolved;
+        // ----получи дату и время в строки dateSolved, timeSolved----//
+        final String dateDetected;
         @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
-        dateSolved = sdf.format(new Date());
-        final String timeSolved;
+        dateDetected = sdf.format(new Date());
+        final String timeDetected;
         @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
-        timeSolved = sdf1.format(new Date());
-        thisUrgentProblem.setValue(new UrgentProblem(stationNo, equipmentLineName, shopName, operatorLogin, positionTypes[whoIsNeededIndex], qrRandomCode[whoIsNeededIndex], dateSolved, timeSolved));
-        //задать состояние кнопки блокированным
-        btnBlocked[whoIsNeededIndex] = true;
-        //здесь же добавить БД слушатель, чтобы реагировал позднее на изменения в БД
-        thisUrgentProblem.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot thisUrgentProblemSnap) {
-                if(thisUrgentProblemSnap.child("date_specialist_came").exists())
-                {
-                    btnBlocked[whoIsNeededIndex] = false;
-                    andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
-                    btn_condition[whoIsNeededIndex]++;
-                    updateButton(whoIsNeededIndex);
-                }
-            }
+        timeDetected = sdf1.format(new Date());
+        //----считал дату и время----//
+        //вбить обнаруженную срочную проблему в базу
+        thisUrgentProblem.setValue(new UrgentProblem(stationNo, equipmentLineName, shopName, operatorLogin, positionTypes[whoIsNeededIndex], qrRandomCode[whoIsNeededIndex], dateDetected, timeDetected));
+        btnBlocked[whoIsNeededIndex] = true; //задать состояние кнопки блокированным
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-        if(whoIsNeededIndex % 2 == 0)
-        {
-            andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(R.drawable.qrcode_drawable, 0, 0, 0);
-        }
-        else
-        {
-            andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.qrcode_drawable, 0);
-        }
+        //следующие 1 строка определяют, куда поставить значок QR - справа или слева (зависит от четности)
+//        setQRIconOnAndonButton(1, whoIsNeededIndex);
+        //здесь же добавить БД слушатель, чтобы реагировал позднее на изменения в БД (specialist_came, solved)
+        thisUrgentProblem.addValueEventListener(getUrgentProblemListener(whoIsNeededIndex));
     }
 
     @Override
     public void onDialogCanceled(int whoIsNeededIndex) {
       //если диалог выбора проблемного участка отменили/закрыли
         //возврати мигающую кнопку в нейтральное состояние
-        btn_condition[whoIsNeededIndex]--;
+        btnCondition[whoIsNeededIndex]--;
         updateButton(whoIsNeededIndex);
 //        andons[whoIsNeededIndex].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
     }
@@ -542,9 +459,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     public void onQRCodeDialogCanceled(int whoIsNeededIndex) {
         //чтобы кнопка не  зависла в состоянии ACTION_DOWN (серый фон при нажатии), переключим ее состояние на один вперед и обратно, чтобы
         //pultRefListener отреагировал и вернул кнопку в нормализованное незажатое состояние
-        btn_condition[whoIsNeededIndex]--;
+        int tmp = btnCondition[whoIsNeededIndex];
+        if(tmp == 0 || tmp == 1)
+            btnCondition[whoIsNeededIndex] = 2;
+        else
+            btnCondition[whoIsNeededIndex] = 0;
         updateButton(whoIsNeededIndex);
-        btn_condition[whoIsNeededIndex]++;
+        btnCondition[whoIsNeededIndex] = tmp;
         updateButton(whoIsNeededIndex);
     }
 }
