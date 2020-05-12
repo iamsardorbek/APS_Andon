@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     DatabaseReference pultRef;
     private ActionBarDrawerToggle toggle;
     ValueEventListener pultRefListener;
+    private final String DETECTED = "DETECTED", SPECIALIST_CAME = "SPECIALIST_CAME", SOLVED = "SOLVED";
     String[] qrRandomCode = new String[numOfButtons]; //для сохранения актуальных QR кодов
     private int [][] andonDrawableReferences = {{R.drawable.remont_button, R.drawable.remont_button_animation, R.drawable.remont_button_alert},
             {R.drawable.otk_button, R.drawable.otk_button_animation, R.drawable.otk_button_alert},
@@ -90,7 +91,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         pultRefListener = new ValueEventListener() {
             @Override public void onDataChange(@NonNull DataSnapshot userSnap) {
                 nomerPulta = userSnap.child("pultNo").getValue().toString(); //считать номер пульта юзера, концепт номера пульта надо менять
-                Log.i("TAQ", "nomerPulta " + nomerPulta);
                 //инициализируем listener базы данных именно этого пульта, чтобы считать оттуда данные
                 //пока данные не пришли с базы, в pultInfo будет показываться "Загрузка данных"
                 pultRef = database.getReference("Pults/" + nomerPulta); //ссылка именно к этому пульту
@@ -102,9 +102,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                             //ветка отдельной кнопки (мастер, ремонт, отк, сырье) именно этого пульта
                             String whoIsNeededPosition = buttonStateSnap.getKey();
                             int whoIsNeededIndex = renderWhoIsNeededIndex(whoIsNeededPosition);
-                            Log.i("TAQ", "whoIsNeededIndex " + whoIsNeededIndex);
                             int buttonState = Integer.parseInt(buttonStateSnap.getValue().toString());
-                            Log.i("TAQ", "buttonState " + buttonState);
 
                             setAndonBackground(whoIsNeededIndex, buttonState); //синхронизовать внешнее состояние данной кнопки с состоянием в БД
                         }
@@ -129,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 { //рассмотрим по одному каждую проблему (aka Query)
                     UrgentProblem urgentProblem = urgentProblemSnap.getValue(UrgentProblem.class); //считать ветку в объект срочная проблема
                     String operatorLogin = urgentProblem.getOperator_login();
-                    if(operatorLogin.equals(login) && !urgentProblemSnap.child("date_specialist_came").exists())
+                    if(operatorLogin.equals(login) && urgentProblemSnap.child("status").getValue().toString().equals(DETECTED))
                     { //если проблема относится к данному пользователю, но специалист еще не пришел (состояние 1), но оператор сообщил  о проблеме уже до этого
                         String whoIsNeededLogin = urgentProblem.getWho_is_needed_login();
                         int whoIsNeededIndex = renderWhoIsNeededIndex(whoIsNeededLogin); //какая кнопка было нажата (кого вызвали?)
@@ -144,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         //---- ВНИМАНИЕ, НИЖЕ ОБЪЯВЛЯЕТСЯ АСИНХРОННЫЙ СЛУШАТЕЛЬ ИЗМЕНЕНИЙ ИМЕННО НА ВЕТКЕ ЭТОЙ СРОЧНОЙ ПРОБЛЕМЫ, ПРИ ПРИХОДЕ СПЕЦИАЛИСТА, ----//
                         //---- СЛУШАТЕЛЬ (LISTENER) ПЕРЕВОДИТ КНОПКУ В СОСТОЯНИЕ 2, РАБЛОКИРУЕТ ЕЕ И ОБНОВЛЯЕТ БД ----//
                         DatabaseReference thisUrgentProblem =  database.getReference("Urgent_problems/" + urgentProblemSnap.getKey());
-                        thisUrgentProblem.addValueEventListener(getUrgentProblemListener(whoIsNeededIndex));
+                        thisUrgentProblem.child("status").addValueEventListener(getUrgentProblemStatusListener(whoIsNeededIndex));
                     }
                 }
             }
@@ -219,18 +217,20 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
       }
     }
 
-    private ValueEventListener getUrgentProblemListener(final int whoIsNeededIndex)
+    private ValueEventListener getUrgentProblemStatusListener(final int whoIsNeededIndex)
     {
+        //---- ВНИМАНИЕ, НИЖЕ ОБЪЯВЛЯЕТСЯ АСИНХРОННЫЙ СЛУШАТЕЛЬ ИЗМЕНЕНИЙ СТАТУСА (РЕШЕНА, СПЕЦ ПРИШЕЛ, ОБНАРУЖЕНА) ЭТОЙ СРОЧНОЙ ПРОБЛЕМЫ, ПРИ ПРИХОДЕ СПЕЦИАЛИСТА, ----//
+        //---- СЛУШАТЕЛЬ (LISTENER) ПЕРЕВОДИТ КНОПКУ В СОСТОЯНИЕ 2, РАБЛОКИРУЕТ ЕЕ И ОБНОВЛЯЕТ БД ----//
         ValueEventListener urgentProblemListener = new ValueEventListener() {
-            @Override public void onDataChange(@NonNull DataSnapshot thisUrgentProblemSnap) {
-                if(thisUrgentProblemSnap.child("date_specialist_came").exists()) //если специалист пришел
+            @Override public void onDataChange(@NonNull DataSnapshot thisUrgentProblemStatusSnap) {
+                if(thisUrgentProblemStatusSnap.getValue().toString().equals(SPECIALIST_CAME)) //если специалист пришел
                 {
                     btnBlocked[whoIsNeededIndex] = false; //разблокируй кнопку
-                    btnCondition[whoIsNeededIndex]++; //итерируй состояние кнопки в состояние "специалист пришел"
+                    btnCondition[whoIsNeededIndex] = 2; //переведи состояние кнопки в состояние "специалист пришел"
                     updateButton(whoIsNeededIndex); //внеси изменения в БД
                     //убери значок QR с кнопки
                     //автоматом уберется в pultRef Listener
-//                    setQRIconOnAndonButton(2, whoIsNeededIndex);
+                    //setQRIconOnAndonButton(2, whoIsNeededIndex);
                 }
             }
             @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
@@ -323,26 +323,26 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     //4 случая ниже - для обработки больших кнопок: ремонт, отк, сырье, мастер
                     case R.id.repair_btn:
                         btnCondition[0]++;
-                        processCallForSpecialist(0);
                         updateButton(0);
+                        processCallForSpecialist(0);
                         break;
 
                     case R.id.quality_btn:
                         btnCondition[1]++;
-                        processCallForSpecialist(1);
                         updateButton(1);
+                        processCallForSpecialist(1);
                         break;
 
                     case R.id.raw_btn:
                         btnCondition[2]++;
-                        processCallForSpecialist(2);
                         updateButton(2);
+                        processCallForSpecialist(2);
                         break;
 
                     case R.id.master_btn:
                         btnCondition[3]++;
-                        processCallForSpecialist(3);
                         updateButton(3);
+                        processCallForSpecialist(3);
                         break;
                 }
                 break;
@@ -356,14 +356,17 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         // check status and drop for 0 if more than 2
         if ((btnCondition[whoIsNeededIndex] >= 3)) //всего 3 состояния (нейтральное - порядок, мигает - срочная проблема ждет решения, горит - специалист работает
             //если больше 2, переведи в 0
-            btnCondition[whoIsNeededIndex]=0;
+            btnCondition[whoIsNeededIndex] = 0;
 
         //занеси новое состояние в базу данных
+        pultRef = database.getReference("Pults/" + nomerPulta); //ссылка именно к этому пульту
         pultRef.child(positionTypes[whoIsNeededIndex]).setValue(btnCondition[whoIsNeededIndex]);
     }
 
     private void processCallForSpecialist(final int whoIsNeededIndex)
     {//обработай нажатие на кнопку, проверяя заблокирована ли она, и реши, какой диалог показать или что дальше
+        Log.i("TAQ", "processCallForSpecialist: btnCondition[whoIsNeededIndex] = " + btnCondition[whoIsNeededIndex] + "\tbtnBlocked[whoIsNeededIndex] = " + btnBlocked[whoIsNeededIndex]
+                + "\twhoIsNeededIndex = " + whoIsNeededIndex);
         if(btnCondition[whoIsNeededIndex] == 1 /*&& !btnBlocked[whoIsNeededIndex]*/)
         {//хочет вызвать специалиста
             //startDialogFragment для выбора проблемного участка и вызова специалиста
@@ -378,6 +381,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         {
             //если кнопка заблокирована(спец еще не пришел), высветить QR Code
             btnCondition[whoIsNeededIndex]--; //вернуть в состояние "специалист не пришел, ПРОБЛЕМА"
+            updateButton(whoIsNeededIndex);
             //Открыть диалог с QR Кодом
             DialogFragment dialogFragment = new QRCodeDialog();
             Bundle bundle = new Bundle();
@@ -388,7 +392,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         else if(btnCondition[whoIsNeededIndex] == 0 && !btnBlocked[whoIsNeededIndex])
         {
             //хочет нажать для индикации того, что проблема решена (Из горящего состояния перевести в нейтральное)
-            Log.i("TAG", "Problem reported SOLVED!");
 
             //---получить данные о дате и времени---//
             final String dateSolved;
@@ -407,10 +410,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         String operatorLogin = urgentProblemSnap.child("operator_login").getValue().toString();
                         String whoIsNeededLogin = urgentProblemSnap.child("who_is_needed_login").getValue().toString();
                         //проверка (Query) выбор срочной проблемы с тем же логином оператора, специалиста и проблема, которая не решена еще
-                        if(operatorLogin.equals(login) && whoIsNeededLogin.equals(positionTypes[whoIsNeededIndex]) && !urgentProblemSnap.child("date_solved").exists()) {
+                        if(operatorLogin.equals(login) && whoIsNeededLogin.equals(positionTypes[whoIsNeededIndex]) && urgentProblemSnap.child("status").getValue().toString().equals(SPECIALIST_CAME)) {
+                            //если специалист пришел, но еще не решил проблему (status = SPECIALIST_CAME
                             String thisProbKey = urgentProblemSnap.getKey();
                             urgentProblemsRef.child(thisProbKey).child("date_solved").setValue(dateSolved);
                             urgentProblemsRef.child(thisProbKey).child("time_solved").setValue(timeSolved);
+                            urgentProblemsRef.child(thisProbKey).child("status").setValue(SOLVED);
                             return;
                         }
                     }
@@ -437,13 +442,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         timeDetected = sdf1.format(new Date());
         //----считал дату и время----//
         //вбить обнаруженную срочную проблему в базу
-        thisUrgentProblem.setValue(new UrgentProblem(stationNo, equipmentLineName, shopName, operatorLogin, positionTypes[whoIsNeededIndex], qrRandomCode[whoIsNeededIndex], dateDetected, timeDetected));
+        thisUrgentProblem.setValue(new UrgentProblem(stationNo, equipmentLineName, shopName, operatorLogin, positionTypes[whoIsNeededIndex], qrRandomCode[whoIsNeededIndex],
+                dateDetected, timeDetected, DETECTED));
         btnBlocked[whoIsNeededIndex] = true; //задать состояние кнопки блокированным
 
         //следующие 1 строка определяют, куда поставить значок QR - справа или слева (зависит от четности)
 //        setQRIconOnAndonButton(1, whoIsNeededIndex);
         //здесь же добавить БД слушатель, чтобы реагировал позднее на изменения в БД (specialist_came, solved)
-        thisUrgentProblem.addValueEventListener(getUrgentProblemListener(whoIsNeededIndex));
+        thisUrgentProblem.child("status").addValueEventListener(getUrgentProblemStatusListener(whoIsNeededIndex));
     }
 
     @Override
@@ -459,13 +465,15 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     public void onQRCodeDialogCanceled(int whoIsNeededIndex) {
         //чтобы кнопка не  зависла в состоянии ACTION_DOWN (серый фон при нажатии), переключим ее состояние на один вперед и обратно, чтобы
         //pultRefListener отреагировал и вернул кнопку в нормализованное незажатое состояние
-        int tmp = btnCondition[whoIsNeededIndex];
-        if(tmp == 0 || tmp == 1)
-            btnCondition[whoIsNeededIndex] = 2;
-        else
-            btnCondition[whoIsNeededIndex] = 0;
+        int thisAndonCondition = btnCondition[whoIsNeededIndex];
+        setAndonBackground(whoIsNeededIndex, thisAndonCondition);
         updateButton(whoIsNeededIndex);
-        btnCondition[whoIsNeededIndex] = tmp;
-        updateButton(whoIsNeededIndex);
+//        if(tmp == 0 || tmp == 1)
+//            btnCondition[whoIsNeededIndex] = 2;
+//        else
+//            btnCondition[whoIsNeededIndex] = 0;
+//        updateButton(whoIsNeededIndex);
+//        btnCondition[whoIsNeededIndex] = tmp;
+//        updateButton(whoIsNeededIndex);
     }
 }

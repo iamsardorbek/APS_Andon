@@ -1,16 +1,15 @@
 package com.akfa.apsproject;
 
 public class UrgentProblem {
-    public String shop_name, equipment_name, qr_random_code, operator_login, who_is_needed_login, date_detected, time_detected;
+    public String shop_name, equipment_name, qr_random_code, operator_login, who_is_needed_login, date_detected, time_detected, status;
     public int station_no;
-
     public UrgentProblem()
     {
 
     }
 
     public UrgentProblem(int stationNo, String equipmentName, String shopName, String operatorLogin, String whoIsNeededLogin, String qrRandomCode,
-                         String dateTimeDetected, String time_detected)
+                         String dateTimeDetected, String time_detected, String status)
     {
         this.station_no = stationNo;
         this.shop_name = shopName;
@@ -20,6 +19,7 @@ public class UrgentProblem {
         this.who_is_needed_login = whoIsNeededLogin;
         this.date_detected = dateTimeDetected;
         this.time_detected = time_detected;
+        this.status = status;
     }
 
     public int getStation_no() {
@@ -52,5 +52,9 @@ public class UrgentProblem {
 
     public String getTime_detected() {
         return time_detected;
+    }
+
+    public String getStatus() {
+        return status;
     }
 }

@@ -257,17 +257,18 @@ public class QRScanner extends AppCompatActivity {
                                                 for(DataSnapshot singleUrgentProbSnap : urgentProbsSnap.getChildren())
                                                 {
                                                     String codeToDetect = singleUrgentProbSnap.child("qr_random_code").getValue().toString();
-                                                    if(codeFromQR.equals(codeToDetect))
+                                                    if(codeFromQR.equals(codeToDetect) && singleUrgentProbSnap.child("status").getValue().toString().equals("DETECTED"))
                                                     {
                                                         String urgentProblemKey = singleUrgentProbSnap.getKey();
-                                                        final String dateSolved;
+                                                        final String dateSpecialistCame;
                                                         @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
-                                                        dateSolved = sdf.format(new Date());
-                                                        final String timeSolved;
+                                                        dateSpecialistCame = sdf.format(new Date());
+                                                        final String timeSpecialistCame;
                                                         @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
-                                                        timeSolved = sdf1.format(new Date());
-                                                        urgentProbsRef.child(urgentProblemKey).child("date_specialist_came").setValue(dateSolved);
-                                                        urgentProbsRef.child(urgentProblemKey).child("time_specialist_came").setValue(timeSolved);
+                                                        timeSpecialistCame = sdf1.format(new Date());
+                                                        urgentProbsRef.child(urgentProblemKey).child("date_specialist_came").setValue(dateSpecialistCame);
+                                                        urgentProbsRef.child(urgentProblemKey).child("time_specialist_came").setValue(timeSpecialistCame);
+                                                        urgentProbsRef.child(urgentProblemKey + "/status").setValue("SPECIALIST_CAME");
                                                         detectedOnce = true;
                                                         Toast.makeText(getApplicationContext(), "Специалист на месте", Toast.LENGTH_SHORT).show();
                                                         finish();
@@ -275,11 +276,7 @@ public class QRScanner extends AppCompatActivity {
                                                     }
                                                 }
                                             }
-
-                                            @Override
-                                            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                            }
+                                            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
                                         });
                                         EquipmentLine equipmentLine = detectedCodeAmongInitialPunkts(codeFromQR);
                                         if(equipmentLine != null)
