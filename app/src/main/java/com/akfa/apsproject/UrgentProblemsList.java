@@ -4,13 +4,18 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.annotation.SuppressLint;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
@@ -44,6 +49,9 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_urgent_problems_list);
+
+//        showTestNotification();
+
         qrScan = findViewById(R.id.qr_scan);
         linearLayout = findViewById(R.id.linearLayout);
         qrScan.setOnTouchListener(this);
@@ -69,6 +77,45 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
         addProblemsFromDatabase();
     }
 
+
+    private void showTestNotification()
+    {
+        createNotificationChannel();
+        Intent intent = new Intent(getApplicationContext(), UrgentProblemsList.class);
+        intent.putExtra("Логин пользователя", "master");
+        intent.putExtra("Должность", "master");
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), "CHANNEL_ID")
+                .setSmallIcon(R.drawable.aps_icon)
+                .setContentTitle("Срочная проблема")
+                .setContentText("urgentProblemShortInfo")
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText("urgentProblemShortInfo"))
+                .setContentIntent(pendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+//                            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
+
+        NotificationManager notificationManager =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        // notificationId is a unique int for each notification that you must define
+        notificationManager.notify(1, builder.build());
+    }
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "APS Notifications";
+            String description = "Notifications about problems with the equipment on the factory";
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel("CHANNEL_ID", name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         switch(event.getAction())

@@ -30,6 +30,10 @@ public class Login extends AppCompatActivity {
     private Button enter;
     private CheckBox rememberMe;
     private String login, password;
+//context.startService(new Intent(context, BackgroundService.class)); //эта функция запускает фоновый сервис, когда время delayMillis прошло.
+//        //он ждет Broadcast от системы, что его времяx закончилось и пора запускать сервис
+// startService(new Intent(getBaseContext(), BackgroundService.class)); //эта функция запускает фоновый сервис
+// stopService(new Intent(getBaseContext(), BackgroundService.class));
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +93,11 @@ public class Login extends AppCompatActivity {
                                         editor.putString("Номер пульта", user.child("pultNo").getValue().toString());
                                     }
                                     editor.commit();
+                                }
+
+                                if(!user.child("position").getValue().toString().equals("operator"))
+                                {
+                                    startService(new Intent(getApplicationContext(), BackgroundService.class)); //эта функция запускает фоновый сервис
                                 }
                             }
                             else
