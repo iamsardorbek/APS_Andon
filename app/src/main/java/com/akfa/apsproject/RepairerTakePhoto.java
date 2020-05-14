@@ -34,7 +34,7 @@ public class RepairerTakePhoto extends AppCompatActivity implements View.OnTouch
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_repairer_take_photo);
-        problemPushKey = getIntent().getExtras().getString("ID проблемы в таблице Problems");
+        problemPushKey = getIntent().getExtras().getString("ID проблемы в таблице Maintenance_problems");
         takePic = findViewById(R.id.take_pic);
         dontTakePic = findViewById(R.id.dont_take_pic);
         takePic.setOnTouchListener(this);

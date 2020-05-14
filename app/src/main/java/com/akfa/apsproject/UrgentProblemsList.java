@@ -33,40 +33,48 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 
 public class UrgentProblemsList extends AppCompatActivity implements View.OnTouchListener {
-    private final int ID_TEXTVIEWS = 5000;
-    private int problemCount = 0;
-    private List<String> problemIDs;
-    private Button qrScan;
-    ActionBarDrawerToggle toggle;
-    LinearLayout linearLayout;
-    String employeeLogin, employeePosition;
-    View.OnClickListener textviewClickListener;
+    //ЭТОТ КЛАСС СОЗДАН ДЛЯ ТОГО, ЧТО ПОКАЗЫВАТЬ СПЕЦИАЛИСТАМ СООТВЕТСТВУЯ ИХ СПЕЦИАЛЬНОСТИ (МАСТЕР, ОТК, РЕМОНТ И ДР) СПИСОК СРОЧНЫХ ПРОБЛЕМ,
+    //ОБНАРУЖЕННЫХ ОПЕРАТОРАМИ И СООБЩЕННЫХ ЧЕРЕЗ ПУЛЬТЫ
+    private final int ID_TEXTVIEWS = 5000; //константа чтобы задавать айдишки TextView элементам
+    private int problemCount = 0;  //счетчик выводящихся проблем, чтобы уникализировать id каждого TextView
+    //private List<String> problemIDs; //лист для сохранения айдишек срочных проблем как в БД, если потребуется сделать так, чтобы специалист шел, и сканировал QR код именно данного оператора
+    private Button qrScan; //кнопка, которая стоит внизу, чтобы сразу отсканировать код на экране оператора
+    ActionBarDrawerToggle toggle; //для работы navigation bar, инициализируется возвращаемым значением функции setUpNavBar()
+    LinearLayout linearLayout; //vertical linear layout, который находится внутри ScrollView; в него и будем добавлять в отдельных textview данные об отдельных срочных проблемах
+    String employeeLogin, employeePosition; //логин и должность сотрудника-пользователя, которые мы получим из intent(предыдущих окон)
+    View.OnClickListener textviewClickListener; //слушатель кликов textviews
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_urgent_problems_list);
 
-//        showTestNotification();
+        initInstances();
+        toggle = setUpNavBar();
+        addProblemsFromDatabase();
+    }
 
+    private void initInstances()
+    {//иниуиализация объектов дизайна и глобальных переменных
         qrScan = findViewById(R.id.qr_scan);
         linearLayout = findViewById(R.id.linearLayout);
         qrScan.setOnTouchListener(this);
         employeeLogin = getIntent().getExtras().getString("Логин пользователя");
         employeePosition = getIntent().getExtras().getString("Должность");
-        toggle = setUpNavBar();
+        initTextViewClickListener();
+    }
+
+    private void initTextViewClickListener()
+    {
         textviewClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                int nomerProblemy = v.getId() - ID_TEXTVIEWS;
-//                Intent intent = new Intent(getApplicationContext(), RepairerSeparateProblem.class);
-//                String IDOfSelectedProblem = problemIDs.get(nomerProblemy);
-//                intent.putExtra("ID проблемы в таблице Problems", IDOfSelectedProblem);
-//                intent.putExtra("Логин пользователя", employeeLogin);
-//                startActivity(intent);
                 Intent openQR = new Intent(getApplicationContext(), QRScanner.class);
                 openQR.putExtra("Открой PointDynamic", "срочная проблема");
                 openQR.putExtra("Должность", employeePosition);
@@ -74,48 +82,8 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
                 startActivity(openQR);
             }
         };
-        addProblemsFromDatabase();
     }
 
-
-    private void showTestNotification()
-    {
-        createNotificationChannel();
-        Intent intent = new Intent(getApplicationContext(), UrgentProblemsList.class);
-        intent.putExtra("Логин пользователя", "master");
-        intent.putExtra("Должность", "master");
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), "CHANNEL_ID")
-                .setSmallIcon(R.drawable.aps_icon)
-                .setContentTitle("Срочная проблема")
-                .setContentText("urgentProblemShortInfo")
-                .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText("urgentProblemShortInfo"))
-                .setContentIntent(pendingIntent)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-//                            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
-
-        NotificationManager notificationManager =
-                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        // notificationId is a unique int for each notification that you must define
-        notificationManager.notify(1, builder.build());
-    }
-    private void createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "APS Notifications";
-            String description = "Notifications about problems with the equipment on the factory";
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel("CHANNEL_ID", name, importance);
-            channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
-    }
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         switch(event.getAction())
@@ -150,8 +118,8 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
         navigationView = findViewById(R.id.nv);
         navigationView.getMenu().clear();
         switch(employeePosition){
-            case "operator":
-                navigationView.inflateMenu(R.menu.operator_menu);
+            case "repair":
+                navigationView.inflateMenu(R.menu.repair_menu);
                 break;
             case "master":
                 navigationView.inflateMenu(R.menu.master_menu);

@@ -23,7 +23,6 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ViewAnimator;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -44,7 +43,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
-import com.google.firebase.storage.StorageException;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
@@ -55,7 +53,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
+/*DISCLAIMER: ключевые слова MaintenanceProblem, problems, упоминающиеся в этом классе относятся к проверками обнаруженным при профилактических проверках Maintenance_problems*/
 public class QuestPointDynamic extends AppCompatActivity
 {
     private final int RADIO_GROUP_ID = 5000;
@@ -181,8 +179,7 @@ public class QuestPointDynamic extends AppCompatActivity
                 .setIcon(R.drawable.close)
                 .setPositiveButton("Да", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference("Problems");
-                        StorageReference problemsPicRef = mStorageRef.child("problem_pictures");
+                        DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference("Maintenance_problems");
                         for(String problemPushKey : problemPushKeysOfTheWholeCheck)
                         {
                             problemsRef.child(problemPushKey).setValue(null);
@@ -399,7 +396,7 @@ public class QuestPointDynamic extends AppCompatActivity
                 .setIcon(R.drawable.close)
                 .setPositiveButton("Да", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference("Problems");
+                        DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference("Maintenance_problems");
                         StorageReference problemsPicRef = mStorageRef.child("problem_pictures");
                         for(String problemPushKey : problemPushKeysOfTheWholeCheck)
                         {
@@ -472,7 +469,7 @@ public class QuestPointDynamic extends AppCompatActivity
         //the user hits "next point".
         RadioGroup rg;
         //Проблемы - название таблицы для проблем
-        DatabaseReference problemsRef = db.getReference().child("Problems");
+        DatabaseReference problemsRef = db.getReference().child("Maintenance_problems");
         for(int i = 1; i <= numOfRadioGroups; i++)
         {
             rg = findViewById(RADIO_GROUP_ID + i);
@@ -495,7 +492,7 @@ public class QuestPointDynamic extends AppCompatActivity
                 problemPushKeys.add(problemPushKey);
                 problemPushKeysOfTheWholeCheck.add(problemPushKey);
                 Log.i("MMp problemPushKey", problemPushKey);
-                newProbRef.setValue(new Problem(employeeLogin, date, time, shopName, equipmentName, QuestMainActivity.groupPositionG, QuestMainActivity.childPositionG, stationNo, i));
+                newProbRef.setValue(new MaintenanceProblem(employeeLogin, date, time, shopName, equipmentName, QuestMainActivity.groupPositionG, QuestMainActivity.childPositionG, stationNo, i));
                 //сфоткайте проблему, следующие проблемы фоткаются через запуск камеры через onActivityResult
                 if(problemsOnThisStation == 1) {
                     Toast.makeText(getApplicationContext(), "Сфотографируйте проблему пункта " + i, Toast.LENGTH_LONG).show();

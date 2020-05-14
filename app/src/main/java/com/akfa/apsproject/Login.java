@@ -51,69 +51,73 @@ public class Login extends AppCompatActivity {
             public void onClick(View v) {
                 login = loginView.getText().toString();
                 password = passwordView.getText().toString();
-                loading.setVisibility(View.VISIBLE);
-                DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("Users/" + login);
-                dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override public void onDataChange(@NonNull DataSnapshot user) {
-                        loading.setVisibility(View.INVISIBLE);
-                        if(user.exists())
-                        {//3 ifs with boolean checker functions in condition: isOperator, isMaster, isRepairer
-                            if(user.child("password").getValue().toString().equals(password)) {
-                                if (user.child("position").getValue().toString().equals("operator")) {
-                                    Intent openPult = new Intent(getApplicationContext(), MainActivity.class);
-//                                    openPult.putExtra("Номер пульта", user.child("pultNo").getValue().toString());
-                                    openPult.putExtra("Логин пользователя", login);
-                                    openPult.putExtra("Должность", user.child("position").getValue().toString());
-                                    startActivity(openPult);
-                                } else if (user.child("position").getValue().toString().equals("master")) {
-                                    Intent openFactoryCondition = new Intent(getApplicationContext(), QuestMainActivity.class); //actually there should be the FactoryCondition.class, but it is incomplete yet
-                                    openFactoryCondition.putExtra("Логин пользователя", login);
-                                    openFactoryCondition.putExtra("Должность", user.child("position").getValue().toString());
-                                    startActivity(openFactoryCondition);
-                                } else if (user.child("position").getValue().toString().equals("repairer")) {
-                                    Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
-                                    openProblemsList.putExtra("Логин пользователя", login);
-                                    openProblemsList.putExtra("Должность", user.child("position").getValue().toString());
-                                    startActivity(openProblemsList);
-                                } else if(user.child("position").getValue().toString().equals("raw") || user.child("position").getValue().toString().equals("quality")) {
-                                    Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                                    openUrgentProblemsList.putExtra("Логин пользователя", login);
-                                    openUrgentProblemsList.putExtra("Должность", user.child("position").getValue().toString());
-                                    startActivity(openUrgentProblemsList);
-                                }
-
-                                if(rememberMe.isChecked())
-                                {
-                                    SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                                    SharedPreferences.Editor editor = sharedPrefs.edit();
-                                    editor.putString("Логин пользователя", login);
-                                    editor.putString("Должность", user.child("position").getValue().toString());
-                                    if(user.child("pultNo").getValue() != null)
-                                    {
-                                        editor.putString("Номер пульта", user.child("pultNo").getValue().toString());
+                if(login.isEmpty() || password.isEmpty() || password.charAt(0) == ' ' || login.charAt(0) == ' ')
+                {
+                    Toast.makeText(getApplicationContext(), "Заполните оба поля корректно", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    loading.setVisibility(View.VISIBLE);
+                    DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("Users/" + login);
+                    dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot user) {
+                            loading.setVisibility(View.INVISIBLE);
+                            if (user.exists()) {//3 ifs with boolean checker functions in condition: isOperator, isMaster, isRepairer
+                                if (user.child("password").getValue().toString().equals(password)) {
+                                    if (user.child("position").getValue().toString().equals("operator")) {
+                                        Intent openPult = new Intent(getApplicationContext(), MainActivity.class);
+//                                    openPult.putExtra("Номер пульта", user.child("pult_no").getValue().toString());
+                                        openPult.putExtra("Логин пользователя", login);
+                                        openPult.putExtra("Должность", user.child("position").getValue().toString());
+                                        startActivity(openPult);
+                                    } else if (user.child("position").getValue().toString().equals("master")) {
+                                        Intent openFactoryCondition = new Intent(getApplicationContext(), QuestMainActivity.class); //actually there should be the FactoryCondition.class, but it is incomplete yet
+                                        openFactoryCondition.putExtra("Логин пользователя", login);
+                                        openFactoryCondition.putExtra("Должность", user.child("position").getValue().toString());
+                                        startActivity(openFactoryCondition);
+                                    } else if (user.child("position").getValue().toString().equals("repair")) {
+                                        Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
+                                        openProblemsList.putExtra("Логин пользователя", login);
+                                        openProblemsList.putExtra("Должность", user.child("position").getValue().toString());
+                                        startActivity(openProblemsList);
+                                    } else if (user.child("position").getValue().toString().equals("raw") || user.child("position").getValue().toString().equals("quality")) {
+                                        Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class);
+                                        openUrgentProblemsList.putExtra("Логин пользователя", login);
+                                        openUrgentProblemsList.putExtra("Должность", user.child("position").getValue().toString());
+                                        startActivity(openUrgentProblemsList);
                                     }
-                                    editor.commit();
-                                }
 
-                                if(!user.child("position").getValue().toString().equals("operator"))
-                                {
-                                    startService(new Intent(getApplicationContext(), BackgroundService.class)); //эта функция запускает фоновый сервис
+                                    if (rememberMe.isChecked()) {
+                                        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                                        SharedPreferences.Editor editor = sharedPrefs.edit();
+                                        editor.putString("Логин пользователя", login);
+                                        editor.putString("Должность", user.child("position").getValue().toString());
+                                        if (user.child("pult_no").getValue() != null) {
+                                            editor.putString("Номер пульта", user.child("pult_no").getValue().toString());
+                                        }
+                                        editor.commit();
+                                    }
+
+                                    if (!user.child("position").getValue().toString().equals("operator")) {
+                                        stopService(new Intent(getBaseContext(), BackgroundService.class)); //если до этого уже сервис для другого аккаунта был включен и произошел повторный логин
+                                        Intent startBackgroundService = new Intent(getApplicationContext(), BackgroundService.class);
+                                        startBackgroundService.putExtra("Должность", user.child("position").getValue().toString());
+//                                    startService(startBackgroundService); //эта функция запускает фоновый сервис
+                                        ContextCompat.startForegroundService(getApplicationContext(), startBackgroundService);
+                                    }
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "Неверный пароль", Toast.LENGTH_LONG).show();
                                 }
-                            }
-                            else
-                            {
-                                Toast.makeText(getApplicationContext(), "Неверный пароль", Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(getApplicationContext(), "Такого пользователя не существует\nВнимательно заполните поля", Toast.LENGTH_LONG).show();
                             }
                         }
-                        else
-                        {
-                            Toast.makeText(getApplicationContext(), "Такого пользователя не существует\nВнимательно заполните поля", Toast.LENGTH_LONG).show();
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
                         }
-                    }
-
-                    @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
-                });
-
+                    });
+                }
             }
         });
     }

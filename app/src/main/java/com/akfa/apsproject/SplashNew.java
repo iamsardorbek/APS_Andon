@@ -1,6 +1,7 @@
 package com.akfa.apsproject;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -36,13 +37,18 @@ public class SplashNew extends AppCompatActivity {
                     openFactoryCondition.putExtra("Должность", rememberedPosition);
                     keepSplash(openFactoryCondition);
                     break;
-                case "repairer":
+                case "repair":
                     Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
                     openProblemsList.putExtra("Логин пользователя", rememberedLogin);
                     openProblemsList.putExtra("Должность", rememberedPosition);
                     keepSplash(openProblemsList);
                     break;
             }
+            stopService(new Intent(getBaseContext(), BackgroundService.class)); //если до этого уже сервис для другого аккаунта был включен и произошел повторный логин
+            Intent startBackgroundService = new Intent(getApplicationContext(), BackgroundService.class);
+            startBackgroundService.putExtra("Должность", rememberedPosition);
+ //эта функция запускает фоновый сервис
+            ContextCompat.startForegroundService(getApplicationContext(), startBackgroundService);
         }
         else
         {

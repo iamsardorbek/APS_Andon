@@ -61,8 +61,8 @@ public class FactoryCondition extends AppCompatActivity{
         navigationView = findViewById(R.id.nv);
         navigationView.getMenu().clear();
         switch(position){
-            case "repairer":
-                navigationView.inflateMenu(R.menu.repairer_menu);
+            case "repair":
+                navigationView.inflateMenu(R.menu.repair_menu);
                 break;
             case "master":
                 navigationView.inflateMenu(R.menu.master_menu);

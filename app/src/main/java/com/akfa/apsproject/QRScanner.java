@@ -201,8 +201,8 @@ public class QRScanner extends AppCompatActivity {
                                                 startActivity(intent);
                                             } else if (shouldOpenPointDynamic.equals("нет")) {
                                                 Bundle arguments = getIntent().getExtras();
-                                                String problemKey = arguments.getString("ID проблемы в таблице Problems");
-                                                DatabaseReference problemRef = FirebaseDatabase.getInstance().getReference().child("Problems/" + problemKey);
+                                                String problemKey = arguments.getString("ID проблемы в таблице Maintenance_problems");
+                                                DatabaseReference problemRef = FirebaseDatabase.getInstance().getReference().child("Maintenance_problems/" + problemKey);
                                                 problemRef.child("solved").setValue(true);
                                                 problemRef.child("solved_by").setValue(employeeLogin);
                                                 String date, time;
@@ -213,7 +213,7 @@ public class QRScanner extends AppCompatActivity {
                                                 problemRef.child("date_solved").setValue(date);
                                                 problemRef.child("time_solved").setValue(time);
                                                 Intent openRepairerTakePhoto = new Intent(getApplicationContext(), RepairerTakePhoto.class);
-                                                openRepairerTakePhoto.putExtra("ID проблемы в таблице Problems", problemKey);
+                                                openRepairerTakePhoto.putExtra("ID проблемы в таблице Maintenance_problems", problemKey);
                                                 startActivity(openRepairerTakePhoto);
                                             }
                                             finish();
@@ -295,7 +295,8 @@ public class QRScanner extends AppCompatActivity {
                                         }
                                         else
                                         {
-                                            textView.setText("Отсканируйте код, сгенерированный на устройстве оператора, который сообщил о данной проблеме.");
+                                            textView.setText("Отсканируйте код, сгенерированный на устройстве оператора, который сообщил о данной проблеме. " +
+                                                    "Возможно, QR Код на экране оператора устарел. Нужно закрыть диалог и заново нажать на мигающую кнопку.");
                                         }
                                     }
                                 }
@@ -325,7 +326,7 @@ public class QRScanner extends AppCompatActivity {
                 .setIcon(R.drawable.close)
                 .setPositiveButton("Да", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference("Problems");
+                        DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference("Maintenance_problems");
                         for(String problemPushKey : problemPushKeysOfTheWholeCheck)
                         {
                             problemsRef.child(problemPushKey).setValue(null);

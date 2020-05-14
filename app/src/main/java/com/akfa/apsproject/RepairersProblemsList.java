@@ -13,16 +13,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -58,7 +55,7 @@ public class RepairersProblemsList extends AppCompatActivity {
                 int nomerProblemy = v.getId() - ID_TEXTVIEWS;
                 Intent intent = new Intent(getApplicationContext(), RepairerSeparateProblem.class);
                 String IDOfSelectedProblem = problemIDs.get(nomerProblemy);
-                intent.putExtra("ID проблемы в таблице Problems", IDOfSelectedProblem);
+                intent.putExtra("ID проблемы в таблице Maintenance_problems", IDOfSelectedProblem);
                 intent.putExtra("Логин пользователя", login);
                 startActivity(intent);
             }
@@ -136,7 +133,7 @@ public class RepairersProblemsList extends AppCompatActivity {
 
     private void addProblemsFromDatabase() {
         //на самом деле нужно взять количество строк в таблице problems
-        DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference().child("Problems");
+        DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference().child("Maintenance_problems");
         problemsRef.addValueEventListener(new ValueEventListener() {
             @SuppressLint("ResourceType")
             @Override public void onDataChange(@NonNull DataSnapshot problemsSnap) {
@@ -149,9 +146,9 @@ public class RepairersProblemsList extends AppCompatActivity {
                     setTitle("Проблемы на линиях");
                     for(DataSnapshot problemDataSnapshot : problemsSnap.getChildren())
                     {
-                        Problem problem = problemDataSnapshot.getValue(Problem.class);
+                        MaintenanceProblem problem = problemDataSnapshot.getValue(MaintenanceProblem.class);
                         problemIDs.add(problemDataSnapshot.getKey());
-                        String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nУчасток №" + problem.getPoint() + "\nПункт №" + problem.getSubpoint();
+                        String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nУчасток №" + problem.getStation_no() + "\nПункт №" + problem.getPoint_no();
                         TextView problemsInfo;
                         problemsInfo = new TextView(getApplicationContext());
                         problemsInfo.setText(problemInfoFromDB);

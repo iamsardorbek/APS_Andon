@@ -42,14 +42,14 @@ public class RepairerSeparateProblem extends AppCompatActivity {
 
     private void initInstances() {
         getSupportActionBar().hide();
-        problemsRef = FirebaseDatabase.getInstance().getReference().child("Problems");
-        IDOfTheProblem = getIntent().getExtras().getString("ID проблемы в таблице Problems");
+        problemsRef = FirebaseDatabase.getInstance().getReference().child("Maintenance_problems");
+        IDOfTheProblem = getIntent().getExtras().getString("ID проблемы в таблице Maintenance_problems");
         employeeLogin = getIntent().getExtras().getString("Логин пользователя");
         thisProblemRef = problemsRef.child(IDOfTheProblem);
         thisProblemRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot problemDataSnapshot) {
-                Problem problem = problemDataSnapshot.getValue(Problem.class);
+                MaintenanceProblem problem = problemDataSnapshot.getValue(MaintenanceProblem.class);
                 TextView shopNameTextView = findViewById(R.id.shop_name);
                 TextView equipmentNameTextView = findViewById(R.id.equipment_name);
                 TextView stationNo = findViewById(R.id.station_no);
@@ -58,11 +58,11 @@ public class RepairerSeparateProblem extends AppCompatActivity {
                 TextView date = findViewById(R.id.date);
                 shopNameTextView.setText(problem.getShop_name());
                 equipmentNameTextView.setText(problem.getEquipment_line_name());
-                stationNo.setText(Integer.toString(problem.getPoint()));
-                pointNo.setText(Integer.toString(problem.getSubpoint()));
+                stationNo.setText(Integer.toString(problem.getStation_no()));
+                pointNo.setText(Integer.toString(problem.getPoint_no()));
                 employeeLogin.setText(problem.getDetected_by_employee());
                 date.setText(problem.getDate() + " " + problem.getTime());
-                nomerPunkta = problem.getPoint();
+                nomerPunkta = problem.getStation_no();
                 equipmentName = problem.getEquipment_line_name();
                 equipmentNo = problem.getEquipment_line_no();
                 shopNo = problem.getShop_no();
@@ -101,7 +101,7 @@ public class RepairerSeparateProblem extends AppCompatActivity {
         intent.putExtra("Номер пункта", nomerPunkta);
         intent.putExtra("Открой PointDynamic", "нет");
         intent.putExtra("Логин пользователя", employeeLogin);
-        intent.putExtra("ID проблемы в таблице Problems", IDOfTheProblem);
+        intent.putExtra("ID проблемы в таблице Maintenance_problems", IDOfTheProblem);
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivityForResult(intent, QRScanner.CHECK_PERSON_ON_SPOT);
     }

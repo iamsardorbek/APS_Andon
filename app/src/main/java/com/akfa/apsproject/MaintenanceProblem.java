@@ -1,16 +1,16 @@
 package com.akfa.apsproject;
 
-public class Problem {
+public class MaintenanceProblem {
     public String date, time, detected_by_employee, shop_name, equipment_line_name;
-    public int point, subpoint, shop_no, equipment_line_no;
+    public int station_no, point_no, shop_no, equipment_line_no;
     public boolean solved;
 
-    public Problem()
+    public MaintenanceProblem()
     {
 
     }
 
-    public Problem(String detected_by_employee, String date, String time, String shop_name, String equipment_line_name, int shop_no, int equipment_line_no, int point, int subpoint)
+    public MaintenanceProblem(String detected_by_employee, String date, String time, String shop_name, String equipment_line_name, int shop_no, int equipment_line_no, int station_no, int subpoint)
     {
         this.solved = false;
         this.detected_by_employee = detected_by_employee;
@@ -18,8 +18,8 @@ public class Problem {
         this.time = time;
         this.shop_name = shop_name;
         this.equipment_line_name = equipment_line_name;
-        this.point = point;
-        this.subpoint = subpoint;
+        this.station_no = station_no;
+        this.point_no = subpoint;
         this.shop_no = shop_no;
         this.equipment_line_no = equipment_line_no;
     }
@@ -44,13 +44,13 @@ public class Problem {
     {
         return equipment_line_name;
     }
-    public int getPoint()
+    public int getStation_no()
     {
-        return point;
+        return station_no;
     }
-    public int getSubpoint()
+    public int getPoint_no()
     {
-        return subpoint;
+        return point_no;
     }
     public int getShop_no(){return shop_no;}
     public int getEquipment_line_no(){return equipment_line_no;}
