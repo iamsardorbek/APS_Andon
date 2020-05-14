@@ -42,72 +42,68 @@ import java.util.Date;
 import java.util.List;
 
 public class QRScanner extends AppCompatActivity {
-    public static final int CHECK_PERSON_ON_SPOT = 1, QR_OK = 13;
     SurfaceView surfaceView;
     CameraSource cameraSource;
     TextView textView, directionsTextView;
     BarcodeDetector barcodeDetector;
-    Bundle arguments;
+    private int equipmentNumber, shopNumber, nomerPunkta, numOfPoints, problemsCount; //кросс-активити переменные QuestPointDynamic
+    private long startTimeMillis; //кросс-активити переменная, передаваемая из QuestPointDynamic
+    private boolean detectedOnce = false; //для того, чтобы на уже обнаруженный (расшифрованный) код не реагировал повторно
     private String codeToDetect, shouldOpenPointDynamic;
-    private int equipmentNumber, shopNumber, nomerPunkta, numOfPoints, problemsCount;
-    private boolean detectedOnce = false;
-    private long startTimeMillis;
     private String employeeLogin, employeePosition;
     List<EquipmentLine> equipmentLineList = new ArrayList<>();
     List<String> problemPushKeysOfTheWholeCheck;
+    Bundle arguments;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.quest_activity_q_r_scanner);
-        getSupportActionBar().hide();
-        initInstances();
-        barcodeDetector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.QR_CODE).build();
-        cameraSource = new CameraSource.Builder(this, barcodeDetector).setRequestedPreviewSize(640, 480).build();
+        getSupportActionBar().hide(); //спрятать нав бар
+        initInstances(); //иниц все переменные и объекты
+        barcodeDetector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.QR_CODE).build(); //детектор QR кодов инициализировать
+        cameraSource = new CameraSource.Builder(this, barcodeDetector).setRequestedPreviewSize(640, 480).build(); //иниц источник камеры
         requestCameraPermission(); //в случае разрешения, стартует QR сканер
     }
 
     private void initInstances()
     {
         arguments = getIntent().getExtras();
+        shouldOpenPointDynamic = arguments.getString("Открой PointDynamic");
         equipmentNumber = arguments.getInt("Номер линии");
         shopNumber = arguments.getInt("Номер цеха");
-        Log.w("QRScanner equiNo", String.valueOf(equipmentNumber));
-        Log.w("QRScanner shopNo", String.valueOf(shopNumber));
         nomerPunkta = arguments.getInt("Номер пункта");
-        shouldOpenPointDynamic = arguments.getString("Открой PointDynamic");
-        //на самом деле в адрес пункта нужно заложить полные названия цеха и линии, но пока на номерах
         numOfPoints = arguments.getInt("Количество пунктов");
         startTimeMillis = arguments.getLong("startTimeMillis");
         employeeLogin = arguments.getString("Логин пользователя");
         employeePosition = arguments.getString("Должность");
         problemsCount = arguments.getInt("Количество обнаруженных проблем");
         problemPushKeysOfTheWholeCheck = arguments.getStringArrayList("Коды проблем");
+
+        //UI объекты
         surfaceView = findViewById(R.id.camerapreview);
         textView = findViewById(R.id.textView);
         directionsTextView = findViewById(R.id.directionsTextView);
-        directionsTextView.setVisibility(View.INVISIBLE);
+        directionsTextView.setVisibility(View.INVISIBLE); //пока данные с БД не получены, спрятай directionsTextView
+
         //codeToDetect, возьми данные из таблицы "QRCodes"
-        if(shouldOpenPointDynamic.equals("да") || shouldOpenPointDynamic.equals("нет")) {
-            DatabaseReference shopRef = FirebaseDatabase.getInstance().getReference().child("Shops/" + shopNumber);
-            shopRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot shop) {
+        if(shouldOpenPointDynamic.equals("да") || shouldOpenPointDynamic.equals("ремонтник")) //это оператор заходит в QRScanner в течении ТО проверки или ремонтник хочет решить проблему
+        {
+            DatabaseReference shopRef = FirebaseDatabase.getInstance().getReference().child("Shops/" + shopNumber); //ссылка к цеху
+            shopRef.addListenerForSingleValueEvent(new ValueEventListener() {//единожды считать данные про линию текущего юзера
+                @Override public void onDataChange(@NonNull DataSnapshot shop) {
                     String shopName = shop.child("shop_name").getValue().toString();
                     String equipmentName = shop.child("Equipment_lines/" + equipmentNumber + "/equipment_name").getValue().toString();
                     String directionsText = "Подойдите к\n" + shopName + "\n" + equipmentName + "\nУчасток №" + nomerPunkta;
                     directionsTextView.setText(directionsText);
                     codeToDetect = shop.child("Equipment_lines/" + equipmentNumber + "/QR_codes/qr_" + nomerPunkta).getValue().toString();
-                    directionsTextView.setVisibility(View.VISIBLE);
+                    directionsTextView.setVisibility(View.VISIBLE); //данные получены и directions составлены, сделаем текствью видимым
                 }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-                }
+                @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
             });
         }
         else
-        {
+        { //пройтись по всем линиям, и забей данные о них в equipmentLineList для мастера/оператора которые сразу начинают проверку  прямой вход в QR из QuestMainActivity ("Любой код")
             DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference().child("Shops");
             shopsRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override public void onDataChange(@NonNull DataSnapshot shops) {
@@ -116,7 +112,7 @@ public class QRScanner extends AppCompatActivity {
                         DataSnapshot shopEquipmentLines = shop.child("Equipment_lines");
                         for(DataSnapshot equipmentLine : shopEquipmentLines.getChildren()) {
                             String codeToDetect = equipmentLine.child("QR_codes/qr_1").getValue().toString();
-                            int shopNo = Integer.parseInt(shop.getKey().toString());
+                            int shopNo = Integer.parseInt(shop.getKey());
                             int equipmentLineNo = Integer.parseInt(equipmentLine.getKey().toString());
                             EquipmentLine equipmentLineObject = new EquipmentLine(shopNo, equipmentLineNo, codeToDetect);
                             equipmentLineList.add(equipmentLineObject);
@@ -128,59 +124,47 @@ public class QRScanner extends AppCompatActivity {
         }
     }
 
-    private void requestCameraPermission() {
+    private void requestCameraPermission() { //если разрешение на камеру все еще не дали, спросить снова. Спрашивается это также в Логин активити
         int permissionStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        if (permissionStatus == PackageManager.PERMISSION_DENIED) {
+        if (permissionStatus == PackageManager.PERMISSION_DENIED)
             ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.CAMERA}, 0);
-        }
         else
-        {
-            qrScanCameraON();
-        }
+            qrScanCameraON(); //стартует cameraSource и QRScanner сам
     }
 
     private void qrScanCameraON()
     {
         surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) {
+            @Override public void surfaceCreated(SurfaceHolder holder) {
                 if(ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA)
                         != PackageManager.PERMISSION_GRANTED) {
                     return;
                 }
-                try {
-                    cameraSource.start(holder);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                try { cameraSource.start(holder); }
+                catch (IOException e) { e.printStackTrace(); }
             }
-
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-            }
-
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
+            @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) { }
+            @Override public void surfaceDestroyed(SurfaceHolder holder) {
                 cameraSource.stop();
             }
         });
 
         barcodeDetector.setProcessor(new Detector.Processor<Barcode>() {
-            @Override public void release() {
+            @Override public void release() { }
 
-            }
-
+            //------------САМОЕ ГЛАВНОЕ ЭТОГО АКТИВИТИ ЗДЕСЬ------------//
+            //-------обработка обнаруженных кодов, сравнивание их с тем, что нам нужно, дальнейшие действия--------//
             @Override public void receiveDetections(Detector.Detections<Barcode> detections) {
                 final SparseArray<Barcode> qrCodes = detections.getDetectedItems();
-                if(qrCodes.size()!=0)
+                if(qrCodes.size()!=0) //если обнаружен хоть 1 код
                 {
+                    //именно textView.post используется, потому что он дает доступ изменять textView в других классах (а это inner class Detector.Processor<Barcode>)
+                    //поэтому все умещаем внутри этого post и runnable
                     textView.post(new Runnable() {
-                        @Override
-                        public void run() {
+                        @Override public void run() {
                             {
                                 final String codeFromQR = qrCodes.valueAt(0).displayValue;
-                                if(shouldOpenPointDynamic.equals("да") || shouldOpenPointDynamic.equals("нет")) {
+                                if(shouldOpenPointDynamic.equals("да") || shouldOpenPointDynamic.equals("ремонтник")) {
                                     if (!detectedOnce) {
                                         if (areDetectedAndPassedCodesSame(codeFromQR, codeToDetect)) {
                                             vibration(500);
@@ -199,7 +183,7 @@ public class QRScanner extends AppCompatActivity {
                                                 intent.putExtra("Должность", employeePosition);
                                                 intent.putStringArrayListExtra("Коды проблем", (ArrayList<String>) problemPushKeysOfTheWholeCheck);
                                                 startActivity(intent);
-                                            } else if (shouldOpenPointDynamic.equals("нет")) {
+                                            } else if (shouldOpenPointDynamic.equals("ремонтник")) {
                                                 Bundle arguments = getIntent().getExtras();
                                                 String problemKey = arguments.getString("ID проблемы в таблице Maintenance_problems");
                                                 DatabaseReference problemRef = FirebaseDatabase.getInstance().getReference().child("Maintenance_problems/" + problemKey);
@@ -222,7 +206,7 @@ public class QRScanner extends AppCompatActivity {
                                         }
                                     }
                                 }
-                                else if (shouldOpenPointDynamic.equals("другое")) {
+                                else if (shouldOpenPointDynamic.equals("Любой код")) {
                                     if (!detectedOnce) {
                                         EquipmentLine equipmentLine = detectedCodeAmongInitialPunkts(codeFromQR);
                                         if(equipmentLine != null)
@@ -310,7 +294,7 @@ public class QRScanner extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(nomerPunkta > 1 && !shouldOpenPointDynamic.equals("нет")) {
+        if(nomerPunkta > 1 && !shouldOpenPointDynamic.equals("ремонтник")) {
             AlertDialog diaBox = AskOption();
             diaBox.show();
         }

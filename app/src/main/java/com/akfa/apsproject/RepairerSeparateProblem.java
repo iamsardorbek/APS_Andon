@@ -99,10 +99,10 @@ public class RepairerSeparateProblem extends AppCompatActivity {
         intent.putExtra("Номер цеха", shopNo);
         intent.putExtra("Номер линии", equipmentNo);
         intent.putExtra("Номер пункта", nomerPunkta);
-        intent.putExtra("Открой PointDynamic", "нет");
+        intent.putExtra("Открой PointDynamic", "ремонтник");
         intent.putExtra("Логин пользователя", employeeLogin);
         intent.putExtra("ID проблемы в таблице Maintenance_problems", IDOfTheProblem);
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        startActivityForResult(intent, QRScanner.CHECK_PERSON_ON_SPOT);
+        startActivity(intent);
     }
 }

@@ -30,63 +30,75 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 
+//------------ВЫВОДИТ EXPANDABLE LIST VIEW C ЦЕХАМИ И ЛИНИЯМИ------------//
+//------------ТАКЖЕ ЕСТЬ КНОПКА QR СКАНЕРА, ЧТОБЫ СРАЗУ ОТСКАНИРОВАТЬ И НАЧАТЬ ПРОВЕРКУ------------//
+//------------ПРИ НАЖАТИИ НА НАЗВАНИЯ ЛИНИЙ, ПЕРЕВОДИТ В MACHINE LAYOUT ACTIVITY------------//
 public class QuestMainActivity extends AppCompatActivity  {
 
-    static int childPositionG, groupPositionG;
+    static int equipmentNoGlobal, shopNoGlobal; //глоб переменные, используемые также в EndOfChecking
 
+    Button startWithQR; //КНОПКА QR СКАНЕРА, ЧТОБЫ СРАЗУ ОТСКАНИРОВАТЬ И НАЧАТЬ ПРОВЕРКУ
+
+    //связано с ExpandableListView
     ExpandableListView expandableListView; //для выпадающего списка
-    Button startWithQR;
     List<String> listGroup;
     HashMap<String, List<String>> listItem;
-    private MainAdapter adapter;
-    private String login, position;
-    private ActionBarDrawerToggle toggle;
+    private ExpandableListViewAdapter adapter;
+
+
+    private String login, position; //кросс-активити переменные
+    private ActionBarDrawerToggle toggle; //для нав бара
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.quest_activity_main);
-        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+        AppCompatDelegate.setCompatVectorFromResourcesEnabled(true); //какой-то месседж компилятору, чтобы drawable resources задаваемые объектам могли быть векторными
+
+        initInstances(); //инициализация переменных и кнопки
+        initExpandableListView(); //иницилизация выпадающего списка
+        toggle = setUpNavBar();
+    }
+
+    private void initInstances()
+    {
         //inter-activity values
         login = getIntent().getExtras().getString("Логин пользователя");
         position = getIntent().getExtras().getString("Должность");
-        initExpandableListView(); //иницилизация выпадающего списка
         startWithQR = findViewById(R.id.start_with_qr);
         startWithQR.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //запуск QR сканера отсканировав  qr код 1-го участка любой линии
                 Intent openQR = new Intent(getApplicationContext(), QRScanner.class);
-//                openQR.putExtra("")
-                //nedds edits, extras
-                openQR.putExtra("Открой PointDynamic", "другое");
+                openQR.putExtra("Открой PointDynamic", "Любой код");
                 openQR.putExtra("Должность", position);
                 openQR.putExtra("Логин пользователя", login); //передавать логин пользователя взятый из Firebase
                 startActivity(openQR);
             }
         });
-        toggle = setUpNavBar();
     }
 
     private void initExpandableListView() {
         //инициализация выпадающего списка
         expandableListView = findViewById(R.id.equipment_list);
-        listGroup = new ArrayList<>();
-        listItem = new HashMap<>();
-        adapter = new MainAdapter(this, listGroup, listItem);
+        listGroup = new ArrayList<>(); //для названий цехов
+        listItem = new HashMap<>(); //для названий линий
+        adapter = new ExpandableListViewAdapter(this, listGroup, listItem); //адаптер задает элементы expListView сам
         expandableListView.setAdapter(adapter);
-        initListData();
+        initListData(); //получить данные из БД и записать их в спец
         expandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
             public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
                 //пользователь выбрал линию для проверки передаем данные в QRScanner
                 //логин в QRScanner не используется explicitly, он передается в PointDynamic. Таким образом QrScanner выступает посредником передачи логина
                 if(position.equals("master")) {
-                    groupPositionG = groupPosition;
-                    childPositionG = childPosition;
+                    shopNoGlobal = groupPosition;
+                    equipmentNoGlobal = childPosition;
                 }
                 Intent intent = new Intent(getApplicationContext(), MachineLayoutActivity.class);
-                intent.putExtra("Номер цеха", QuestMainActivity.groupPositionG);
-                intent.putExtra("Номер линии", QuestMainActivity.childPositionG);
+                intent.putExtra("Номер цеха", QuestMainActivity.shopNoGlobal);
+                intent.putExtra("Номер линии", QuestMainActivity.equipmentNoGlobal);
                 intent.putExtra("Логин пользователя", login); //передавать логин пользователя взятый из Firebase
                 intent.putExtra("Должность", position);
                 startActivity(intent);
@@ -184,39 +196,44 @@ public class QuestMainActivity extends AppCompatActivity  {
     }
 
     TreeMap<Integer,  Shop> shopsMap = new TreeMap<>();
-    //добавить данные в раскрывающийся список
-    private void initListData() {
+    private void initListData() {//добавить данные в раскрывающийся список
         switch (position)
-        {
+        { //динамически добавляет данные о доступных для этого юзера линий для проверки (мастер может проверить все линии во всех цехах; оператор может проверить только одну линию)
             case "operator":
-                //у оператора есть возможность провести проверку только на своей линии, поэтому в ExpandableListView покажем его линию
-                DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users/" + login);
-                userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot user) {
-                        final String userEquipmentName = user.child("equipment_name").getValue().toString();
-                        final String userShopName = user.child("shop_name").getValue().toString();
-                        DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference("Shops");
-                        shopsRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot shops) {
-                                int shopNo = 99, equipmentNo = 99; //IDE ругается что might not be initialized, поэтому задал эти числа
-                                for (DataSnapshot shop : shops.getChildren()) { //считать данные объекта цеха в объект Shop (aka распарсить данные с файрбейз снэпшот в объект)
+                //у оператора есть возможность провести проверку только на своей линии, поэтому в ExpandableListView покажем только его линию
+                DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users/" + login); //ссылка на ветку этого юзера (чтобы получить назв-я его цеха и линии)
+                userRef.addListenerForSingleValueEvent(new ValueEventListener()
+                {
+                    @Override public void onDataChange(@NonNull DataSnapshot user)
+                    {
+                        final String userEquipmentName = user.child("equipment_name").getValue().toString(); //полное название его линии
+                        final String userShopName = user.child("shop_name").getValue().toString(); //полное название его цеха
+                        DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference("Shops"); //сделаем query и найдем ветку Firebase именно его линии, этот же концепт используется в PultActivity
+                        shopsRef.addListenerForSingleValueEvent(new ValueEventListener()
+                        {
+                            @Override public void onDataChange(@NonNull DataSnapshot shops)
+                            {
+                                int shopNo, equipmentNo; //конечное и релевантные индексов цеха и линии будут заданы в equipmentNoGlobal, shopNoGlobal
+                                for (DataSnapshot shop : shops.getChildren()) //пройдем по каждой подветке shop пока не найдем нужный нам shop с shop_name соответствующий названию цеха в ветке юзера
+                                { //считать данные объекта цеха в объект Shop (aka распарсить данные с файрбейз снэпшот в объект)
                                     shopNo = Integer.parseInt(shop.getKey());
                                     String shopName = (String) shop.child("shop_name").getValue();
-                                    if (shopName.equals(userShopName)) {
-                                        Shop currentShop = new Shop(shopName);
+                                    if (shopName.equals(userShopName)) //оппа, наша ветка юзера нашлась
+                                    {
+                                        Shop currentShop = new Shop(shopName); //сохранить данные о цехе в объекте Shop
                                         DataSnapshot equipmentLines = shop.child("Equipment_lines");
-                                        for (DataSnapshot equipmentLine : equipmentLines.getChildren()) { //распарсить линии оборудования
+
+                                        for (DataSnapshot equipmentLine : equipmentLines.getChildren()) //пройтись по линиям данного цеха, найти нужную линию и внести это в expandableListView
+                                        {
                                             equipmentNo = Integer.parseInt(equipmentLine.getKey());
                                             String equipmentName = (String) equipmentLine.child("equipment_name").getValue();
-                                            if (equipmentName.equals(userEquipmentName)) {
+                                            if (equipmentName.equals(userEquipmentName)) { //релевантная линия относящаяся к данному оператору
                                                 currentShop.equipmentLines.put(equipmentNo, equipmentName);
                                                 //поставь это в дерево мап, которое будет вставлять с сортировкой
                                                 shopsMap.put(shopNo, currentShop);
                                                 //числа ниже используются для обращения к Firebase в Pointdynamic+QRScanner
-                                                groupPositionG = shopNo;
-                                                childPositionG = equipmentNo;
+                                                shopNoGlobal = shopNo;
+                                                equipmentNoGlobal = equipmentNo;
                                                 //количество цехов для ограничения цикла
                                                 //добавить это в лист и мап, нужные для добавления элементов в expandableListView
 //                                                Shop currentShop = shopsMap.get(shopNo);
@@ -228,7 +245,7 @@ public class QuestMainActivity extends AppCompatActivity  {
                                                 listItem.put(currentShop.name, listOfEquipmentLines);
                                                 //обнови адаптер, чтобы изменения стали видны
                                                 adapter.notifyDataSetChanged();
-                                                break;
+                                                return; //нашли нужную линию, записали данные, заканчивай работу функции (закрой ее)
                                             }
                                         }
                                     }
@@ -240,12 +257,12 @@ public class QuestMainActivity extends AppCompatActivity  {
                     @Override public void onCancelled(@NonNull DatabaseError databaseError) {}
                 });
                 break;
-            case "master":
-                // у мастера доступ ко всем линиям и цехам, поэтому ему мы покажем все
+            case "master": // у мастера доступ ко всем линиям и цехам
                 DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference("Shops");
-                shopsRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot shops) {
+                shopsRef.addListenerForSingleValueEvent(new ValueEventListener()
+                {
+                    @Override public void onDataChange(@NonNull DataSnapshot shops)
+                    {
                         for(DataSnapshot shop : shops.getChildren())
                         { //считать данные объекта цеха в объект Shop (aka распарсить данные с файрбейз снэпшот в объект)
                             int shopNo = Integer.parseInt(shop.getKey());
@@ -279,11 +296,7 @@ public class QuestMainActivity extends AppCompatActivity  {
                         //обнови адаптер, чтобы изменения стали видны
                         adapter.notifyDataSetChanged();
                     }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
+                    @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
                 });
                 break;
         }

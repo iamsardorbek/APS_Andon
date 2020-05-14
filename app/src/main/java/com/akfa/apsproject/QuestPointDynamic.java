@@ -88,7 +88,7 @@ public class QuestPointDynamic extends AppCompatActivity
         getSupportActionBar().hide();
         mStorageRef = FirebaseStorage.getInstance().getReference();
         db = FirebaseDatabase.getInstance();
-        shopRef = db.getReference().child("Shops/" + QuestMainActivity.groupPositionG);
+        shopRef = db.getReference().child("Shops/" + QuestMainActivity.shopNoGlobal);
         nextPoint = findViewById(R.id.nextPoint);
         equipmentNameTextView = findViewById(R.id.equipmentName);
         nomerPunktaTextView = findViewById(R.id.nomer_punkta);
@@ -246,7 +246,7 @@ public class QuestPointDynamic extends AppCompatActivity
             public void onDataChange(@NonNull DataSnapshot shopSnap) {
                 // "/Equipment_lines/" + QuestMainActivity.childPositionG
                 shopName = shopSnap.child("shop_name").getValue().toString();
-                DataSnapshot equipmentSnap = shopSnap.child("Equipment_lines/" + QuestMainActivity.childPositionG);
+                DataSnapshot equipmentSnap = shopSnap.child("Equipment_lines/" + QuestMainActivity.equipmentNoGlobal);
                 equipmentName = equipmentSnap.child("equipment_name").getValue().toString();
                 equipmentNameTextView.setText(getString(R.string.equipment_name_textview) + " " + equipmentName);
                 //простое кастование не получается, поэтому приходится писать больше кода
@@ -492,7 +492,7 @@ public class QuestPointDynamic extends AppCompatActivity
                 problemPushKeys.add(problemPushKey);
                 problemPushKeysOfTheWholeCheck.add(problemPushKey);
                 Log.i("MMp problemPushKey", problemPushKey);
-                newProbRef.setValue(new MaintenanceProblem(employeeLogin, date, time, shopName, equipmentName, QuestMainActivity.groupPositionG, QuestMainActivity.childPositionG, stationNo, i));
+                newProbRef.setValue(new MaintenanceProblem(employeeLogin, date, time, shopName, equipmentName, QuestMainActivity.shopNoGlobal, QuestMainActivity.equipmentNoGlobal, stationNo, i));
                 //сфоткайте проблему, следующие проблемы фоткаются через запуск камеры через onActivityResult
                 if(problemsOnThisStation == 1) {
                     Toast.makeText(getApplicationContext(), "Сфотографируйте проблему пункта " + i, Toast.LENGTH_LONG).show();

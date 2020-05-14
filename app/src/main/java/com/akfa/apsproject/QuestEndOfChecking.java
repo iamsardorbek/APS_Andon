@@ -24,46 +24,34 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+//----------------------АКТИВИТИ, ВЫВОДЯЩЕЕ ИТОГИ ТО ПРОВЕРКИ----------------------//
 public class QuestEndOfChecking extends AppCompatActivity {
-    Button newChecking;
-    TextView shop, equipmentLine, numberOfProblems, checkingDuration;
-    String employeeLogin, employeePosition;
-    ActionBarDrawerToggle toggle;
+    Button newChecking; //кнопка, переводящая юзера в QuestMainActivity для запуска новой ТО проверки
+    TextView shop, equipmentLine, numberOfProblems, checkingDuration; //данные и  статистика, накопившаяся за текущую ТО проверку
+    String employeeLogin, employeePosition; //данные о пользователе, чтобы передавать их в дальнейшие активити
+    ActionBarDrawerToggle toggle; //для navigation bar
     //Данные, которые нужно вывести:
 //    из таблицы equipment возьми название цеха основываясь на номере цеха - Quest Main Activity.groupPositionG
 //    из таблицы equipment возьми название оборудования/линии основываясь на номере оборудования/линии - Quest Main Activity.childPositionG
+    // время проверки - QuestPointDynamic.checkDuration
 
-    // время проверки - PointDynamic.checkDuration
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.quest_activity_end_of_checking);
-        getSupportActionBar().hide();
-        shop = findViewById(R.id.shop);
-        equipmentLine = findViewById(R.id.equipmentLine);
-        numberOfProblems = findViewById(R.id.numberOfProblems);
-        checkingDuration = findViewById(R.id.checkingDuration);
-        Bundle arguments = getIntent().getExtras();
-        int problemsCount = arguments.getInt("Количество обнаруженных проблем");
-        employeeLogin = getIntent().getExtras().getString("Логин пользователя");
-        employeePosition = getIntent().getExtras().getString("Должность");
-        toggle = setUpNavBar();
+        setTitle(R.string.endOfChecking); //задать текст app bar как "Проверка линии закончена"
 
-        shop.setText(Integer.toString(QuestMainActivity.groupPositionG));
-        equipmentLine.setText(Integer.toString(QuestMainActivity.childPositionG));
-        numberOfProblems.setText(Integer.toString(problemsCount));
-        checkingDuration.setText(QuestPointDynamic.checkDuration);
+        initInstances(); //инициализировать переменные и объекты views
+        toggle = setUpNavBar(); //настроить нав бар
 
-        DatabaseReference equipmentRef = FirebaseDatabase.getInstance().getReference("Shops/" + QuestMainActivity.groupPositionG);
+        DatabaseReference equipmentRef = FirebaseDatabase.getInstance().getReference("Shops/" + QuestMainActivity.shopNoGlobal);
         equipmentRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override public void onDataChange(@NonNull DataSnapshot shopSnap) {
-                shop.setText(shopSnap.child("shop_name").getValue().toString()); //название цеха записать в текствью
-                String equipmentLineName = shopSnap.child("Equipment_lines/" + QuestMainActivity.childPositionG + "/equipment_name").getValue().toString(); //название линии
+                shop.setText(shopSnap.child("shop_name").getValue().toString()); //название цеха записать в текствью shop
+                String equipmentLineName = shopSnap.child("Equipment_lines/" + QuestMainActivity.equipmentNoGlobal + "/equipment_name").getValue().toString(); //название линии записать в текствью equipmentLine
                 equipmentLine.setText(equipmentLineName);
             }
-            @Override public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
+            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
 
         newChecking = findViewById(R.id.newChecking);
@@ -78,6 +66,26 @@ public class QuestEndOfChecking extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+    }
+
+    private void initInstances()
+    {
+        //инициализируем все элементы дизайна
+        shop = findViewById(R.id.shop);
+        equipmentLine = findViewById(R.id.equipmentLine);
+        numberOfProblems = findViewById(R.id.numberOfProblems);
+        checkingDuration = findViewById(R.id.checkingDuration);
+        //инициализируем все переменные, переданные в arguments
+        Bundle arguments = getIntent().getExtras();
+        int problemsCount = arguments.getInt("Количество обнаруженных проблем");
+        employeeLogin = getIntent().getExtras().getString("Логин пользователя");
+        employeePosition = getIntent().getExtras().getString("Должность");
+
+        //задать текста в textviews с данными
+        shop.setText(Integer.toString(QuestMainActivity.shopNoGlobal)); //для подстраховки задаем номер цеха
+        equipmentLine.setText(Integer.toString(QuestMainActivity.equipmentNoGlobal)); //и номер линии
+        numberOfProblems.setText(Integer.toString(problemsCount)); //задаем количество обнаруженных
+        checkingDuration.setText(QuestPointDynamic.checkDuration); //задаем в textview checkingDuration продолжительность проверки в мм:сс
     }
 
     private ActionBarDrawerToggle setUpNavBar() {
