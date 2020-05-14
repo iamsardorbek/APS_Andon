@@ -48,7 +48,7 @@ public class BackgroundService extends Service {
                 {
                     String thisUrgentProbStatus = urgentProbSnap.child("status").getValue().toString();
                     String thisUrgentProbKey = urgentProbSnap.getKey();
-                    String whoIsNeededPosition = urgentProbSnap.child("who_is_needed_login").getValue().toString();
+                    String whoIsNeededPosition = urgentProbSnap.child("who_is_needed_position").getValue().toString();
 
                     if(thisUrgentProbStatus.equals("DETECTED") && !urgentProblems.contains(thisUrgentProbKey) && whoIsNeededPosition.equals(employeePosition)) {
                          //получить UID проблемы

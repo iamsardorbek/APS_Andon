@@ -2,10 +2,8 @@ package com.akfa.apsproject;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -13,7 +11,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,8 +30,8 @@ public class QuestEndOfChecking extends AppCompatActivity {
     String employeeLogin, employeePosition;
     ActionBarDrawerToggle toggle;
     //Данные, которые нужно вывести:
-//    из таблицы equipment возьми название цеха основываясь на номере цеха - MainActivity.groupPositionG
-//    из таблицы equipment возьми название оборудования/линии основываясь на номере оборудования/линии - MainActivity.childPositionG
+//    из таблицы equipment возьми название цеха основываясь на номере цеха - Quest Main Activity.groupPositionG
+//    из таблицы equipment возьми название оборудования/линии основываясь на номере оборудования/линии - Quest Main Activity.childPositionG
 
     // время проверки - PointDynamic.checkDuration
     @Override
@@ -126,7 +123,7 @@ public class QuestEndOfChecking extends AppCompatActivity {
                         startActivity(openUrgentProblemsList);
                         break;
                     case R.id.pult:
-                        Intent openMainActivity = new Intent(getApplicationContext(), MainActivity.class);
+                        Intent openMainActivity = new Intent(getApplicationContext(), PultActivity.class);
                         openMainActivity.putExtra("Логин пользователя", employeeLogin);
                         openMainActivity.putExtra("Должность", employeePosition);
                         startActivity(openMainActivity);

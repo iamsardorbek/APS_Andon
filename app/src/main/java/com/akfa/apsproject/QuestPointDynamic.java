@@ -201,7 +201,7 @@ public class QuestPointDynamic extends AppCompatActivity
                                 startActivity(openUrgentProblemsList);
                                 break;
                             case R.id.pult:
-                                Intent openMainActivity = new Intent(getApplicationContext(), MainActivity.class);
+                                Intent openMainActivity = new Intent(getApplicationContext(), PultActivity.class);
                                 openMainActivity.putExtra("Логин пользователя", employeeLogin);
                                 openMainActivity.putExtra("Должность", employeePosition);
                                 startActivity(openMainActivity);

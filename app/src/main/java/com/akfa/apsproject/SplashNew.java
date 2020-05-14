@@ -25,7 +25,7 @@ public class SplashNew extends AppCompatActivity {
             {
                 case "operator":
                     String rememberedPultNo = sharedPrefs.getString("Номер пульта", null);
-                    Intent openPult = new Intent(getApplicationContext(), MainActivity.class);
+                    Intent openPult = new Intent(getApplicationContext(), PultActivity.class);
                     openPult.putExtra("Номер пульта", rememberedPultNo);
                     openPult.putExtra("Логин пользователя", rememberedLogin);
                     openPult.putExtra("Должность", rememberedPosition);
