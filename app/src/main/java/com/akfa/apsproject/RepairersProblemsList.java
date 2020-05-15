@@ -29,26 +29,34 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
-
+//----------ПОКАЗЫВАЕТ СПИСОК ТО ПРОБЛЕМ НА ЗАВОДЕ-------//
+//----------ПРИ НАЖАТИИ НА TextView С ПРОБЛЕМОЙ, ОТКРЫВАЕТ RepairersSeparateProblem---------//
+//---------layout xml пустой почти, потому что элементы динамически добавляются, заголовок задается программно---------//
 public class RepairersProblemsList extends AppCompatActivity {
     private final int ID_TEXTVIEWS = 5000;
     private int problemCount = 0;
-    private List<String> problemIDs;
     private String login, position;
+    private List<String> problemIDs;
     LinearLayout linearLayout;
-    View.OnClickListener textviewClickListener;
     ActionBarDrawerToggle toggle;
+    View.OnClickListener textviewClickListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.repairers_activity_problems_list);
         setTitle("Загрузка данных..."); //если нет проблем, надо сделать: нету проблем
+        initInstances();
         toggle = setUpNavBar();
+        addProblemsFromDatabase();
+    }
+    private void initInstances()
+    {//иниц кросс-активити перем-х
         login = getIntent().getExtras().getString("Логин пользователя");
         position = getIntent().getExtras().getString("Должность");
         linearLayout = findViewById(R.id.linearLayout);
         problemIDs = new ArrayList<>();
+        //к каждому textview проблемы будет прикреплен этот listener
         textviewClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -57,10 +65,56 @@ public class RepairersProblemsList extends AppCompatActivity {
                 String IDOfSelectedProblem = problemIDs.get(nomerProblemy);
                 intent.putExtra("ID проблемы в таблице Maintenance_problems", IDOfSelectedProblem);
                 intent.putExtra("Логин пользователя", login);
+                intent.putExtra("Должность", position);
                 startActivity(intent);
             }
         };
-        addProblemsFromDatabase();
+    }
+
+    private void addProblemsFromDatabase() {
+        //----САМОЕ ГЛАВНОЕ ЭТОГО АКТИВИТИ----//
+        //на самом деле нужно взять количество строк в таблице problems
+        DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference().child("Maintenance_problems"); //ссылка на проблемы ТО
+        problemsRef.addValueEventListener(new ValueEventListener() {
+            @SuppressLint("ResourceType")
+            @Override public void onDataChange(@NonNull DataSnapshot problemsSnap) {
+                linearLayout.removeAllViews(); //для обновления данных удали все результаты предыдущего поиска
+                if(problemsSnap.getValue() == null)
+                {
+                    setTitle("Все проблемы решены");
+                }
+                else
+                {
+                    setTitle("Проблемы на линиях");
+                    for(DataSnapshot problemDataSnapshot : problemsSnap.getChildren())
+                    { //пройдись по всем проблемах в ветке
+                        MaintenanceProblem problem = problemDataSnapshot.getValue(MaintenanceProblem.class); //считай в объект
+                        problemIDs.add(problemDataSnapshot.getKey()); //добавь айди данной проблемы в лист
+
+                        //инициализация TEXTVIEW
+                        String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nУчасток №" + problem.getStation_no() + "\nПункт №" + problem.getPoint_no();
+                        TextView problemsInfo;
+                        problemsInfo = new TextView(getApplicationContext());
+                        problemsInfo.setText(problemInfoFromDB);
+                        problemsInfo.setPadding(25, 25, 25, 25);
+                        problemsInfo.setId(ID_TEXTVIEWS + problemCount);
+                        problemsInfo.setTextColor(Color.parseColor(getString(R.color.text)));
+                        problemsInfo.setTextSize(13);
+                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                        params.setMargins(20, 25, 20, 25);
+                        problemsInfo.setLayoutParams(params);
+                        problemsInfo.setClickable(true);
+                        problemsInfo.setBackgroundResource(R.drawable.list_group_layout);
+                        problemsInfo.setOnClickListener(textviewClickListener);
+                        //добавить textview в layout
+                        linearLayout.addView(problemsInfo);
+                        problemCount++; //итерируй для уникализации айдишек textview и обращения к лист элементам
+                    }
+                }
+            }
+
+            @Override public void onCancelled(@NonNull DatabaseError databaseError) {}
+        });
     }
 
     private ActionBarDrawerToggle setUpNavBar() {
@@ -129,46 +183,5 @@ public class RepairersProblemsList extends AppCompatActivity {
             return true;
 
         return super.onOptionsItemSelected(item);
-    }
-
-    private void addProblemsFromDatabase() {
-        //на самом деле нужно взять количество строк в таблице problems
-        DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference().child("Maintenance_problems");
-        problemsRef.addValueEventListener(new ValueEventListener() {
-            @SuppressLint("ResourceType")
-            @Override public void onDataChange(@NonNull DataSnapshot problemsSnap) {
-                if(problemsSnap.getValue() == null)
-                {
-                    setTitle("Все проблемы решены");
-                }
-                else
-                {
-                    setTitle("Проблемы на линиях");
-                    for(DataSnapshot problemDataSnapshot : problemsSnap.getChildren())
-                    {
-                        MaintenanceProblem problem = problemDataSnapshot.getValue(MaintenanceProblem.class);
-                        problemIDs.add(problemDataSnapshot.getKey());
-                        String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nУчасток №" + problem.getStation_no() + "\nПункт №" + problem.getPoint_no();
-                        TextView problemsInfo;
-                        problemsInfo = new TextView(getApplicationContext());
-                        problemsInfo.setText(problemInfoFromDB);
-                        problemsInfo.setPadding(25, 25, 25, 25);
-                        problemsInfo.setId(ID_TEXTVIEWS + problemCount);
-                        problemsInfo.setTextColor(Color.parseColor(getString(R.color.text)));
-                        problemsInfo.setTextSize(13);
-                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                        params.setMargins(20, 25, 20, 25);
-                        problemsInfo.setLayoutParams(params);
-                        problemsInfo.setClickable(true);
-                        problemsInfo.setBackgroundResource(R.drawable.list_group_layout);
-                        problemsInfo.setOnClickListener(textviewClickListener);
-                        linearLayout.addView(problemsInfo);
-                        problemCount++;
-                    }
-                }
-            }
-
-            @Override public void onCancelled(@NonNull DatabaseError databaseError) {            }
-        });
     }
 }

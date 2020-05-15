@@ -18,26 +18,29 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
 
+//------ВЕБ БРАУЗЕР СОСТОЯНИЯ ПРОИЗВОДСТВА, ВЫВОДЯЩИЙ САЙТ В WebView------//
+//------Мастер и ремонтик имеет доступ к данному активити-------//
 public class FactoryCondition extends AppCompatActivity{
     WebView webview;
     ActionBarDrawerToggle toggle;
-    String login, position;
+    String login, position; //кросс-активити переменные
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.factory_condition);
-        find_objects();
+        initInstances();
         toggle = setUpNavBar();
+        //иниц WebView
         webview.setWebViewClient(new WebViewClient());
         webview.getSettings().setJavaScriptEnabled(true);
         webview.getSettings().setDomStorageEnabled(true);
         webview.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
-        webview.loadUrl("https://aps-project-akfa.web.app/");
+        webview.loadUrl(getString(R.string.website_address_factory_condition));
     }
 
     // find all variables
-    protected void find_objects(){
+    protected void initInstances(){
         webview=findViewById(R.id.webview);
         login = getIntent().getExtras().getString("Логин пользователя");
         position = getIntent().getExtras().getString("Должность");
@@ -122,10 +125,8 @@ public class FactoryCondition extends AppCompatActivity{
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         if(toggle.onOptionsItemSelected(item))
             return true;
-
         return super.onOptionsItemSelected(item);
     }
 

@@ -1,11 +1,7 @@
 package com.akfa.apsproject;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
-
+import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -15,9 +11,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
+
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
@@ -26,20 +25,29 @@ import com.google.firebase.storage.UploadTask;
 import java.io.File;
 import java.io.IOException;
 
+//----------ПОСЛЕ ОТСКАНИРОВАНИЯ РЕМОНТНИКОМ QR ПРОБЛЕМНОГО УЧАСТКА, ЭТОТ АКТИВИТИ  СПРАШИВАЕТ, ---------//
+// ---------ХОЧЕТ ЛИ ОН СФОТКАТЬ РЕШЕНИЕ, ЕСЛИ ДА - ЗАПУСК КАМЕРЫ, ЕСЛИ НЕТ - ВОЗВРАТ В REPAIRERS PROBLEMS LIST---------//
 public class RepairerTakePhoto extends AppCompatActivity implements View.OnTouchListener {
-    private static final int REQUEST_IMAGE_CAPTURE = 1;
-    Button takePic, dontTakePic;
+    private static final int REQUEST_IMAGE_CAPTURE = 1; //код для камера активити
     String problemPushKey;
+    Button takePic, dontTakePic;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_repairer_take_photo);
+        initInstances();
+
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private void initInstances()
+    {
         problemPushKey = getIntent().getExtras().getString("ID проблемы в таблице Maintenance_problems");
         takePic = findViewById(R.id.take_pic);
         dontTakePic = findViewById(R.id.dont_take_pic);
         takePic.setOnTouchListener(this);
         dontTakePic.setOnTouchListener(this);
-
     }
 
     @Override
@@ -50,6 +58,8 @@ public class RepairerTakePhoto extends AppCompatActivity implements View.OnTouch
                 button.setBackgroundResource(R.drawable.edit_red_accent_pressed);
                 break;
             case MotionEvent.ACTION_UP:
+                //ГЛАВНЫЕ ДЕЙСТВИЯ ЭТОГО АКТИВИТИ:
+                //ЕСЛИ НАЖАЛИ TAKE_PIC - ОТКРОЙ КАМЕРУ, ЕСЛИ НАЖАЛИ DONT_TAKE_PIC - ЗАКРОЙ АКТИВИТИ
                 button.setBackgroundResource(R.drawable.edit_red_accent);
                 switch(button.getId())
                 {
@@ -59,7 +69,6 @@ public class RepairerTakePhoto extends AppCompatActivity implements View.OnTouch
                     case R.id.dont_take_pic:
                         //проблема решена! аутпут
                         finish();
-
                         Toast.makeText(getApplicationContext(), "Проблема успешно решена", Toast.LENGTH_SHORT).show();
                         break;
                 }
@@ -95,7 +104,8 @@ public class RepairerTakePhoto extends AppCompatActivity implements View.OnTouch
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
-                Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), getString(R.string.package_name), photoFile);
+                //ЗАПУСТИ КАМЕРУ
+                Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), getString(R.string.package_name), photoFile); //создай файл в памяти телефона
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
@@ -106,7 +116,8 @@ public class RepairerTakePhoto extends AppCompatActivity implements View.OnTouch
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_IMAGE_CAPTURE  && resultCode == RESULT_OK) {
-            finish();
+            finish(); //если получил фотку, закрывай уже это активити
+            //загрузка фотки в БД
             Uri file = Uri.fromFile(new File(currentPhotoPath));
             StorageReference mStorageRef = FirebaseStorage.getInstance().getReference();
             StorageReference probPicRef = mStorageRef.child("solved_problem_pictures/" + file.getLastPathSegment());

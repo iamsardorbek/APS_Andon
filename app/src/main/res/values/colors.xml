@@ -19,5 +19,6 @@
     <color name="white">#FFFFFF</color>
     <color name="blackListItem">#000000</color>
     <color name="greenButton">#60D14E</color>
-    <color name="redButton">#D12325</color>
+    <color name="redButton">#D1423F</color>
+    <color name="redButton_pressed">#ACDA5D51</color>
 </resources>

@@ -19,15 +19,36 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+//--------ЗДЕСЬ ПОКАЗЫВАЕТСЯ ЧЕРТЕЖ ЛИНИИ И 1-Й УЧАСТОК, КУДА ЮЗЕР ДОЛЖЕН НАПРАВИТЬСЯ---------//
+//--------ОТКРЫВАЕТСЯ ПРИ НАЖАТИИ НА ЭЛЕМЕНТ EXPANDABLE LIST VIEW (ЛИНИЮ) В QUEST MAIN ACTIVITY---------//
 public class MachineLayoutActivity extends AppCompatActivity {
     Button qrScan;
     ImageView equipmentLayout;
     private int shopNo, equipmentNo;
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+
+    @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_machine_layout);
         initInstances();
+        final DatabaseReference equipmentLayoutRef = FirebaseDatabase.getInstance().getReference("Shops/" + shopNo + "/Equipment_lines/" + equipmentNo + "/layout_start_pic_name");
+        equipmentLayoutRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override public void onDataChange(@NonNull DataSnapshot equipmentLayoutSnap) {
+                //setTitle()
+                String equipmentLayoutPicName = equipmentLayoutSnap.getValue().toString(); //получи название картинки содержащей чертеж оборудования
+                StorageReference equipmentLayoutFolder = FirebaseStorage.getInstance().getReference( "equipment_layouts"); //загрузи ту картинку из Storage - > equipment_layouts
+                StorageReference equipmentLayoutPic = equipmentLayoutFolder.child(equipmentLayoutPicName);
+                Glide.with(getApplicationContext()).load(equipmentLayoutPic).into(equipmentLayout); //поставь картинку в ImageView
+            }
+            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+        });
+    }
+
+    private void initInstances() {
+        qrScan = findViewById(R.id.qr_scan);
+        equipmentLayout = findViewById(R.id.equipment_layout);
+        shopNo = getIntent().getExtras().getInt("Номер цеха");
+        equipmentNo = getIntent().getExtras().getInt("Номер линии");
+
         qrScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -45,24 +66,6 @@ public class MachineLayoutActivity extends AppCompatActivity {
                 intent.putExtra("Должность", position);
                 startActivity(intent);
             }
-        });
-    }
-
-    private void initInstances() {
-        qrScan = findViewById(R.id.qr_scan);
-        equipmentLayout = findViewById(R.id.equipment_layout);
-        shopNo = getIntent().getExtras().getInt("Номер цеха");
-        equipmentNo = getIntent().getExtras().getInt("Номер линии");
-        final DatabaseReference equipmentLayoutRef = FirebaseDatabase.getInstance().getReference("Shops/" + shopNo + "/Equipment_lines/" + equipmentNo + "/layout_start_pic_name");
-        equipmentLayoutRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override public void onDataChange(@NonNull DataSnapshot equipmentLayoutSnap) {
-                //setTitle()
-                String equipmentLayoutPicName = equipmentLayoutSnap.getValue().toString();
-                StorageReference equipmentLayoutFolder = FirebaseStorage.getInstance().getReference( "equipment_layouts");
-                StorageReference equipmentLayoutPic = equipmentLayoutFolder.child(equipmentLayoutPicName);
-                Glide.with(getApplicationContext()).load(equipmentLayoutPic).into(equipmentLayout);
-            }
-            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
     }
 }

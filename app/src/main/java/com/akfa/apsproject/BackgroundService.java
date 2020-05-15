@@ -8,12 +8,10 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -24,13 +22,15 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
+//-------- ФОНОВЫЙ СЕРВИС ПРОВЕРКИ НАЛИЧИЯ НОВООБНАРУЖЕННЫХ ПРОБЛЕМ И НЕПОЛАДОК. ПРИ НОВЫХ ПРОБЛЕМАХ В ЗАВИС ОТ ДОЛЖНОСТИ ВЫВОДИТ УВЕДОМЛЕНИЯ--------//
+//--------РАБ ДАЖЕ ПРИ ЗАКРЫТОМ ПРИЛОЖЕНИИ--------//
 public class BackgroundService extends Service {
-    private static final String CHANNEL_ID = "com.akfa.apsproject";
+    private static final String CHANNEL_ID = "com.akfa.apsproject"; //название канала уведомлений
     List<String> urgentProblems = new ArrayList<String>(); //для хранения данных об уже обнаруженных срочных проблемах
     List<String> maintenanceProblems = new ArrayList<String>(); //для хранения данных об уже обнаруженных простых проблемах
 
     @Override
-    public void onCreate() {
+    public void onCreate() {//при создании  сервиса
         createNotificationChannel();
         startForegroundWithNotification();
         super.onCreate();
@@ -38,14 +38,13 @@ public class BackgroundService extends Service {
 
     @Override //при запуске сервиса
     public int onStartCommand(Intent intent, int flags, int startId) {
-        DatabaseReference urgentProblemsRef = FirebaseDatabase.getInstance().getReference("Urgent_problems");
-        DatabaseReference maintenanceProblemsRef = FirebaseDatabase.getInstance().getReference("Maintenance_problems");
         final String employeePosition = intent.getExtras().getString("Должность");
-        urgentProblemsRef.addValueEventListener(new ValueEventListener() { //привязываем слушатель к срочным проблемаам
 
+        DatabaseReference urgentProblemsRef = FirebaseDatabase.getInstance().getReference("Urgent_problems"); //мониторить срочные проблемы ( с пультов)
+        urgentProblemsRef.addValueEventListener(new ValueEventListener() { //привязываем слушатель к срочным проблемаам
             @Override public void onDataChange(@NonNull DataSnapshot urgentProbsSnap) {
                 for(DataSnapshot urgentProbSnap : urgentProbsSnap.getChildren())
-                {
+                { //пройдись по проблемам и если есть DETECTED проблемы, о которых ты еще не вывел уведомления, сообщи о них в новом уведомлении
                     String thisUrgentProbStatus = urgentProbSnap.child("status").getValue().toString();
                     String thisUrgentProbKey = urgentProbSnap.getKey();
                     String whoIsNeededPosition = urgentProbSnap.child("who_is_needed_position").getValue().toString();
@@ -58,11 +57,13 @@ public class BackgroundService extends Service {
                         String equipmentName = urgentProbSnap.child("equipment_name").getValue().toString();
                         String stationNo = urgentProbSnap.child("station_no").getValue().toString();
                         String urgentProblemShortInfo = shopName + "\n" + equipmentName + "\n Участок №" + stationNo;
+
                         Intent intent = new Intent(getApplicationContext(), UrgentProblemsList.class);
                         intent.putExtra("Логин пользователя", "master");
                         intent.putExtra("Должность", "master");
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+
                         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
                                 .setSmallIcon(R.drawable.aps_icon)
                                 .setContentTitle("Срочная проблема")
@@ -74,18 +75,18 @@ public class BackgroundService extends Service {
                         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                         // notificationId is a unique int for each notification that you must define
                         notificationManager.notify(1, builder.build());
-                        urgentProblems.add(thisUrgentProbKey);
+                        urgentProblems.add(thisUrgentProbKey); //добавь эту проблему в список уже сообщенных
                     }
                 }
 
             }
-
             @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
 
+        //те же дейсвтия повтори с ТО проблемами
+        DatabaseReference maintenanceProblemsRef = FirebaseDatabase.getInstance().getReference("Maintenance_problems");
         maintenanceProblemsRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot maintenanceProbsSnap) {
+            @Override public void onDataChange(@NonNull DataSnapshot maintenanceProbsSnap) {
                 for(DataSnapshot maintenanceProbSnap : maintenanceProbsSnap.getChildren())
                 {
                     boolean thisMaintenanceProbIsSolved = (boolean) maintenanceProbSnap.child("solved").getValue();
@@ -121,21 +122,17 @@ public class BackgroundService extends Service {
                 }
             }
 
-            @Override public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
+            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
-        return super.onStartCommand(intent, flags, startId);
 
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override public void onDestroy() {
         super.onDestroy();
 
     }
-
-    @Nullable @Override
-    public IBinder onBind(Intent intent) {
+    @Nullable @Override public IBinder onBind(Intent intent) {
         return null;
     }
 
@@ -143,8 +140,8 @@ public class BackgroundService extends Service {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "APS Notifications";
-            String description = "Notifications about problems with the equipment on the factory";
+            CharSequence name = "Уведомления APS"; //название канала уведомлений (показывается в настройках
+            String description = "Уведомления о проблемах и неполадках обородувания на заводе";
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
@@ -157,7 +154,8 @@ public class BackgroundService extends Service {
 
     private void startForegroundWithNotification()
     {
-        Intent intent = new Intent(getApplicationContext(), SplashNew.class);
+        // система android требует, чтобы вы вывели фоновое уведомление если вы запускаете фоновый независимый сервис
+        Intent intent = new Intent(getApplicationContext(), SplashActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
         Notification notification = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)

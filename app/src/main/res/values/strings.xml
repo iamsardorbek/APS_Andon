@@ -83,4 +83,5 @@
     <string name="back_button">Назад</string>
     <string name="urgentProblemsButton">Сканировать QR код</string>
     <string name="urgent_problems_submenu">Срочные проблемы</string>
+    <string name="website_address_factory_condition">https://aps-project-akfa.web.app/</string>
 </resources>

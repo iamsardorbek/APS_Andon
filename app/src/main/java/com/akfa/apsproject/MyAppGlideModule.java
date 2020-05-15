@@ -13,11 +13,11 @@ import com.google.firebase.storage.StorageReference;
 
 import java.io.InputStream;
 
+//------ЭТОТ КЛАСС ВАЖЕН ДЛЯ КОРРЕКТНОЙ РАБОТЫ GLIDE БИБЛИОТЕКИ ДЛЯ ЗАГРУЗКИ КАРТИНОК ИЗ НЭТА ПРЯМО В IMAGE VIEW------//
 @GlideModule
 public class MyAppGlideModule extends AppGlideModule {
 
-    @Override
-    public void registerComponents(@NonNull Context context, @NonNull Glide glide, Registry registry) {
+    @Override public void registerComponents(@NonNull Context context, @NonNull Glide glide, Registry registry) {
         // Register FirebaseImageLoader to handle StorageReference
         registry.append(StorageReference.class, InputStream.class, new FirebaseImageLoader.Factory());
     }

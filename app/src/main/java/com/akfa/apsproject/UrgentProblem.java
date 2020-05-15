@@ -1,15 +1,13 @@
 package com.akfa.apsproject;
 
+            //---------КЛАСС ОБЪЕКТОВ ИСПОЛЬЗУЕТСЯ В PULT И URGENT PROB LIST ДЛЯ УДОБНОЙ РАБОТЫ С ДАННЫМИ ПРО СРОЧНЫЕ ПРОБЛЕМЫ----------//
+//---------ДЛЯ ЗАПИСИ NODES В FIREBASE НЕПОСРЕДСТВЕННО ИЗ ОБЪЕКТОВ СУЩ ТРЕБОВАНИЕ, ЧТО У КЛАССА ДОЛЖЕН БЫТЬ ПУСТОЙ КОНСТРУКТОР, PUBLIC ГЕТТЕРЫ---------//
 public class UrgentProblem {
     public String shop_name, equipment_name, qr_random_code, operator_login, who_is_needed_position, date_detected, time_detected, status;
     public int station_no;
-    public UrgentProblem()
-    {
+    public UrgentProblem() { }
 
-    }
-
-    public UrgentProblem(int stationNo, String equipmentName, String shopName, String operatorLogin, String whoIsNeededLogin, String qrRandomCode,
-                         String dateTimeDetected, String time_detected, String status)
+    public UrgentProblem(int stationNo, String equipmentName, String shopName, String operatorLogin, String whoIsNeededLogin, String qrRandomCode, String dateTimeDetected, String time_detected, String status)
     {
         this.station_no = stationNo;
         this.shop_name = shopName;

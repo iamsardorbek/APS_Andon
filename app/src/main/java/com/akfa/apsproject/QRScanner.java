@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Vibrator;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -41,12 +40,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+//--------------ОБЕСПЕЧИВАЕТ ТО, ЧТОБЫ СОТРУДНИКИ ШЛИ НА МЕСТА ВОЗНИКНОВЕНИЯ ПРОБЛЕМ, А НЕ ОТМЕЧАЛИ ПРОБЛЕМЫ РЕШЕННЫМИ/ПРОВЕРКИ ОКОНЧЕННЫМИ ПРОСТО С МЕСТА------------//
+//--------------QR SCANNER ПОЗВОЛЯЕТ ДЕЛАТЬ СВОЕГО РОДА REALITY CHECK-------------//
+//--------------ЕГО ОТКРЫВАЕТ ОПЕРАТОР ПРИ ТО ПРОВЕРКЕ, РЕМОНТНИК ПРИ РЕШЕНИИ ТО ПРОБЛЕМЫ, СПЕЦИАЛИСТ ПРИ РЕШЕНИИ СРОЧНОЙ ПРОБЛЕМЫ---------------//
 public class QRScanner extends AppCompatActivity {
     SurfaceView surfaceView;
     CameraSource cameraSource;
-    TextView textView, directionsTextView;
     BarcodeDetector barcodeDetector;
+    TextView textView, directionsTextView;
     private int equipmentNumber, shopNumber, nomerPunkta, numOfPoints, problemsCount; //кросс-активити переменные QuestPointDynamic
+    private static final int VIBRATION_DURATION = 500;
     private long startTimeMillis; //кросс-активити переменная, передаваемая из QuestPointDynamic
     private boolean detectedOnce = false; //для того, чтобы на уже обнаруженный (расшифрованный) код не реагировал повторно
     private String codeToDetect, shouldOpenPointDynamic;
@@ -102,7 +105,7 @@ public class QRScanner extends AppCompatActivity {
                 @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
             });
         }
-        else
+        else if(shouldOpenPointDynamic.equals("Любой код"))
         { //пройтись по всем линиям, и забей данные о них в equipmentLineList для мастера/оператора которые сразу начинают проверку  прямой вход в QR из QuestMainActivity ("Любой код")
             DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference().child("Shops");
             shopsRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -132,21 +135,21 @@ public class QRScanner extends AppCompatActivity {
             qrScanCameraON(); //стартует cameraSource и QRScanner сам
     }
 
-    private void qrScanCameraON()
+    private void qrScanCameraON()  //стартует cameraSource и QRScanner сам
     {
         surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override public void surfaceCreated(SurfaceHolder holder) {
-                if(ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA)
-                        != PackageManager.PERMISSION_GRANTED) {
+                if(ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+                {//если юзер не дал разрешение на использование камеры, дай ему знать об этом и закрой QR Scanner
+                    Toast.makeText(getApplicationContext(), "У приложения нет разрешения на использование камеры. Вы можете его предоставить в настройках или перезапустив приложение. ", Toast.LENGTH_LONG).show();
+                    finish();
                     return;
                 }
                 try { cameraSource.start(holder); }
                 catch (IOException e) { e.printStackTrace(); }
             }
             @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) { }
-            @Override public void surfaceDestroyed(SurfaceHolder holder) {
-                cameraSource.stop();
-            }
+            @Override public void surfaceDestroyed(SurfaceHolder holder) { cameraSource.stop(); }
         });
 
         barcodeDetector.setProcessor(new Detector.Processor<Barcode>() {
@@ -167,12 +170,12 @@ public class QRScanner extends AppCompatActivity {
                                 if(shouldOpenPointDynamic.equals("да") || shouldOpenPointDynamic.equals("ремонтник")) {
                                     if (!detectedOnce) {
                                         if (areDetectedAndPassedCodesSame(codeFromQR, codeToDetect)) {
-                                            vibration(500);
+                                            vibration(VIBRATION_DURATION);
                                             //создаем интент, в него заносим код успешного распознования
-                                            //после окончания finish(), интент сам найдет родительский активити и отдаст результат в
-                                            //onActivityResult
+                                            //открываем соответствующий активити (Point Dynamic / RepairerTakePhoto)
                                             if (shouldOpenPointDynamic.equals("да")) { //когда идет переход Verification->QR->PointDynamic
                                                 Intent intent = new Intent(getApplicationContext(), QuestPointDynamic.class);
+                                                //кросс-активити данные PointDynamica
                                                 intent.putExtra("Номер пункта", nomerPunkta);
                                                 intent.putExtra("Количество пунктов", numOfPoints);
                                                 intent.putExtra("startTimeMillis", startTimeMillis);
@@ -183,36 +186,39 @@ public class QRScanner extends AppCompatActivity {
                                                 intent.putExtra("Должность", employeePosition);
                                                 intent.putStringArrayListExtra("Коды проблем", (ArrayList<String>) problemPushKeysOfTheWholeCheck);
                                                 startActivity(intent);
-                                            } else if (shouldOpenPointDynamic.equals("ремонтник")) {
-                                                Bundle arguments = getIntent().getExtras();
+                                            } else if (shouldOpenPointDynamic.equals("ремонтник")) { //ремонтник нажал кнопку "Решить проблему" и подошел к соответствующему проблемному участку, и решил ее, потом отсканировал код этого участка
                                                 String problemKey = arguments.getString("ID проблемы в таблице Maintenance_problems");
                                                 DatabaseReference problemRef = FirebaseDatabase.getInstance().getReference().child("Maintenance_problems/" + problemKey);
-                                                problemRef.child("solved").setValue(true);
-                                                problemRef.child("solved_by").setValue(employeeLogin);
+                                                problemRef.child("solved").setValue(true); //перевести в статус РЕШЕННАЯ
+                                                problemRef.child("solved_by").setValue(employeeLogin); //логин ремонтника для отчета и мониторинга ответственности
+                                                //--получ данные о текущей дате и времени--//
                                                 String date, time;
                                                 SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
                                                 date = sdf.format(new Date());
-                                                sdf = new SimpleDateFormat("HH:mm z");
+                                                sdf = new SimpleDateFormat("HH:mm");
                                                 time = sdf.format(new Date());
-                                                problemRef.child("date_solved").setValue(date);
+                                                //--конец получ данных о дате-времени--//
+                                                problemRef.child("date_solved").setValue(date); //записать эти данные в БД
                                                 problemRef.child("time_solved").setValue(time);
                                                 Intent openRepairerTakePhoto = new Intent(getApplicationContext(), RepairerTakePhoto.class);
                                                 openRepairerTakePhoto.putExtra("ID проблемы в таблице Maintenance_problems", problemKey);
                                                 startActivity(openRepairerTakePhoto);
                                             }
                                             finish();
-                                        } else {
+                                        }
+                                        else {//если отсканировал несоответствующий код
                                             textView.setText("Вы не в том месте");
                                         }
                                     }
                                 }
-                                else if (shouldOpenPointDynamic.equals("Любой код")) {
-                                    if (!detectedOnce) {
-                                        EquipmentLine equipmentLine = detectedCodeAmongInitialPunkts(codeFromQR);
-                                        if(equipmentLine != null)
+                                else if (shouldOpenPointDynamic.equals("Любой код")) { //оператор/мастер сразу хочет начать проверку войдя в сканер из QUESTMAINACTIVTY
+                                    if (!detectedOnce) { //чтобы не реагировал повторно
+                                        EquipmentLine equipmentLine = detectedCodeAmongInitialPunkts(codeFromQR); //своеобразно проверяет, есть ли среди equipmentLineList линия с кодом 1-го участка, соответствующий тому, что только что отсканировали
+                                        //если да, возвращается соответ объект equipmentLine, если нет - null
+                                        if(equipmentLine != null) //если такой код сущ и вернули объект
                                         {
                                             vibration(500);
-                                            Intent intent = new Intent(getApplicationContext(), QuestPointDynamic.class);
+                                            Intent intent = new Intent(getApplicationContext(), QuestPointDynamic.class); //начнет ТО проверку с 1-го участка соответ линии
                                             intent.putExtra("Номер пункта", 1);
                                             intent.putExtra("Номер цеха", equipmentLine.getShopNo());
                                             intent.putExtra("Номер линии", equipmentLine.getEquipmentNo());
@@ -225,11 +231,11 @@ public class QRScanner extends AppCompatActivity {
                                         }
                                         else
                                         {
-                                            textView.setText("Подойдите к 1-участку линии, которую вы хотите проверить");
+                                            textView.setText("Подойдите к 1-участку линии, которую вы хотите проверить"); //если попутали что-то
                                         }
                                     }
                                 }
-                                else if(shouldOpenPointDynamic.equals("срочная проблема"))
+                                else if(shouldOpenPointDynamic.equals("срочная проблема")) //если специалист сканирует код с экрана пульта оператора
                                 {
                                     if (!detectedOnce) {
                                         //go through the qr codes of urgent probs
@@ -240,44 +246,33 @@ public class QRScanner extends AppCompatActivity {
                                             public void onDataChange(@NonNull DataSnapshot urgentProbsSnap) {
                                                 for(DataSnapshot singleUrgentProbSnap : urgentProbsSnap.getChildren())
                                                 {
-                                                    String codeToDetect = singleUrgentProbSnap.child("qr_random_code").getValue().toString();
-                                                    if(codeFromQR.equals(codeToDetect) && singleUrgentProbSnap.child("status").getValue().toString().equals("DETECTED"))
-                                                    {
+                                                    String codeToDetect = singleUrgentProbSnap.child("qr_random_code").getValue().toString(); //код итерируемой сроч проблемы в БД
+                                                    if(codeFromQR.equals(codeToDetect) && singleUrgentProbSnap.child("status").getValue().toString().equals("DETECTED")) //если то что отсканировал соответствует коду сроч проблемы в БД и специалист не приходил на тот участок
+                                                    { //отметим, что специалист пришел, что переведет кнопку в состояние SPECIALIST_CAME и она перестанет мигать, а начнет ярко гореть
                                                         String urgentProblemKey = singleUrgentProbSnap.getKey();
+                                                        //дата-время
                                                         final String dateSpecialistCame;
                                                         @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
                                                         dateSpecialistCame = sdf.format(new Date());
                                                         final String timeSpecialistCame;
                                                         @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
                                                         timeSpecialistCame = sdf1.format(new Date());
+                                                        //конец дата-время
+                                                        //занеси данные в БД, измени статус проблемы, что повлечет изм-е статуса кнопки
                                                         urgentProbsRef.child(urgentProblemKey).child("date_specialist_came").setValue(dateSpecialistCame);
                                                         urgentProbsRef.child(urgentProblemKey).child("time_specialist_came").setValue(timeSpecialistCame);
                                                         urgentProbsRef.child(urgentProblemKey + "/status").setValue("SPECIALIST_CAME");
-                                                        detectedOnce = true;
+                                                        detectedOnce = true; //чтобы повторно не реагировало на коды
                                                         Toast.makeText(getApplicationContext(), "Специалист на месте", Toast.LENGTH_SHORT).show();
-                                                        finish();
+                                                        finish(); //вернись в предыдущ активити (UrgentProbList)
                                                         return;
                                                     }
                                                 }
                                             }
                                             @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
                                         });
-                                        EquipmentLine equipmentLine = detectedCodeAmongInitialPunkts(codeFromQR);
-                                        if(equipmentLine != null)
-                                        {
-                                            vibration(500);
-                                            Intent intent = new Intent(getApplicationContext(), QuestPointDynamic.class);
-                                            intent.putExtra("Номер пункта", 1);
-                                            intent.putExtra("Номер цеха", equipmentLine.getShopNo());
-                                            intent.putExtra("Номер линии", equipmentLine.getEquipmentNo());
-                                            intent.putExtra("Логин пользователя", employeeLogin);
-                                            intent.putExtra("Количество обнаруженных проблем", problemsCount);
-                                            intent.putExtra("Должность", employeePosition);
-                                            intent.putStringArrayListExtra("Коды проблем", (ArrayList<String>) problemPushKeysOfTheWholeCheck);
-                                            startActivity(intent);
-                                            finish();
-                                        }
-                                        else
+
+                                        if(!detectedOnce) //если все еще не отсканировал нужный код, дай ему подсказку
                                         {
                                             textView.setText("Отсканируйте код, сгенерированный на устройстве оператора, который сообщил о данной проблеме. " +
                                                     "Возможно, QR Код на экране оператора устарел. Нужно закрыть диалог и заново нажать на мигающую кнопку.");
@@ -294,17 +289,18 @@ public class QRScanner extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(nomerPunkta > 1 && !shouldOpenPointDynamic.equals("ремонтник")) {
-            AlertDialog diaBox = AskOption();
+        if(nomerPunkta > 1 && (shouldOpenPointDynamic.equals("да")))
+        {//если оператор уже проверяет минимум 2 участок, и хочет выйти из проверки, все данные об этой ТО проверке стираются из БД (Maintenance_problems->subnode + Storage->problem_pictures->picture
+            AlertDialog diaBox = AskOption(); //конструирует объект диалога, в котором при нажатии на да стираются данные ТО проверки
             diaBox.show();
         }
-        else
+        else //это не оператор/мастер уже начавшие проверку, данные не собраны, можно сразу закрывать сканер
         {
             super.onBackPressed();
         }
     }
 
-    private AlertDialog AskOption()
+    private AlertDialog AskOption() //конструирует диалог
     {
         AlertDialog myQuittingDialogBox = new AlertDialog.Builder(this).setTitle("Закончить проверку").setMessage("Вы уверены, что хотите закончить проверку? Данные не будут сохранены.")
                 .setIcon(R.drawable.close)
@@ -312,7 +308,7 @@ public class QRScanner extends AppCompatActivity {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference("Maintenance_problems");
                         for(String problemPushKey : problemPushKeysOfTheWholeCheck)
-                        {
+                        { //удалим даннные и фотки проблем, о которых сообщил юзер в течение текущ ТО проверки
                             problemsRef.child(problemPushKey).setValue(null);
                             StorageReference mStorageRef = FirebaseStorage.getInstance().getReference();
                             StorageReference problemPicRef = mStorageRef.child("problem_pictures/" + problemPushKey + ".jpg");
@@ -322,34 +318,32 @@ public class QRScanner extends AppCompatActivity {
                                     //file deleted successfully
                                 }
                             });
-                            finish();
                         }
                         finish();
                     }
                 })
                 .setNegativeButton("Нет", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
+                        dialog.dismiss(); //просто закр диалог
                     }
                 })
                 .create();
-        return myQuittingDialogBox;
+        return myQuittingDialogBox; //возврати сконструирнованный объект диалога
     }
 
-    private EquipmentLine detectedCodeAmongInitialPunkts(String codeFromQR) {
+    private EquipmentLine detectedCodeAmongInitialPunkts(String codeFromQR) {//своеобразно проверяет, есть ли среди equipmentLineList линия с кодом 1-го участка, соответствующий тому, что только что отсканировали
+        //если да, возвращается соответ объект equipmentLine, если нет - null
         for(EquipmentLine equipmentCurrent : equipmentLineList)
-        {
             if(codeFromQR.equals(equipmentCurrent.getStartQRCode()))
             {
                 detectedOnce = true;
                 return equipmentCurrent;
             }
-        }
         return null;
     }
 
     private boolean areDetectedAndPassedCodesSame(String fromQRScanner, String fromDatabase)
-    {
+    {//функция сравнивает две строчные переменные (чтобы сделать код читабельнее)
         if(fromQRScanner.equals(fromDatabase))
         {
             detectedOnce = true;
@@ -359,7 +353,7 @@ public class QRScanner extends AppCompatActivity {
     }
 
     private void vibration(int milliseconds)
-    {
+    { //вибрирует
         Vibrator vibrator = (Vibrator) getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
         vibrator.vibrate(milliseconds);
     }

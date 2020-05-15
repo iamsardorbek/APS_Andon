@@ -1,8 +1,9 @@
 package com.akfa.apsproject;
 
+//---------КЛАСС ОБЪЕКТОВ ИСПОЛЬЗУЕТСЯ В QR SCANNER ДЛЯ УДОБНОЙ РАБОТЫ С ДАННЫМИ ЛИНИЙ ОБОРУДОВАНИЯ----------//
 public class EquipmentLine {
-    private int shopNo, equipmentNo;
-    private String startQRCode;
+    private int shopNo, equipmentNo; //номер цеха и линии
+    private String startQRCode; //QR КОД первого участка этой линии оборудования
     public EquipmentLine(int shopNo, int equipmentNo, String startQRCode)
     {
         this.shopNo = shopNo;
