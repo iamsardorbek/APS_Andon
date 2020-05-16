@@ -104,6 +104,9 @@ public class QuestEndOfChecking extends AppCompatActivity {
         toggle.syncState();
         actionBar.setDisplayHomeAsUpEnabled(true);
         navigationView = findViewById(R.id.nv);
+        View headerView = navigationView.getHeaderView(0);
+        TextView userInfo = headerView.findViewById(R.id.user_info);
+        userInfo.setText(employeeLogin);
 //        здесь адаптируем меню в нав баре в зависимости от уровня доступа пользователя: мастер/оператор, у ремонтника нет прав проверки
         navigationView.getMenu().clear();
         switch(employeePosition){

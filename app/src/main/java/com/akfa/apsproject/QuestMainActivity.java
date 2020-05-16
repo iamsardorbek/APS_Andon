@@ -8,6 +8,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ExpandableListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -123,6 +124,9 @@ public class QuestMainActivity extends AppCompatActivity  {
         toggle.syncState();
         actionBar.setDisplayHomeAsUpEnabled(true);
         navigationView = findViewById(R.id.nv);
+        View headerView = navigationView.getHeaderView(0);
+        TextView userInfo = headerView.findViewById(R.id.user_info);
+        userInfo.setText(login);
 //        здесь адаптируем меню в нав баре в зависимости от уровня доступа пользователя: мастер/оператор, у ремонтника нет прав проверки
         navigationView.getMenu().clear();
         switch(position){

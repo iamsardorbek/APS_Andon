@@ -132,6 +132,9 @@ public class RepairersProblemsList extends AppCompatActivity {
         toggle.syncState();
         actionBar.setDisplayHomeAsUpEnabled(true);
         navigationView = findViewById(R.id.nv);
+        View headerView = navigationView.getHeaderView(0);
+        TextView userInfo = headerView.findViewById(R.id.user_info);
+        userInfo.setText(login);
         //ниже действия, выполняемые при нажатиях на элементы нав бара
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override

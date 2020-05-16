@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -72,22 +73,22 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
       super.onCreate(savedInstanceState);
       setContentView(R.layout.activity_main);
       initInstances(); //инициализация всех layout элементов
-      toggle = setUpNavBar(); //setUpNavBar выполняет все действия и возвращает toggle, которые используется в функции onOptionsItemSelected()
       setAndonsVisibility(false); //спрятать все кнопки-андоны, пока не установлена связь с веткой пульта в БД
       Bundle arguments = getIntent().getExtras(); //аргументы переданные с других активити
       if(arguments != null) //был ли сделан правилно логин и возвратил ли он оттуда номер пульта, или передал ли предыдущий активити аргументы
       {
-            position = arguments.getString("Должность");
-            login = arguments.getString("Логин пользователя");
-            //создать ссылку на ветку пользователя для получения номера пульта
-            DatabaseReference userRef = database.getReference("Users/" + login);
-            findPathToRelevantPult(); //инициализировать pathToRelevantPultQuery для пульта этого юзера
-            userRef.addListenerForSingleValueEvent(pathToRelevantPultQuery); //привязать pathToRelevantPultQuery к ветке пользователей (там далее берутся данные о линии, цехе и номере пульта, что запускает потом асинхронный listener для пульта
-            setAndonStates(); //проверь ветку Urgent problems, если там есть проблемы, связанные с нашим пультом, измени соответственно состояние кнопок пульта
+          position = arguments.getString("Должность");
+          login = arguments.getString("Логин пользователя");
+          //создать ссылку на ветку пользователя для получения номера пульта
+          DatabaseReference userRef = database.getReference("Users/" + login);
+          findPathToRelevantPult(); //инициализировать pathToRelevantPultQuery для пульта этого юзера
+          userRef.addListenerForSingleValueEvent(pathToRelevantPultQuery); //привязать pathToRelevantPultQuery к ветке пользователей (там далее берутся данные о линии, цехе и номере пульта, что запускает потом асинхронный listener для пульта
+          setAndonStates(); //проверь ветку Urgent problems, если там есть проблемы, связанные с нашим пультом, измени соответственно состояние кнопок пульта
       }
       else Toast.makeText(getApplicationContext(), "Ошибка, постарайтесь зайти снова", Toast.LENGTH_LONG).show(); //сработает, если в код сделали изменения и это нарушило стабильность работы приложения
       //напр: забыли приписать putExtras к интенту, открывшему этот активити PultActivity
-    }
+      toggle = setUpNavBar(); //setUpNavBar выполняет все действия и возвращает toggle, которые используется в функции onOptionsItemSelected()
+  }
 
     @SuppressLint("ClickableViewAccessibility")
     protected void initInstances(){
@@ -310,6 +311,9 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
         toggle.syncState();
         actionBar.setDisplayHomeAsUpEnabled(true);
         navigationView = findViewById(R.id.nv);
+        View headerView = navigationView.getHeaderView(0);
+        TextView userInfo = headerView.findViewById(R.id.user_info);
+        userInfo.setText(login);
         //ниже действия, выполняемые при нажатиях на элементы нав бара
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override

@@ -109,6 +109,9 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
         toggle.syncState();
         actionBar.setDisplayHomeAsUpEnabled(true);
         navigationView = findViewById(R.id.nv);
+        View headerView = navigationView.getHeaderView(0);
+        TextView userInfo = headerView.findViewById(R.id.user_info);
+        userInfo.setText(employeeLogin);
         navigationView.getMenu().clear();
         switch(employeePosition){ //у каждого специалиста свое меню выводится в nav bar
             case "repair":

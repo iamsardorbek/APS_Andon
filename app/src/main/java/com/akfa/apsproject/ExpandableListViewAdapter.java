@@ -36,7 +36,7 @@ public class ExpandableListViewAdapter extends BaseExpandableListAdapter {
         }
         TextView textView = convertView.findViewById(R.id.list_parent);
         textView.setText(group);
-        textView.setTextColor(Color.parseColor(String.valueOf(R.color.borders))); //цвет текста названия цеха
+        textView.setTextColor(context.getColor(R.color.borders)); //цвет текста названия цеха
         return convertView;
     }
 
