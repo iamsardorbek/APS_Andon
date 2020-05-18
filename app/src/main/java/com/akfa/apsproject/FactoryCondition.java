@@ -75,6 +75,12 @@ public class FactoryCondition extends AppCompatActivity{
             case "master":
                 navigationView.inflateMenu(R.menu.master_menu);
                 break;
+            case "raw":
+                navigationView.inflateMenu(R.menu.raw_menu);
+                break;
+            case "quality":
+                navigationView.inflateMenu(R.menu.quality_menu);
+                break;
             //other positions shouldn't be able to access checking page at all
             //if some changes, u can add a case
         }

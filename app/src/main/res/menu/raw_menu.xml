@@ -3,6 +3,9 @@
     <item android:id="@+id/urgent_problems"
         android:icon="@drawable/urgent_problems"
         android:title="@string/urgent_problems_submenu"/>
+    <item android:id="@+id/web_monitoring"
+        android:icon="@drawable/web_monitoring"
+        android:title="@string/web_monitoring_submenu"/>
     <item android:id="@+id/about"
         android:icon="@drawable/about"
         android:title="@string/about_app_submenu"/>

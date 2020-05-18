@@ -254,7 +254,7 @@ public class QuestPointDynamic extends AppCompatActivity
                 equipmentName = equipmentSnap.child("equipment_name").getValue().toString();
                 equipmentNameTextView.setText(getString(R.string.equipment_name_textview) + " " + equipmentName);
                 //простое кастование не получается, поэтому приходится писать больше кода
-                Long longNumOfPoints = new Long((long) equipmentSnap.child("number_of_punkts").getValue());
+                Long longNumOfPoints = new Long((long) equipmentSnap.child("number_of_stations").getValue());
                 numOfStations = longNumOfPoints.intValue();
                 Long longNumOfSubpoints = Long.valueOf((long) equipmentSnap.child(Integer.toString(stationNo)).getValue());
                 numOfPunkts = longNumOfSubpoints.intValue();

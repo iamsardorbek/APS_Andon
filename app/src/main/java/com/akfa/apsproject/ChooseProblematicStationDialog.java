@@ -65,7 +65,7 @@ public class ChooseProblematicStationDialog extends DialogFragment implements Vi
                                 {
                                     if(equipmentSnap.child("equipment_name").getValue().toString().equals(equipmentLineName)) //нашел нужную линию
                                     {
-                                        numOfStations = Integer.parseInt(equipmentSnap.child("number_of_punkts").getValue().toString()); //искомое кол-во участков
+                                        numOfStations = Integer.parseInt(equipmentSnap.child("number_of_stations").getValue().toString()); //искомое кол-во участков
                                         //ниже: заполни спиннер
                                         for(int i = 1; i <=numOfStations; i++) {
                                             spinnerArray.add("Участок №" + i);
