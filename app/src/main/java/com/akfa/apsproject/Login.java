@@ -70,15 +70,15 @@ public class Login extends AppCompatActivity {
                                         openPult.putExtra("Должность", user.child("position").getValue().toString());
                                         startActivity(openPult);
                                     } else if (user.child("position").getValue().toString().equals("master")) {//МАСТЕР
-                                        Intent openFactoryCondition = new Intent(getApplicationContext(), QuestMainActivity.class); //actually there should be the FactoryCondition.class, but it is incomplete yet
-                                        openFactoryCondition.putExtra("Логин пользователя", login);
-                                        openFactoryCondition.putExtra("Должность", user.child("position").getValue().toString());
-                                        startActivity(openFactoryCondition);
+                                        Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class); //actually there should be the FactoryCondition.class, but it is incomplete yet
+                                        openUrgentProblemsList.putExtra("Логин пользователя", login);
+                                        openUrgentProblemsList.putExtra("Должность", user.child("position").getValue().toString());
+                                        startActivity(openUrgentProblemsList);
                                     } else if (user.child("position").getValue().toString().equals("repair")) { //РЕМОНТНИК
-                                        Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
-                                        openProblemsList.putExtra("Логин пользователя", login);
-                                        openProblemsList.putExtra("Должность", user.child("position").getValue().toString());
-                                        startActivity(openProblemsList);
+                                        Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class);
+                                        openUrgentProblemsList.putExtra("Логин пользователя", login);
+                                        openUrgentProblemsList.putExtra("Должность", user.child("position").getValue().toString());
+                                        startActivity(openUrgentProblemsList);
                                     } else if (user.child("position").getValue().toString().equals("raw") || user.child("position").getValue().toString().equals("quality")) { //ОТК / СЫРЬЕ
                                         Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class);
                                         openUrgentProblemsList.putExtra("Логин пользователя", login);
