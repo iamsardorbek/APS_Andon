@@ -1,6 +1,7 @@
 package com.akfa.apsproject;
 
 import android.app.Activity;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,6 +18,8 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.material.navigation.NavigationView;
+
+import static android.content.Context.NOTIFICATION_SERVICE;
 
 public class InitNavigationBar {
 
@@ -113,6 +116,8 @@ public class InitNavigationBar {
                             break;
                         case R.id.log_out: //возвращение в логин page
                             activity.stopService(new Intent(context, BackgroundService.class)); //если до этого уже сервис был включен, выключи сервис
+                            NotificationManager notificationManager = (NotificationManager)  context.getSystemService(NOTIFICATION_SERVICE);
+                            notificationManager.cancelAll();
                             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
                             SharedPreferences.Editor editor = sharedPrefs.edit();
                             editor.clear();
