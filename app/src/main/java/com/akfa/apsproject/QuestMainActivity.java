@@ -47,7 +47,7 @@ public class QuestMainActivity extends AppCompatActivity  {
     private ExpandableListViewAdapter adapter;
 
 
-    private String login, position; //кросс-активити переменные
+    private String employeeLogin, employeePosition; //кросс-активити переменные
     private ActionBarDrawerToggle toggle; //для нав бара
 
     @Override
@@ -58,14 +58,15 @@ public class QuestMainActivity extends AppCompatActivity  {
 
         initInstances(); //инициализация переменных и кнопки
         initExpandableListView(); //иницилизация выпадающего списка
-        toggle = setUpNavBar();
+        toggle = InitNavigationBar.setUpNavBar(QuestMainActivity.this, getApplicationContext(),  getSupportActionBar(), employeeLogin, employeePosition, R.id.check_equipment, R.id.quest_activity_main);
+        setTitle("Проверка линий");
     }
 
     private void initInstances()
     {
         //inter-activity values
-        login = getIntent().getExtras().getString("Логин пользователя");
-        position = getIntent().getExtras().getString("Должность");
+        employeeLogin = getIntent().getExtras().getString("Логин пользователя");
+        employeePosition = getIntent().getExtras().getString("Должность");
         startWithQR = findViewById(R.id.start_with_qr);
         startWithQR.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,8 +74,8 @@ public class QuestMainActivity extends AppCompatActivity  {
                 //запуск QR сканера отсканировав  qr код 1-го участка любой линии
                 Intent openQR = new Intent(getApplicationContext(), QRScanner.class);
                 openQR.putExtra("Открой PointDynamic", "Любой код");
-                openQR.putExtra("Должность", position);
-                openQR.putExtra("Логин пользователя", login); //передавать логин пользователя взятый из Firebase
+                openQR.putExtra("Должность", employeePosition);
+                openQR.putExtra("Логин пользователя", employeeLogin); //передавать логин пользователя взятый из Firebase
                 startActivity(openQR);
             }
         });
@@ -93,101 +94,19 @@ public class QuestMainActivity extends AppCompatActivity  {
             public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
                 //пользователь выбрал линию для проверки передаем данные в QRScanner
                 //логин в QRScanner не используется explicitly, он передается в PointDynamic. Таким образом QrScanner выступает посредником передачи логина
-                if(position.equals("master")) {
+                if(employeePosition.equals("master")) {
                     shopNoGlobal = groupPosition;
                     equipmentNoGlobal = childPosition;
                 }
                 Intent intent = new Intent(getApplicationContext(), MachineLayoutActivity.class);
                 intent.putExtra("Номер цеха", QuestMainActivity.shopNoGlobal);
                 intent.putExtra("Номер линии", QuestMainActivity.equipmentNoGlobal);
-                intent.putExtra("Логин пользователя", login); //передавать логин пользователя взятый из Firebase
-                intent.putExtra("Должность", position);
+                intent.putExtra("Логин пользователя", employeeLogin); //передавать логин пользователя взятый из Firebase
+                intent.putExtra("Должность", employeePosition);
                 startActivity(intent);
                 return false;
             }
         });
-    }
-
-    private ActionBarDrawerToggle setUpNavBar() {
-        //---------код связанный с nav bar---------//
-        //настрой actionBar
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.show();
-        setTitle("Проверка линий");
-        //настрой сам навигейшн бар
-        final DrawerLayout drawerLayout;
-        ActionBarDrawerToggle toggle;
-        NavigationView navigationView;
-        drawerLayout = findViewById(R.id.quest_activity_main);
-        toggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close);
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        navigationView = findViewById(R.id.nv);
-        View headerView = navigationView.getHeaderView(0);
-        TextView userInfo = headerView.findViewById(R.id.user_info);
-        userInfo.setText(login);
-//        здесь адаптируем меню в нав баре в зависимости от уровня доступа пользователя: мастер/оператор, у ремонтника нет прав проверки
-        navigationView.getMenu().clear();
-        switch(position){
-            case "operator":
-                navigationView.inflateMenu(R.menu.operator_menu);
-                break;
-            case "master":
-                navigationView.inflateMenu(R.menu.master_menu);
-                break;
-            //other positions shouldn't be able to access checking page at all
-            //if some changes, u can add a case
-        }
-
-        //ниже действия, выполняемые при нажатиях на элементы нав бара
-        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                int id = item.getItemId();
-                switch(id)
-                {
-                    case R.id.urgent_problems:
-                        Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                        openUrgentProblemsList.putExtra("Логин пользователя", login);
-                        openUrgentProblemsList.putExtra("Должность", position);
-                        startActivity(openUrgentProblemsList);
-                        break;
-                    case R.id.pult:
-                        Intent openMainActivity = new Intent(getApplicationContext(), PultActivity.class);
-                        openMainActivity.putExtra("Логин пользователя", login);
-                        openMainActivity.putExtra("Должность", position);
-                        startActivity(openMainActivity);
-                        break;
-                    case R.id.check_equipment: //переход в модуль проверки
-                        drawerLayout.closeDrawer(GravityCompat.START); //когда нажали на саму проверку, нав бар просто закрывается
-                        break;
-                    case R.id.web_monitoring:
-                        Intent openFactoryCondition = new Intent(getApplicationContext(), FactoryCondition.class);
-                        openFactoryCondition.putExtra("Логин пользователя", login);
-                        openFactoryCondition.putExtra("Должность", position);
-                        startActivity(openFactoryCondition);
-                        break;
-                    case R.id.about: //инфа про приложение и компанию и иинструкции может
-//                        Intent openAbout = new Intent(getApplicationContext(), About.class);
-//                        startActivity(openAbout);
-                        Toast.makeText(getApplicationContext(), "Приложение создано Akfa R&D в 2020 году в Ташкенте.",Toast.LENGTH_SHORT).show();break;
-                    case R.id.log_out: //возвращение в логин page
-                        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                        SharedPreferences.Editor editor = sharedPrefs.edit();
-                        editor.clear();
-                        editor.commit();
-                        Intent logOut = new Intent(getApplicationContext(), Login.class);
-                        logOut.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                        startActivity(logOut);
-                        finish();
-                    default:
-                        return true;
-                }
-                return true;
-            }
-        });
-        return toggle;
     }
 
     @Override
@@ -201,11 +120,11 @@ public class QuestMainActivity extends AppCompatActivity  {
 
     TreeMap<Integer,  Shop> shopsMap = new TreeMap<>();
     private void initListData() {//добавить данные в раскрывающийся список
-        switch (position)
+        switch (employeePosition)
         { //динамически добавляет данные о доступных для этого юзера линий для проверки (мастер может проверить все линии во всех цехах; оператор может проверить только одну линию)
             case "operator":
                 //у оператора есть возможность провести проверку только на своей линии, поэтому в ExpandableListView покажем только его линию
-                DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users/" + login); //ссылка на ветку этого юзера (чтобы получить назв-я его цеха и линии)
+                DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users/" + employeeLogin); //ссылка на ветку этого юзера (чтобы получить назв-я его цеха и линии)
                 userRef.addListenerForSingleValueEvent(new ValueEventListener()
                 {
                     @Override public void onDataChange(@NonNull DataSnapshot user)

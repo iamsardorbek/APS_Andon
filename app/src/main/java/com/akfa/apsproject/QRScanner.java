@@ -200,6 +200,7 @@ public class QRScanner extends AppCompatActivity {
                                                 //--конец получ данных о дате-времени--//
                                                 problemRef.child("date_solved").setValue(date); //записать эти данные в БД
                                                 problemRef.child("time_solved").setValue(time);
+                                                problemRef.child("solved_by").setValue(employeeLogin);
                                                 Intent openRepairerTakePhoto = new Intent(getApplicationContext(), RepairerTakePhoto.class);
                                                 openRepairerTakePhoto.putExtra("ID проблемы в таблице Maintenance_problems", problemKey);
                                                 startActivity(openRepairerTakePhoto);

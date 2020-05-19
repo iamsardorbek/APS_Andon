@@ -46,7 +46,7 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
         setContentView(R.layout.activity_urgent_problems_list);
 
         initInstances(); //иниуиализация объектов дизайна и глобальных переменных
-        toggle = setUpNavBar(); //инициализация navigation bar
+        toggle = InitNavigationBar.setUpNavBar(UrgentProblemsList.this, getApplicationContext(), getSupportActionBar(), employeeLogin, employeePosition, R.id.urgent_problems, R.id.activity_urgent_problems_list); //инициализация navigation bar
         addProblemsFromDatabase(); //добавление срочных проблем в linearLayout динамично
     }
 
@@ -92,94 +92,6 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
                 break;
         }
         return false;
-    }
-
-    private ActionBarDrawerToggle setUpNavBar() {
-        //---------код связанный с nav bar---------//
-        //настрой actionBar
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.show();
-        //настрой сам навигейшн бар
-        final DrawerLayout drawerLayout;
-        ActionBarDrawerToggle toggle;
-        NavigationView navigationView;
-        drawerLayout = findViewById(R.id.activity_urgent_problems_list);
-        toggle = new ActionBarDrawerToggle(this, drawerLayout,R.string.open, R.string.close);
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        navigationView = findViewById(R.id.nv);
-        View headerView = navigationView.getHeaderView(0);
-        TextView userInfo = headerView.findViewById(R.id.user_info);
-        userInfo.setText(employeeLogin);
-        navigationView.getMenu().clear();
-        switch(employeePosition){ //у каждого специалиста свое меню выводится в nav bar
-            case "repair":
-                navigationView.inflateMenu(R.menu.repair_menu);
-                break;
-            case "master":
-                navigationView.inflateMenu(R.menu.master_menu);
-                break;
-            case "raw":
-                navigationView.inflateMenu(R.menu.raw_menu);
-                break;
-            case "quality":
-                navigationView.inflateMenu(R.menu.quality_menu);
-                break;
-        //other positions shouldn't be able to access checking page at all
-        //if some changes, u can add a case
-        }
-        //ниже действия, выполняемые при нажатиях на элементы нав бара
-        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                int id = item.getItemId();
-                switch(id)
-                {
-                    case R.id.urgent_problems:
-                        drawerLayout.closeDrawer(GravityCompat.START); //когда нажали на подменю самого пульта, нав бар просто закрывается
-                        break;
-                    case R.id.problems_list: //открой лист ТО проблем
-                        Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
-                        openProblemsList.putExtra("Логин пользователя", employeeLogin);
-                        openProblemsList.putExtra("Должность", employeePosition);
-                        startActivity(openProblemsList);
-                        finish();
-                        break;
-                    case R.id.check_equipment: //переход в модуль проверки
-                        Intent openQuest = new Intent(getApplicationContext(), QuestMainActivity.class);
-                        openQuest.putExtra("Логин пользователя", employeeLogin);
-                        openQuest.putExtra("Должность", employeePosition);
-                        startActivity(openQuest);
-                        finish();
-                        break;
-                    case R.id.web_monitoring: //переход в модуль веб-мониторинга
-                        Intent openFactoryCondition = new Intent(getApplicationContext(), FactoryCondition.class);
-                        openFactoryCondition.putExtra("Логин пользователя", employeeLogin);
-                        openFactoryCondition.putExtra("Должность", employeePosition);
-                        startActivity(openFactoryCondition);
-                        finish();
-                        break;
-                    case R.id.about: //инфа про приложение и компанию и иинструкции может
-//                        Intent openAbout = new Intent(getApplicationContext(), About.class);
-//                        startActivity(openAbout);
-                        Toast.makeText(getApplicationContext(), "Приложение создано Akfa R&D в 2020 году в Ташкенте.",Toast.LENGTH_SHORT).show();break;
-                    case R.id.log_out: //возвращение в логин page
-                        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                        SharedPreferences.Editor editor = sharedPrefs.edit();
-                        editor.clear();
-                        editor.commit();
-                        Intent logOut = new Intent(getApplicationContext(), Login.class);
-                        logOut.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                        startActivity(logOut);
-                        finish();
-                    default:
-                        return true;
-                }
-                return true;
-            }
-        });
-        return toggle;
     }
 
     @Override public boolean onOptionsItemSelected(MenuItem item) {

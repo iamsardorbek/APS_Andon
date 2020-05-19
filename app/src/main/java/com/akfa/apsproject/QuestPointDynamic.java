@@ -1,6 +1,7 @@
 package com.akfa.apsproject;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -161,7 +162,7 @@ public class QuestPointDynamic extends AppCompatActivity
                 }
                 else
                 {
-                    AlertDialog diaBox = askOptionOnNavigationBarClicked(id, drawerLayout);
+                    AlertDialog diaBox = askOptionOnNavigationBarClicked(id);
                     diaBox.show();
                 }
                 return true;
@@ -177,7 +178,7 @@ public class QuestPointDynamic extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    private AlertDialog askOptionOnNavigationBarClicked(final int menuItemId, final DrawerLayout drawerLayout)
+    private AlertDialog askOptionOnNavigationBarClicked(final int menuItemId)
     {//тут если юзер захочет выйти из проверки, данные должны стереться, поэтому выводится диалог для этого
         AlertDialog myQuittingDialogBox = new AlertDialog.Builder(this).setTitle("Закончить проверку").setMessage("Вы уверены, что хотите закончить проверку? Данные не будут сохранены.")
                 .setIcon(R.drawable.close)

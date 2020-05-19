@@ -49,7 +49,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
                                                                             //positionTypes создан для упрощения работы с этими подветками и связания из строковый названий с числами-индексами
 
     private String nomerPulta, equipmentName, shopName; //данные, хранящиеся в ветке отдельного пользотвателя-оператора (номер пульта, назв-е линии, цеха)
-    private String login, position; //inter-activity strings
+    private String employeeLogin, employeePosition; //inter-activity strings
     public int shopNo, equipmentNo; //для сохранения индексов цеха и линии
     private final String DETECTED = "DETECTED", SPECIALIST_CAME = "SPECIALIST_CAME", SOLVED = "SOLVED"; //константы, хранящие в себе состояния обнаруженных проблем ОБНАРУЖЕНА, СПЕЦ_ПРИШЕЛ, РЕШЕНА. Это для понятного кода без хардкодинга
 
@@ -77,17 +77,18 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
       Bundle arguments = getIntent().getExtras(); //аргументы переданные с других активити
       if(arguments != null) //был ли сделан правилно логин и возвратил ли он оттуда номер пульта, или передал ли предыдущий активити аргументы
       {
-          position = arguments.getString("Должность");
-          login = arguments.getString("Логин пользователя");
+          employeePosition = arguments.getString("Должность");
+          employeeLogin = arguments.getString("Логин пользователя");
           //создать ссылку на ветку пользователя для получения номера пульта
-          DatabaseReference userRef = database.getReference("Users/" + login);
+          DatabaseReference userRef = database.getReference("Users/" + employeeLogin);
           findPathToRelevantPult(); //инициализировать pathToRelevantPultQuery для пульта этого юзера
           userRef.addListenerForSingleValueEvent(pathToRelevantPultQuery); //привязать pathToRelevantPultQuery к ветке пользователей (там далее берутся данные о линии, цехе и номере пульта, что запускает потом асинхронный listener для пульта
           setAndonStates(); //проверь ветку Urgent problems, если там есть проблемы, связанные с нашим пультом, измени соответственно состояние кнопок пульта
       }
       else Toast.makeText(getApplicationContext(), "Ошибка, постарайтесь зайти снова", Toast.LENGTH_LONG).show(); //сработает, если в код сделали изменения и это нарушило стабильность работы приложения
       //напр: забыли приписать putExtras к интенту, открывшему этот активити PultActivity
-      toggle = setUpNavBar(); //setUpNavBar выполняет все действия и возвращает toggle, которые используется в функции onOptionsItemSelected()
+      toggle = InitNavigationBar.setUpNavBar(PultActivity.this, getApplicationContext(),  getSupportActionBar(), employeeLogin, employeePosition, R.id.pult, R.id.activity_main); //setUpNavBar выполняет все действия и возвращает toggle, которые используется в функции onOptionsItemSelected()
+      setTitle("Загрузка данных...");
   }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -191,7 +192,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
                 { //рассмотрим по одному каждую проблему (aka Query)
                     UrgentProblem urgentProblem = urgentProblemSnap.getValue(UrgentProblem.class); //считать ветку в объект срочная проблема
                     String operatorLogin = urgentProblem.getOperator_login();
-                    if(operatorLogin.equals(login) && urgentProblemSnap.child("status").getValue().toString().equals(DETECTED))
+                    if(operatorLogin.equals(employeeLogin) && urgentProblemSnap.child("status").getValue().toString().equals(DETECTED))
                     { //если проблема относится к данному пользователю, но специалист еще не пришел (состояние 1), но оператор сообщил  о проблеме уже до этого
                         String whoIsNeededLogin = urgentProblem.getWho_is_needed_position();
                         int whoIsNeededIndex = renderWhoIsNeededIndex(whoIsNeededLogin); //какая кнопка было нажата (кого вызвали?)
@@ -295,64 +296,6 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
         //----КОНЕЦ ОБЪЯВЛЕНИЯ АСИНХРОННОГО СЛУШАТЕЛЯ БД----//
     }
 
-    private ActionBarDrawerToggle setUpNavBar() {
-        //---------код связанный с nav bar---------//
-        //настрой actionBar
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.show();
-        setTitle("Загрузка данных...");
-        //настрой сам навигейшн бар
-        final DrawerLayout drawerLayout;
-        ActionBarDrawerToggle toggle;
-        NavigationView navigationView;
-        drawerLayout = findViewById(R.id.activity_main);
-        toggle = new ActionBarDrawerToggle(this, drawerLayout,R.string.open, R.string.close);
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        navigationView = findViewById(R.id.nv);
-        View headerView = navigationView.getHeaderView(0);
-        TextView userInfo = headerView.findViewById(R.id.user_info);
-        userInfo.setText(login);
-        //ниже действия, выполняемые при нажатиях на элементы нав бара
-        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                int id = item.getItemId();
-                switch(id)
-                {
-                    case R.id.pult:
-                        drawerLayout.closeDrawer(GravityCompat.START); //когда нажали на сам пульт, нав бар просто закрывается
-                        break;
-                    case R.id.check_equipment: //переход в модуль проверки
-                        Intent openQuest = new Intent(getApplicationContext(), QuestMainActivity.class);
-                        openQuest.putExtra("Логин пользователя", login);
-                        openQuest.putExtra("Должность", position);
-                        startActivity(openQuest);
-                        finish();
-                        break;
-                    case R.id.about: //инфа про приложение и компанию и иинструкции может
-//                        Intent openAbout = new Intent(getApplicationContext(), About.class);
-//                        startActivity(openAbout);
-                        Toast.makeText(getApplicationContext(), "Приложение создано Akfa R&D в 2020 году в Ташкенте.",Toast.LENGTH_SHORT).show();break;
-                    case R.id.log_out: //возвращение в логин page
-                        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                        SharedPreferences.Editor editor = sharedPrefs.edit();
-                        editor.clear();
-                        editor.commit();
-                        Intent logOut = new Intent(getApplicationContext(), Login.class);
-                        logOut.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                        startActivity(logOut);
-                        finish();
-                    default:
-                        return true;
-                }
-                return true;
-            }
-        });
-        return toggle;
-    }
-
     @Override public boolean onOptionsItemSelected(MenuItem item) {
       //связано с навигейшн бар
         if(toggle.onOptionsItemSelected(item)) return true;
@@ -427,7 +370,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
             //startDialogFragment для выбора проблемного участка и вызова специалиста
             DialogFragment dialogFragment = new ChooseProblematicStationDialog();
             Bundle bundle = new Bundle();
-            bundle.putString("Логин пользователя", login);
+            bundle.putString("Логин пользователя", employeeLogin);
             bundle.putInt("Вызвать специалиста", whoIsNeededIndex);
             dialogFragment.setArguments(bundle);
             dialogFragment.show(getSupportFragmentManager(), "Выбор участка");
@@ -442,7 +385,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
             Bundle bundle = new Bundle();
             bundle.putString("Название цеха", shopName);
             bundle.putString("Название линии", equipmentName);
-            bundle.putString("Логин пользователя", login);
+            bundle.putString("Логин пользователя", employeeLogin);
             bundle.putString("Должность", positionTypes[whoIsNeededIndex]);
             dialogFragment.setArguments(bundle);
             dialogFragment.show(getSupportFragmentManager(), "QR Код");
@@ -468,7 +411,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
                         String operatorLogin = urgentProblemSnap.child("operator_login").getValue().toString();
                         String whoIsNeededLogin = urgentProblemSnap.child("who_is_needed_position").getValue().toString();
                         //проверка (Query) выбор срочной проблемы с тем же логином оператора, специалиста и проблема, которая не решена еще
-                        if(operatorLogin.equals(login) && whoIsNeededLogin.equals(positionTypes[whoIsNeededIndex]) && urgentProblemSnap.child("status").getValue().toString().equals(SPECIALIST_CAME)) {
+                        if(operatorLogin.equals(employeeLogin) && whoIsNeededLogin.equals(positionTypes[whoIsNeededIndex]) && urgentProblemSnap.child("status").getValue().toString().equals(SPECIALIST_CAME)) {
                             //если специалист пришел, но еще не решил проблему (status = SPECIALIST_CAME)
 
                             //---ввести изменения о решенности проблемы в базу данных---//

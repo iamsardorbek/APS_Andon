@@ -35,7 +35,7 @@ import java.util.List;
 public class RepairersProblemsList extends AppCompatActivity {
     private final int ID_TEXTVIEWS = 5000;
     private int problemCount = 0;
-    private String login, position;
+    private String employeeLogin, employeePosition;
     private List<String> problemIDs;
     LinearLayout linearLayout;
     ActionBarDrawerToggle toggle;
@@ -47,13 +47,13 @@ public class RepairersProblemsList extends AppCompatActivity {
         setContentView(R.layout.repairers_activity_problems_list);
         setTitle("Загрузка данных..."); //если нет проблем, надо сделать: нету проблем
         initInstances();
-        toggle = setUpNavBar();
+        toggle = InitNavigationBar.setUpNavBar(RepairersProblemsList.this, getApplicationContext(),  getSupportActionBar(), employeeLogin, employeePosition, R.id.problems_list, R.id.repairers_activity);
         addProblemsFromDatabase();
     }
     private void initInstances()
     {//иниц кросс-активити перем-х
-        login = getIntent().getExtras().getString("Логин пользователя");
-        position = getIntent().getExtras().getString("Должность");
+        employeeLogin = getIntent().getExtras().getString("Логин пользователя");
+        employeePosition = getIntent().getExtras().getString("Должность");
         linearLayout = findViewById(R.id.linearLayout);
         problemIDs = new ArrayList<>();
         //к каждому textview проблемы будет прикреплен этот listener
@@ -64,8 +64,8 @@ public class RepairersProblemsList extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(), RepairerSeparateProblem.class);
                 String IDOfSelectedProblem = problemIDs.get(nomerProblemy);
                 intent.putExtra("ID проблемы в таблице Maintenance_problems", IDOfSelectedProblem);
-                intent.putExtra("Логин пользователя", login);
-                intent.putExtra("Должность", position);
+                intent.putExtra("Логин пользователя", employeeLogin);
+                intent.putExtra("Должность", employeePosition);
                 startActivity(intent);
             }
         };
@@ -115,68 +115,6 @@ public class RepairersProblemsList extends AppCompatActivity {
 
             @Override public void onCancelled(@NonNull DatabaseError databaseError) {}
         });
-    }
-
-    private ActionBarDrawerToggle setUpNavBar() {
-        //---------код связанный с nav bar---------//
-        //настрой actionBar
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.show();
-        //настрой сам навигейшн бар
-        final DrawerLayout drawerLayout;
-        ActionBarDrawerToggle toggle;
-        NavigationView navigationView;
-        drawerLayout = findViewById(R.id.repairers_activity);
-        toggle = new ActionBarDrawerToggle(this, drawerLayout,R.string.open, R.string.close);
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        navigationView = findViewById(R.id.nv);
-        View headerView = navigationView.getHeaderView(0);
-        TextView userInfo = headerView.findViewById(R.id.user_info);
-        userInfo.setText(login);
-        //ниже действия, выполняемые при нажатиях на элементы нав бара
-        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                int id = item.getItemId();
-                switch(id)
-                {
-                    case R.id.urgent_problems:
-                        Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                        openUrgentProblemsList.putExtra("Логин пользователя", login);
-                        openUrgentProblemsList.putExtra("Должность", position);
-                        startActivity(openUrgentProblemsList);
-                        break;
-                    case R.id.problems_list:
-                        drawerLayout.closeDrawer(GravityCompat.START); //когда нажали на сам пульт, нав бар просто закрывается
-                        break;
-                    case R.id.web_monitoring: //переход в модуль проверки
-                        Intent openFactoryCondition = new Intent(getApplicationContext(), FactoryCondition.class);
-                        openFactoryCondition.putExtra("Логин пользователя", login);
-                        openFactoryCondition.putExtra("Должность", position);
-                        startActivity(openFactoryCondition);
-                        break;
-                    case R.id.about: //инфа про приложение и компанию и иинструкции может
-//                        Intent openAbout = new Intent(getApplicationContext(), About.class);
-//                        startActivity(openAbout);
-                        Toast.makeText(getApplicationContext(), "Приложение создано Akfa R&D в 2020 году в Ташкенте.",Toast.LENGTH_SHORT).show();break;
-                    case R.id.log_out: //возвращение в логин page
-                        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                        SharedPreferences.Editor editor = sharedPrefs.edit();
-                        editor.clear();
-                        editor.commit();
-                        Intent logOut = new Intent(getApplicationContext(), Login.class);
-                        logOut.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                        startActivity(logOut);
-                        finish();
-                    default:
-                        return true;
-                }
-                return true;
-            }
-        });
-        return toggle;
     }
 
     @Override
