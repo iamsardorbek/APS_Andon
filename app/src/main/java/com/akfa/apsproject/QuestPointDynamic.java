@@ -390,7 +390,8 @@ public class QuestPointDynamic extends AppCompatActivity
         AlertDialog myQuittingDialogBox = new AlertDialog.Builder(this).setTitle("Закончить проверку").setMessage("Вы уверены, что хотите закончить проверку? Данные не будут сохранены.")
                 .setIcon(R.drawable.close)
                 .setPositiveButton("Да", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
+                    public void onClick(DialogInterface dialog, int whichButton)
+                    {
                         DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference("Maintenance_problems");
                         for(String problemPushKey : problemPushKeysOfTheWholeCheck)
                         {
@@ -402,8 +403,10 @@ public class QuestPointDynamic extends AppCompatActivity
                                     //file deleted successfully
                                 }
                             });
-                            finish();
-                    }}
+
+                        }
+                        finish();
+                    }
                 })
                 .setNegativeButton("Нет", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
