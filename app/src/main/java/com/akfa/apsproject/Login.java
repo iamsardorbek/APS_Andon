@@ -101,6 +101,7 @@ public class Login extends AppCompatActivity {
                                         startBackgroundService.putExtra("Должность", user.child("position").getValue().toString()); //уведомления сортируются в зависимости от должности пользователя
                                         ContextCompat.startForegroundService(getApplicationContext(), startBackgroundService);//эта функция запускает фоновый сервис
                                     }
+                                    finish();
                                 }
                                 else { Toast.makeText(getApplicationContext(), "Неверный пароль", Toast.LENGTH_LONG).show(); }
                             }
