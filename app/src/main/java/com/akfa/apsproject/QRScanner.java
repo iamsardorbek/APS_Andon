@@ -52,7 +52,7 @@ public class QRScanner extends AppCompatActivity {
     private static final int VIBRATION_DURATION = 500;
     private long startTimeMillis; //кросс-активити переменная, передаваемая из QuestPointDynamic
     private boolean detectedOnce = false; //для того, чтобы на уже обнаруженный (расшифрованный) код не реагировал повторно
-    private String codeToDetect, shouldOpenPointDynamic;
+    private String codeToDetect, shouldOpenPointDynamic, shopName, equipmentName, callFirebaseKey;
     private String employeeLogin, employeePosition;
     List<EquipmentLine> equipmentLineList = new ArrayList<>();
     List<String> problemPushKeysOfTheWholeCheck;
@@ -74,14 +74,17 @@ public class QRScanner extends AppCompatActivity {
         arguments = getIntent().getExtras();
         shouldOpenPointDynamic = arguments.getString("Открой PointDynamic");
         equipmentNumber = arguments.getInt("Номер линии");
+        equipmentName = arguments.getString("Название линии");
         shopNumber = arguments.getInt("Номер цеха");
-        nomerPunkta = arguments.getInt("Номер пункта");
+        shopName = arguments.getString("Название цеха");
+        nomerPunkta = arguments.getInt("Номер участка");
         numOfPoints = arguments.getInt("Количество пунктов");
         startTimeMillis = arguments.getLong("startTimeMillis");
         employeeLogin = arguments.getString("Логин пользователя");
         employeePosition = arguments.getString("Должность");
         problemsCount = arguments.getInt("Количество обнаруженных проблем");
         problemPushKeysOfTheWholeCheck = arguments.getStringArrayList("Коды проблем");
+        callFirebaseKey = arguments.getString("Код вызова");
 
         //UI объекты
         surfaceView = findViewById(R.id.camerapreview);
@@ -124,6 +127,33 @@ public class QRScanner extends AppCompatActivity {
                 }
                 @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
             });
+        }
+        else if(shouldOpenPointDynamic.equals("вызов оператора/мастера"))
+        {
+            DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference("Shops");
+            shopsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot shopsSnap) {
+                    for(DataSnapshot singleShopSnap : shopsSnap.getChildren())
+                    {
+                        String shopNameDB = singleShopSnap.child("shop_name").getValue().toString();
+                        if(shopNameDB.equals(shopName))
+                        {
+                            for (DataSnapshot singleEquipmentSnap : singleShopSnap.child("Equipment_lines").getChildren())
+                            {
+                                String equipmentNameDB = singleEquipmentSnap.child("equipment_name").getValue().toString();
+                                if(equipmentNameDB.equals(equipmentName))
+                                {
+                                    codeToDetect = singleEquipmentSnap.child("QR_codes/qr_" + nomerPunkta).getValue().toString();
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+                @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+            });
+
         }
     }
 
@@ -176,7 +206,7 @@ public class QRScanner extends AppCompatActivity {
                                             if (shouldOpenPointDynamic.equals("да")) { //когда идет переход Verification->QR->PointDynamic
                                                 Intent intent = new Intent(getApplicationContext(), QuestPointDynamic.class);
                                                 //кросс-активити данные PointDynamica
-                                                intent.putExtra("Номер пункта", nomerPunkta);
+                                                intent.putExtra("Номер участка", nomerPunkta);
                                                 intent.putExtra("Количество пунктов", numOfPoints);
                                                 intent.putExtra("startTimeMillis", startTimeMillis);
                                                 intent.putExtra("Логин пользователя", employeeLogin);
@@ -220,7 +250,7 @@ public class QRScanner extends AppCompatActivity {
                                         {
                                             vibration(500);
                                             Intent intent = new Intent(getApplicationContext(), QuestPointDynamic.class); //начнет ТО проверку с 1-го участка соответ линии
-                                            intent.putExtra("Номер пункта", 1);
+                                            intent.putExtra("Номер участка", 1);
                                             intent.putExtra("Номер цеха", equipmentLine.getShopNo());
                                             intent.putExtra("Номер линии", equipmentLine.getEquipmentNo());
                                             intent.putExtra("Логин пользователя", employeeLogin);
@@ -277,6 +307,31 @@ public class QRScanner extends AppCompatActivity {
                                         {
                                             textView.setText("Отсканируйте код, сгенерированный на устройстве оператора, который сообщил о данной проблеме. " +
                                                     "Возможно, QR Код на экране оператора устарел. Нужно закрыть диалог и заново нажать на мигающую кнопку.");
+                                        }
+                                    }
+                                }
+                                else if(shouldOpenPointDynamic.equals("вызов оператора/мастера"))
+                                {
+                                    if (!detectedOnce) {
+                                        //retrieve the appropriate qr code value of station from DB, compare it
+                                        if(codeFromQR.equals(codeToDetect))
+                                        {
+                                            vibration(500);
+                                            //дата-время
+                                            final String dateCame;
+                                            @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+                                            dateCame = sdf.format(new Date());
+                                            final String timeCame;
+                                            @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
+                                            timeCame = sdf1.format(new Date());
+                                            //----считал дату и время----//
+                                            DatabaseReference callRef = FirebaseDatabase.getInstance().getReference("Operator_and_master_calls/" + callFirebaseKey);
+
+                                            callRef.child("date_came").setValue(dateCame);
+                                            callRef.child("time_came").setValue(timeCame);
+                                            callRef.child("who_came_login").setValue(employeeLogin);
+                                            callRef.child("complete").setValue(true);
+                                            finish();
                                         }
                                     }
                                 }

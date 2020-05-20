@@ -56,7 +56,7 @@ public class MachineLayoutActivity extends AppCompatActivity {
                 intent.putExtra("Номер цеха", shopNo);
                 intent.putExtra("Номер линии", equipmentNo);
                 int INITIAL_POINT_NUMBER_FOR_QR = 1;
-                intent.putExtra("Номер пункта", INITIAL_POINT_NUMBER_FOR_QR);
+                intent.putExtra("Номер участка", INITIAL_POINT_NUMBER_FOR_QR);
                 intent.putExtra("Открой PointDynamic", "да");
                 String login = getIntent().getExtras().getString("Логин пользователя");
                 intent.putExtra("Логин пользователя", login); //передавать логин пользователя взятый из Firebase

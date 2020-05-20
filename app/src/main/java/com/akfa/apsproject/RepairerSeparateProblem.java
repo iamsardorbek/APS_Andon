@@ -1,8 +1,10 @@
 package com.akfa.apsproject;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -20,17 +22,22 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import static com.google.firebase.database.FirebaseDatabase.getInstance;
+
 //--------ПОКАЗЫВАЕТ БОЛЬШЕ ДЕТАЛЕЙ ПРО ТО ПРОБЛЕМУ, ЧЕМ В REPAIRERS PROBLEM LIST. ПРИ НАЖАТИИ НА КНОПКУ "ПРОБЛЕМА РЕШЕНА"-------
 //--------ОТКРЫВАЕТ QR И ДАЕТ ВОЗМОЖНОСТЬ ПРИКРЕПИТЬ ФОТКУ РЕШЕНИЯ---------//
-public class RepairerSeparateProblem extends AppCompatActivity {
-    Button problemSolved;
+public class RepairerSeparateProblem extends AppCompatActivity implements View.OnTouchListener {
+    Button problemSolved, callOperator;
     ImageView problemPic;
-    Button.OnClickListener clickListener;
 
     private String IDOfTheProblem;
     private int nomerPunkta, equipmentNo, shopNo;
     private String equipmentName, shopName;
     private String employeeLogin, employeePosition;
+    private MaintenanceProblem problem;
 
     DatabaseReference problemsRef, thisProblemRef;
 
@@ -43,7 +50,7 @@ public class RepairerSeparateProblem extends AppCompatActivity {
     }
 
     private void initInstances() {
-        problemsRef = FirebaseDatabase.getInstance().getReference().child("Maintenance_problems"); //ссылка к ТО пробам
+        problemsRef = getInstance().getReference().child("Maintenance_problems"); //ссылка к ТО пробам
         IDOfTheProblem = getIntent().getExtras().getString("ID проблемы в таблице Maintenance_problems"); //айди именно текущей проблемы
         employeeLogin = getIntent().getExtras().getString("Логин пользователя"); //кросс-активити перем
         employeePosition = getIntent().getExtras().getString("Должность");
@@ -51,7 +58,7 @@ public class RepairerSeparateProblem extends AppCompatActivity {
         thisProblemRef = problemsRef.child(IDOfTheProblem);
         thisProblemRef.addListenerForSingleValueEvent(new ValueEventListener() { //единожды загрузим данные про текущ пробу
             @Override public void onDataChange(@NonNull DataSnapshot problemDataSnapshot) {
-                MaintenanceProblem problem = problemDataSnapshot.getValue(MaintenanceProblem.class); //считай данные пробы в объект
+                problem = problemDataSnapshot.getValue(MaintenanceProblem.class); //считай данные пробы в объект
                 //на месте иниц views и задай их текст
                 TextView shopNameTextView = findViewById(R.id.shop_name);
                 TextView equipmentNameTextView = findViewById(R.id.equipment_name);
@@ -83,29 +90,55 @@ public class RepairerSeparateProblem extends AppCompatActivity {
 
         //действия при нажатии кнопки
         problemSolved = findViewById(R.id.problemSolved);
-        clickListener = new Button.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                switch(v.getId())
-                {
-                    case R.id.problemSolved:
-                        qrStart(nomerPunkta, equipmentNo, shopNo); //открыть QR Scanner
-                        finish();
-                }
-            }
-        };
-        problemSolved.setOnClickListener(clickListener);
+        problemSolved.setOnTouchListener(this);
+        callOperator = findViewById(R.id.call_operator);
+        callOperator.setOnTouchListener(this);
     }
 
     private void qrStart(int nomerPunkta, int equipmentNo, int shopNo) { //ЗАПУСК QR SCANNER
         Intent intent = new Intent(getApplicationContext(), QRScanner.class);
         intent.putExtra("Номер цеха", shopNo);
         intent.putExtra("Номер линии", equipmentNo);
-        intent.putExtra("Номер пункта", nomerPunkta);
+        intent.putExtra("Номер участка", nomerPunkta);
         intent.putExtra("Открой PointDynamic", "ремонтник");
         intent.putExtra("Логин пользователя", employeeLogin);
         intent.putExtra("ID проблемы в таблице Maintenance_problems", IDOfTheProblem);
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivity(intent);
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) { //обработка нажатия с эффектом
+        switch (event.getAction())
+        {
+            case MotionEvent.ACTION_DOWN: //затемнена кнопка
+                v.setBackgroundResource(R.drawable.edit_red_accent_pressed);
+                break;
+            case MotionEvent.ACTION_UP:
+                v.setBackgroundResource(R.drawable.edit_red_accent);
+                switch(v.getId())
+                {
+                    case R.id.call_operator: //если вызов оператора
+                        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference();
+                        DatabaseReference newCallRef = dbRef.child("Operator_and_master_calls").push(); //создать ветку нового вызова
+                        //дата-время
+                        final String dateCalled;
+                        @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+                        dateCalled = sdf.format(new Date());
+                        final String timeCalled;
+                        @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
+                        timeCalled = sdf1.format(new Date());
+                        //----считал дату и время----//
+                        newCallRef.setValue(new OperatorOrMasterCall(dateCalled, timeCalled, employeeLogin, "operator", problem.getStation_no(), problem.getEquipment_line_name(), problem.getShop_name(), false));
+                        break;
+                    case R.id.problemSolved:
+                        qrStart(nomerPunkta, equipmentNo, shopNo); //открыть QR Scanner
+                        finish();
+                        break;
+                }
+                break;
+        }
+
+        return false;
     }
 }

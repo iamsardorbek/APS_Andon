@@ -39,9 +39,10 @@
     <string name="capture_image">Сфоткать проблему</string>
     <string name="access_login">Логин</string>
     <string name="separate_problem_title">Решение проблемы</string>
-    <string name="problem_description_text_filler">Здесь инфа про проблему\n\nНомер пункта, \n\nНазвание оборудования\n\nНазвание цеха</string>
+    <string name="problem_description_text_filler">Здесь инфа про проблему\n\nНомер участка, \n\nНазвание оборудования\n\nНазвание цеха</string>
     <string name="take_pic">Сфотографировать решенную проблему</string>
     <string name="problem_solved">Проблема решена</string>
+    <string name="call_operator">Вызвать оператора</string>
     <string name="cameraViewDescription">cameraView</string>
     <string name="reviseDone">Проверка окончена</string>
     <string name="nextSteps">Дальнейшие действия</string>
@@ -62,6 +63,7 @@
     <string name="log_out_submenu">Выйти</string>
     <string name="check_equipment_submenu">Проверка линии</string>
     <string name="pult_submenu">Пульт</string>
+    <string name="calls_submenu">Вызовы</string>
     <string name="web_monitoring_submenu">Мониторинг завода</string>
     <string name="problems_list_submenu">Список проблем</string>
     <string name="endOfChecking">Проверка линии закончена</string>

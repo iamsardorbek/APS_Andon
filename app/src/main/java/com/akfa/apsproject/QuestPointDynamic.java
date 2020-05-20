@@ -95,7 +95,7 @@ public class QuestPointDynamic extends AppCompatActivity
         nextPoint = findViewById(R.id.nextPoint);
         equipmentNameTextView = findViewById(R.id.equipmentName);
         stationNoTextView = findViewById(R.id.nomer_punkta);
-        stationNo = getIntent().getExtras().getInt("Номер пункта");
+        stationNo = getIntent().getExtras().getInt("Номер участка");
         if(stationNo == 1) //если проверка тока началась, иниц кол-во проблем к 0, начни отсчитывать продолжительность проверки и открой лист для сохранения ключей репортнутых проблем в БД
         {
             startTimeMillis = System.currentTimeMillis(); //эта фигня работает только для последнего активити
@@ -435,7 +435,7 @@ public class QuestPointDynamic extends AppCompatActivity
         Intent intent = new Intent(getApplicationContext(), QRScanner.class);
         intent.putExtra("Номер цеха", shopNumber);
         intent.putExtra("Номер линии", equipmentNumber);
-        intent.putExtra("Номер пункта", stationNo);
+        intent.putExtra("Номер участка", stationNo);
         intent.putExtra("Количество пунктов", numOfStations);
         intent.putExtra("startTimeMillis", startTimeMillis);
         intent.putExtra("Открой PointDynamic", "да");
@@ -489,7 +489,6 @@ public class QuestPointDynamic extends AppCompatActivity
                     Toast.makeText(getApplicationContext(), "Сфотографируйте проблему пункта " + i, Toast.LENGTH_LONG).show();
                     dispatchTakePictureIntent(problemPushKey); //запуск интент камеры
                 }
-
             }
         }
         //если все в порядке (проблем на этом участке нет) - запусти qr scanner

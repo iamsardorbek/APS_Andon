@@ -206,12 +206,26 @@
 
             <Button
                 android:layout_marginTop="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="5dp"
+                android:id="@+id/call_operator"
+                android:textColor="@color/text"
+                android:text="@string/call_operator"
+                android:background="@drawable/edit_red_accent"
+                android:paddingEnd="10dp"
+                android:textStyle="bold"
+                android:drawableEnd="@drawable/call_operator"/>
+
+            <Button
+                android:layout_marginTop="10dp"
                 android:background="@drawable/edit_red_accent"
                 android:id="@+id/problemSolved"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="5dp"
                 android:textColor="@color/text"
+                android:textStyle="bold"
                 android:text="@string/problem_solved"
                 android:drawableEnd="@drawable/ic_check_box_black_24dp"
                 android:paddingEnd="10dp"
