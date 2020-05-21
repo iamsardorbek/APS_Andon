@@ -2,12 +2,16 @@ package com.akfa.apsproject;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Bundle;
-import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -38,8 +42,9 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
     private String equipmentName, shopName;
     private String employeeLogin, employeePosition;
     private MaintenanceProblem problem;
+    private boolean callForOperatorOpen = false;
 
-    DatabaseReference problemsRef, thisProblemRef;
+    DatabaseReference problemsRef, thisProblemRef, callRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +87,65 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
             }
             @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
+
+        DatabaseReference callsRef = getInstance().getReference("Calls");
+        callsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot callsSnap) {
+                for(DataSnapshot singleCallSnap : callsSnap.getChildren()) {
+
+                    if(singleCallSnap.child("problem_key").exists())
+                    {
+                        if(singleCallSnap.child("problem_key").exists()) { //если это вызов прямо из RepairersSeparateProblem
+                            String problemKey = singleCallSnap.child("problem_key").getValue().toString();
+                            boolean isCallComplete = singleCallSnap.child("complete").getValue(Boolean.class);
+                            if (problemKey.equals(IDOfTheProblem) && !isCallComplete) //если оператор еще не пришел, а если он уже пришел и потенциально ушел, можно его вызвать снова
+                            {
+                                String thisCallKey = singleCallSnap.getKey();
+                                DatabaseReference callRef = getInstance().getReference("Calls/" + thisCallKey);
+                                callRef.addValueEventListener(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot callSnap) {
+                                        boolean callSnapComplete = callSnap.child("complete").getValue(Boolean.class);
+                                        if (callSnapComplete) {
+                                            callOperator.setBackgroundResource(R.drawable.call_closed_button);
+                                            callOperator.setText("Оператор прибыл");
+                                            Resources r = getApplicationContext().getResources();
+                                            int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, r.getDisplayMetrics());
+                                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                                            params.setMargins(px, 2 * px, px, 0);
+                                            callOperator.setLayoutParams(params);
+                                            callOperator.setClickable(true); //теперь если вдруг уйдет, можно вызывать снова
+                                            callForOperatorOpen = false;
+                                        } else {
+                                            callForOperatorOpen = true;
+                                            callOperator.setClickable(false); //если есть уже активный вызов оператора, еще раз вызвать его нельзя, а то БД заполнится
+                                            callOperator.setBackgroundResource(R.drawable.call_opened_button);
+                                            callOperator.setText("Оператор вызван");
+                                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                                            params.setMargins(5, 40, 5, 40);
+                                            params.gravity = Gravity.CENTER;
+                                            callOperator.setLayoutParams(params);
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                                    }
+                                });
+                            }
+                        }
+
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
         //загрузим фотку с Storage в ImageView с помощью Glide
         problemPic = findViewById(R.id.problemPic);
         StorageReference mStorageRef = FirebaseStorage.getInstance().getReference("problem_pictures");
@@ -119,17 +183,46 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
                 switch(v.getId())
                 {
                     case R.id.call_operator: //если вызов оператора
-                        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference();
-                        DatabaseReference newCallRef = dbRef.child("Operator_and_master_calls").push(); //создать ветку нового вызова
-                        //дата-время
-                        final String dateCalled;
-                        @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
-                        dateCalled = sdf.format(new Date());
-                        final String timeCalled;
-                        @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
-                        timeCalled = sdf1.format(new Date());
-                        //----считал дату и время----//
-                        newCallRef.setValue(new OperatorOrMasterCall(dateCalled, timeCalled, employeeLogin, "operator", problem.getStation_no(), problem.getEquipment_line_name(), problem.getShop_name(), false));
+                        if(!callForOperatorOpen) {
+                            DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference();
+                            DatabaseReference newCallRef = dbRef.child("Calls").push(); //создать ветку нового вызова
+                            //дата-время
+                            final String dateCalled;
+                            @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+                            dateCalled = sdf.format(new Date());
+                            final String timeCalled;
+                            @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
+                            timeCalled = sdf1.format(new Date());
+                            //----считал дату и время----//
+                            newCallRef.setValue(new Call(dateCalled, timeCalled, employeeLogin, "operator", problem.getStation_no(),
+                                    problem.getEquipment_line_name(), problem.getShop_name(), false, IDOfTheProblem));
+
+                            newCallRef.addValueEventListener(new ValueEventListener() {
+                                @Override public void onDataChange(@NonNull DataSnapshot callSnap) {
+                                    boolean callSnapComplete = callSnap.child("complete").getValue(Boolean.class);
+                                    if(callSnapComplete)
+                                    {
+                                        callOperator.setBackgroundResource(R.drawable.call_closed_button);
+                                        callOperator.setText("Оператор прибыл");
+                                        callOperator.setClickable(true); //теперь если вдруг уйдет, можно вызывать снова
+                                        callForOperatorOpen = false;
+                                    }
+                                    else
+                                    {
+                                        callForOperatorOpen = true;
+                                        callOperator.setClickable(false); //если есть уже активный вызов оператора, еще раз вызвать его нельзя, а то БД заполнится
+                                        callOperator.setBackgroundResource(R.drawable.call_opened_button);
+                                        callOperator.setText("Оператор вызван");
+                                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                                        params.setMargins(5, 40, 5, 40);
+                                        params.gravity = Gravity.CENTER;
+                                        callOperator.setLayoutParams(params);
+                                    }
+                                }
+
+                                @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+                            });
+                        }
                         break;
                     case R.id.problemSolved:
                         qrStart(nomerPunkta, equipmentNo, shopNo); //открыть QR Scanner

@@ -19,7 +19,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup">
-        <activity android:name=".OperatorOrMasterCallsList"></activity>
+        <activity android:name=".ConfirmCallDialog"></activity>
+        <activity android:name=".MakeACall" />
+        <activity android:name=".OperatorOrMasterCallsList" />
         <activity android:name=".UrgentProblemsList" />
         <activity android:name=".RepairerTakePhoto" />
         <activity android:name=".MachineLayoutActivity" />

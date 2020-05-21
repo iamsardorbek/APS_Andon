@@ -10,6 +10,9 @@
     <item android:id="@+id/check_equipment"
         android:icon="@drawable/check_equipment"
         android:title="@string/check_equipment_submenu"/>
+    <item android:id="@+id/make_a_call"
+        android:icon="@drawable/make_a_call"
+        android:title="@string/make_a_call_submenu"/>
     <item android:id="@+id/web_monitoring"
         android:icon="@drawable/web_monitoring"
         android:title="@string/web_monitoring_submenu"/>

@@ -86,4 +86,7 @@
     <string name="urgentProblemsButton">Сканировать QR код</string>
     <string name="urgent_problems_submenu">Срочные проблемы</string>
     <string name="website_address_factory_condition">https://aps-project-akfa.web.app/</string>
+    <string name="make_a_call_submenu">Вызвать сотрудника</string>
+    <string name="confirm">Подтвердить</string>
+    <string name="who_is_called_position">Вызываемый специалист:</string>
 </resources>

@@ -38,7 +38,9 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 //--------------ОБЕСПЕЧИВАЕТ ТО, ЧТОБЫ СОТРУДНИКИ ШЛИ НА МЕСТА ВОЗНИКНОВЕНИЯ ПРОБЛЕМ, А НЕ ОТМЕЧАЛИ ПРОБЛЕМЫ РЕШЕННЫМИ/ПРОВЕРКИ ОКОНЧЕННЫМИ ПРОСТО С МЕСТА------------//
 //--------------QR SCANNER ПОЗВОЛЯЕТ ДЕЛАТЬ СВОЕГО РОДА REALITY CHECK-------------//
@@ -52,10 +54,11 @@ public class QRScanner extends AppCompatActivity {
     private static final int VIBRATION_DURATION = 500;
     private long startTimeMillis; //кросс-активити переменная, передаваемая из QuestPointDynamic
     private boolean detectedOnce = false; //для того, чтобы на уже обнаруженный (расшифрованный) код не реагировал повторно
-    private String codeToDetect, shouldOpenPointDynamic, shopName, equipmentName, callFirebaseKey;
+    private String codeToDetect, shouldOpenPointDynamic, shopName, equipmentName, callFirebaseKey, whoIsCalled;
     private String employeeLogin, employeePosition;
     List<EquipmentLine> equipmentLineList = new ArrayList<>();
     List<String> problemPushKeysOfTheWholeCheck;
+    List<StationData> stationsData;
     Bundle arguments;
 
     @Override
@@ -85,6 +88,7 @@ public class QRScanner extends AppCompatActivity {
         problemsCount = arguments.getInt("Количество обнаруженных проблем");
         problemPushKeysOfTheWholeCheck = arguments.getStringArrayList("Коды проблем");
         callFirebaseKey = arguments.getString("Код вызова");
+        whoIsCalled = arguments.getString("Кого вызываем");
 
         //UI объекты
         surfaceView = findViewById(R.id.camerapreview);
@@ -154,6 +158,34 @@ public class QRScanner extends AppCompatActivity {
                 @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
             });
 
+        }
+        else if(shouldOpenPointDynamic.equals("определи адрес"))
+        {
+            directionsTextView.setText("Отсканируйте QR метку ближайшего участка, место определится автоматически");
+            directionsTextView.setVisibility(View.VISIBLE);
+            stationsData = new ArrayList<>();
+            DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference("Shops");
+            shopsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot shopsSnap) {
+                    for(DataSnapshot singleShopSnap : shopsSnap.getChildren())
+                    {
+                        String shopNameDB = singleShopSnap.child("shop_name").getValue().toString();
+
+                        for (DataSnapshot singleEquipmentSnap : singleShopSnap.child("Equipment_lines").getChildren())
+                        {
+                            String equipmentNameDB = singleEquipmentSnap.child("equipment_name").getValue().toString();
+                            int numOfStations = Integer.parseInt(singleEquipmentSnap.child("number_of_stations").getValue().toString());
+                            for(int i = 1; i <= numOfStations; i++)
+                            {
+                                String thisStationQRCode = singleEquipmentSnap.child("QR_codes/qr_" + i).getValue().toString();
+                                stationsData.add(new StationData(i, equipmentNameDB, shopNameDB, thisStationQRCode));
+                            }
+                        }
+                    }
+                }
+                @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+            });
         }
     }
 
@@ -325,7 +357,7 @@ public class QRScanner extends AppCompatActivity {
                                             @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
                                             timeCame = sdf1.format(new Date());
                                             //----считал дату и время----//
-                                            DatabaseReference callRef = FirebaseDatabase.getInstance().getReference("Operator_and_master_calls/" + callFirebaseKey);
+                                            DatabaseReference callRef = FirebaseDatabase.getInstance().getReference("Calls/" + callFirebaseKey);
 
                                             callRef.child("date_came").setValue(dateCame);
                                             callRef.child("time_came").setValue(timeCame);
@@ -334,6 +366,26 @@ public class QRScanner extends AppCompatActivity {
                                             finish();
                                         }
                                     }
+                                }
+                                else if(shouldOpenPointDynamic.equals("определи адрес"))
+                                {
+                                    for(StationData singleStationData : stationsData)
+                                    {
+                                        if(codeFromQR.equals(singleStationData.getQrCode()))
+                                        {
+
+                                            Intent openMakeACall = new Intent(getApplicationContext(), MakeACall.class);
+                                            openMakeACall.putExtra("Логин пользователя", employeeLogin);
+                                            openMakeACall.putExtra("Должность", employeePosition);
+                                            openMakeACall.putExtra("Название цеха", singleStationData.getShopName());
+                                            openMakeACall.putExtra("Название линии", singleStationData.getEquipmentName());
+                                            openMakeACall.putExtra("Номер участка", singleStationData.getStationNo());
+                                            openMakeACall.putExtra("Кого вызываем", whoIsCalled);
+                                            startActivity(openMakeACall);
+                                            finish();
+                                        }
+                                    }
+                                    textView.setText("Участок с такой QR-меткой не существует в базе");
                                 }
                             }
                         }

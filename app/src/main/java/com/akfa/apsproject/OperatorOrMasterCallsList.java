@@ -21,7 +21,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class OperatorOrMasterCallsList extends AppCompatActivity {
@@ -48,7 +47,7 @@ public class OperatorOrMasterCallsList extends AppCompatActivity {
             @Override public void onDataChange(@NonNull final DataSnapshot userSnap) {
                 final String shopName = userSnap.child("shop_name").getValue().toString();
 
-                DatabaseReference operatorAndMasterCallsRef = FirebaseDatabase.getInstance().getReference("Operator_and_master_calls");
+                DatabaseReference operatorAndMasterCallsRef = FirebaseDatabase.getInstance().getReference("Calls");
                 operatorAndMasterCallsRef.addValueEventListener(new ValueEventListener() {
                     @SuppressLint("ResourceType")
                     @Override public void onDataChange(@NonNull DataSnapshot operatorAndMasterCallsSnap) {
@@ -60,7 +59,7 @@ public class OperatorOrMasterCallsList extends AppCompatActivity {
                         else {
                             setTitle("Вас ждут в данных местах");
                             for (final DataSnapshot singleCallSnap : operatorAndMasterCallsSnap.getChildren()) {
-                                final OperatorOrMasterCall thisCall = singleCallSnap.getValue(OperatorOrMasterCall.class);
+                                final Call thisCall = singleCallSnap.getValue(Call.class);
 
                                 String whoIsNeededPosition = thisCall.getWho_is_needed_position();
                                 String callEquipmentName = thisCall.getEquipment_name();

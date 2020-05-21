@@ -95,6 +95,13 @@ public class InitNavigationBar {
                             activity.startActivity(openCallsList);
                             activity.finish();
                             break;
+                        case R.id.make_a_call:
+                            Intent openMakeACall = new Intent(context, MakeACall.class);
+                            openMakeACall.putExtra("Логин пользователя", employeeLogin);
+                            openMakeACall.putExtra("Должность", employeePosition);
+                            activity.startActivity(openMakeACall);
+                            activity.finish();
+                            break;
                         case R.id.pult:
                             Intent openMainActivity = new Intent(context, PultActivity.class);
                             openMainActivity.putExtra("Логин пользователя", employeeLogin);
