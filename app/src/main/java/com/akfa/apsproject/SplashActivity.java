@@ -3,6 +3,8 @@ package com.akfa.apsproject;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -18,6 +20,13 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_new);
         getSupportActionBar().hide();
+
+        //чтобы регулировать програмно звук уведомлений
+        NotificationManager n = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        if(!n.isNotificationPolicyAccessGranted()) {
+            Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+            startActivity(intent);
+        }
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         if(sharedPrefs.getString("Логин пользователя", null) != null) //Еcли в sharedPrefs есть данные юзера, открой соот активти
@@ -51,15 +60,9 @@ public class SplashActivity extends AppCompatActivity {
                     openUrgentProblemsList.putExtra("Должность", rememberedPosition);
                     startActivity(openUrgentProblemsList);
             }
-            switch (rememberedPosition)
-            { //запусти сервис только если это не оператор
-                case "master":
-                case "repair":
-                case "quality":
-                case "raw":
-                    startBGServ(rememberedPosition);
-                    break;
-            }
+             //запусти сервис
+            startBGServ(rememberedPosition, rememberedLogin);
+
 
         }
         else
@@ -71,11 +74,12 @@ public class SplashActivity extends AppCompatActivity {
 
     }
 
-    private void startBGServ(String rememberedPosition)
+    private void startBGServ(String rememberedPosition, String rememberedLogin)
     {
         stopService(new Intent(getBaseContext(), BackgroundService.class)); //если до этого уже сервис для другого аккаунта был включен и произошел повторный логин, для безопасности выключи сервис
         Intent startBackgroundService = new Intent(getApplicationContext(), BackgroundService.class);
         startBackgroundService.putExtra("Должность", rememberedPosition);
+        startBackgroundService.putExtra("Логин пользователя", rememberedLogin);
         //эта функция запускает фоновый сервис проверки наличия новообнаруженных проблем и неполадок
         ContextCompat.startForegroundService(getApplicationContext(), startBackgroundService);
     }

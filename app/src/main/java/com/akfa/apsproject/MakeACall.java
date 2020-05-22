@@ -1,18 +1,36 @@
 package com.akfa.apsproject;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
 
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Bundle;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import static com.google.firebase.database.FirebaseDatabase.getInstance;
 
 public class MakeACall extends AppCompatActivity implements View.OnTouchListener {
     private Button callMaster, callOperator, callRepairer;
     private String employeePosition, employeeLogin, shopName, equipmentName, whoIsCalled;
     private int stationNo;
+    ActionBarDrawerToggle toggle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +40,7 @@ public class MakeACall extends AppCompatActivity implements View.OnTouchListener
     }
 
     private void initInstances() {
+        setTitle("Вызвать сотрудника");
         Bundle args = getIntent().getExtras();
         employeeLogin = args.getString("Логин пользователя");
         employeePosition = args.getString("Должность");
@@ -50,10 +69,82 @@ public class MakeACall extends AppCompatActivity implements View.OnTouchListener
             bundle.putString("Название цеха", shopName);
             bundle.putString("Название линии", equipmentName);
             bundle.putInt("Номер участка", stationNo);
+            bundle.putString("Логин пользователя", employeeLogin);
             bundle.putString("Вызываемый специалист", whoIsCalled);
             dialogFragment.setArguments(bundle);
             dialogFragment.show(getSupportFragmentManager(), "Подтвердить вызов");
         }
+
+        DatabaseReference callsRef = FirebaseDatabase.getInstance().getReference("Calls");
+        callsRef.addValueEventListener(new ValueEventListener() {
+            @Override public void onDataChange(@NonNull DataSnapshot callsSnap) {
+                for(DataSnapshot callSnap : callsSnap.getChildren())
+                {
+                    Call call = callSnap.getValue(Call.class);
+                    String callCalledBy = call.getCalled_by();
+                    boolean callComplete = call.getComplete();
+                    if(!callComplete && callCalledBy.equals(employeeLogin))
+                    {
+                        String callWhoIsNeededPosition = call.getWho_is_needed_position();
+                        switch (callWhoIsNeededPosition)
+                        {
+                            case "operator":
+                                callOperator.setBackgroundResource(R.drawable.call_opened_button);
+                                callOperator.setClickable(false);
+                                callOperator.setText("Оператор вызван");
+                                break;
+                            case "repair":
+                                callRepairer.setBackgroundResource(R.drawable.call_opened_button);
+                                callRepairer.setClickable(false);
+                                callRepairer.setText("Ремонтник вызван");
+                                break;
+                            case "master":
+                                callMaster.setBackgroundResource(R.drawable.call_opened_button);
+                                callMaster.setClickable(false);
+                                callMaster.setText("Мастер вызван");
+                                break;
+                        }
+                        DatabaseReference activeCallRef = FirebaseDatabase.getInstance().getReference("Calls/" + callSnap.getKey());
+                        activeCallRef.addValueEventListener(new ValueEventListener() {
+                            @Override public void onDataChange(@NonNull DataSnapshot activeCallSnap) {
+                                Call call = activeCallSnap.getValue(Call.class);
+                                boolean callComplete = call.getComplete();
+                                if(callComplete)
+                                {
+                                    String callWhoIsNeededPosition = call.getWho_is_needed_position();
+                                    switch (callWhoIsNeededPosition)
+                                    {
+                                        case "operator":
+                                            callOperator.setBackgroundResource(R.drawable.call_closed_button);
+                                            callOperator.setClickable(true);
+                                            callOperator.setText("Оператор прибыл");
+                                            break;
+                                        case "repair":
+                                            callRepairer.setBackgroundResource(R.drawable.call_closed_button);
+                                            callRepairer.setClickable(true);
+                                            callRepairer.setText("Ремонтник прибыл");
+                                            break;
+                                        case "master":
+                                            callMaster.setBackgroundResource(R.drawable.call_closed_button);
+                                            callMaster.setClickable(true);
+                                            callMaster.setText("Мастер прибыл");
+                                            break;
+                                    }
+                                }
+
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        });
+                    }
+                }
+            }
+            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+        });
+        toggle = InitNavigationBar.setUpNavBar(MakeACall.this, getApplicationContext(),  getSupportActionBar(), employeeLogin, employeePosition, R.id.make_a_call, R.id.activity_make_a_call);
     }
 
     @Override
@@ -73,7 +164,7 @@ public class MakeACall extends AppCompatActivity implements View.OnTouchListener
 
                         break;
                     case R.id.call_repairer:
-                        whoIsCalled = "repairer";
+                        whoIsCalled = "repair";
                         break;
                 }
                 Intent openQR = new Intent(getApplicationContext(), QRScanner.class);
@@ -86,5 +177,19 @@ public class MakeACall extends AppCompatActivity implements View.OnTouchListener
                 break;
         }
         return false;
+    }
+
+    @Override
+    public void onBackPressed() {
+        finish();
+        super.onBackPressed();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        if(toggle.onOptionsItemSelected(item))
+            return true;
+        return super.onOptionsItemSelected(item);
     }
 }

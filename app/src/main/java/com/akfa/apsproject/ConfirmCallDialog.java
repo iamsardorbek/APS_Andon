@@ -14,17 +14,22 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import org.w3c.dom.Text;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class ConfirmCallDialog extends DialogFragment  implements View.OnTouchListener{
-    String whoIsCalled, shopName, equipmentName, employeeLogin;
-    int stationNo;
-    TextView whoIsCalledTextview, shopNameTextview, equipmentNameTextview, stationNoTextview;
-    Button confirm;
+    private String whoIsCalled, shopName, equipmentName, employeeLogin;
+    private int stationNo;
+    private TextView whoIsCalledTextview, shopNameTextview, equipmentNameTextview, stationNoTextview;
+    private Button confirm, cancel;
 
     @Nullable
     @Override
@@ -36,7 +41,7 @@ public class ConfirmCallDialog extends DialogFragment  implements View.OnTouchLi
         return view;
     }
 
-    private void initInstances(View view) {
+    private void initInstances(final View view) {
         Bundle bundle = getArguments();
         whoIsCalled = bundle.getString("Вызываемый специалист");
         shopName = bundle.getString("Название цеха");
@@ -49,6 +54,7 @@ public class ConfirmCallDialog extends DialogFragment  implements View.OnTouchLi
         equipmentNameTextview = view.findViewById(R.id.equipment);
         stationNoTextview = view.findViewById(R.id.station_no);
 
+
         whoIsCalledTextview.setText(whoIsCalled);
         shopNameTextview.setText(shopName);
         equipmentNameTextview.setText(equipmentName);
@@ -56,6 +62,32 @@ public class ConfirmCallDialog extends DialogFragment  implements View.OnTouchLi
 
         confirm = view.findViewById(R.id.confirm);
         confirm.setOnTouchListener(this);
+        cancel = view.findViewById(R.id.cancel);
+        cancel.setOnTouchListener(this);
+
+        DatabaseReference callsRef = FirebaseDatabase.getInstance().getReference("Calls");
+        callsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override public void onDataChange(@NonNull DataSnapshot callsSnap) {
+                for(DataSnapshot callSnap : callsSnap.getChildren())
+                {
+                    Call call = callSnap.getValue(Call.class);
+                    boolean callComplete = call.getComplete();
+                    String callCalledBy = call.getCalled_by();
+                    String callWhoIsNeededPosition = call.getWho_is_needed_position();
+                    String callShopName = call.getShop_name();
+                    String callEquipmentName = call.getEquipment_name();
+                    int callStationNo = call.getStation_no();
+                    if(!callComplete && callCalledBy.equals(employeeLogin) && callEquipmentName.equals(equipmentName) && callShopName.equals(shopName) && stationNo == callStationNo
+                            && callWhoIsNeededPosition.equals(whoIsCalled))
+                    {
+                        confirm.setVisibility(View.INVISIBLE);
+                        TextView title = view.findViewById(R.id.title);
+                        title.setText("У вас уже есть активный вызов с данными параметрами");
+                    }
+                }
+            }
+            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+        });
     }
 
     @Override public boolean onTouch(View button, MotionEvent event) {

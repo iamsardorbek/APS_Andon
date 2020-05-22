@@ -6,6 +6,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -43,6 +45,13 @@ public class Login extends AppCompatActivity {
         //возьми разрешение использования камеры
         int permissionStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
         if (permissionStatus == PackageManager.PERMISSION_DENIED) { ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.CAMERA}, 0); }
+//        permissionStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NOTIFICATION_POLICY);
+//        if (permissionStatus == PackageManager.PERMISSION_DENIED) { ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_NOTIFICATION_POLICY}, 0); }
+        NotificationManager n = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        if(!n.isNotificationPolicyAccessGranted()) {
+            Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+            startActivity(intent);
+        }
 
         initInstances();
         enter.setOnClickListener(new View.OnClickListener() {
@@ -94,13 +103,14 @@ public class Login extends AppCompatActivity {
                                         editor.commit(); //запиши данные в sharedPref
                                     }
 
-                                    if (!user.child("position").getValue().toString().equals("operator")) { //если это любой специалист (не оператор), включи фоновый сервис слежения за появлением проблем (срочный и ТО)
-                                        //при появлении проблемы, будет отправлять уведомление
-                                        stopService(new Intent(getBaseContext(), BackgroundService.class)); //если до этого уже сервис для другого аккаунта был включен и произошел повторный логин
-                                        Intent startBackgroundService = new Intent(getApplicationContext(), BackgroundService.class);
-                                        startBackgroundService.putExtra("Должность", user.child("position").getValue().toString()); //уведомления сортируются в зависимости от должности пользователя
-                                        ContextCompat.startForegroundService(getApplicationContext(), startBackgroundService);//эта функция запускает фоновый сервис
-                                    }
+                                     //если это любой специалист (не оператор), включи фоновый сервис слежения за появлением проблем (срочный и ТО)
+                                    //при появлении проблемы, будет отправлять уведомление
+                                    stopService(new Intent(getBaseContext(), BackgroundService.class)); //если до этого уже сервис для другого аккаунта был включен и произошел повторный логин
+                                    Intent startBackgroundService = new Intent(getApplicationContext(), BackgroundService.class);
+                                    startBackgroundService.putExtra("Должность", user.child("position").getValue().toString()); //уведомления сортируются в зависимости от должности и логина пользователя
+                                    startBackgroundService.putExtra("Логин пользователя", user.getKey());
+                                    ContextCompat.startForegroundService(getApplicationContext(), startBackgroundService);//эта функция запускает фоновый сервис
+                                    startService(new Intent(getApplicationContext(), AppLifecycleTrackerService.class));
                                     finish();
                                 }
                                 else { Toast.makeText(getApplicationContext(), "Неверный пароль", Toast.LENGTH_LONG).show(); }

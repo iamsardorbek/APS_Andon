@@ -20,7 +20,7 @@
             android:textStyle="bold"
             android:id="@+id/call_operator"
             android:text="Вызвать оператора"
-            android:textSize="20sp"
+            android:textSize="24sp"
             android:padding="10dp"/>
         <Button
             android:layout_width="match_parent"
@@ -30,7 +30,7 @@
             android:padding="10dp"
             android:textStyle="bold"
             android:text="Вызвать ремонтника"
-            android:textSize="20sp"
+            android:textSize="24sp"
             android:layout_height="wrap_content"/>
         <Button
             android:layout_width="match_parent"
@@ -40,7 +40,7 @@
             android:padding="10dp"
             android:textStyle="bold"
             android:text="Вызвать мастера"
-            android:textSize="20sp"
+            android:textSize="24sp"
             android:layout_height="wrap_content"/>
 
 

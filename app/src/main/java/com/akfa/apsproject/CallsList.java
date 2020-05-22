@@ -9,6 +9,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -23,7 +24,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OperatorOrMasterCallsList extends AppCompatActivity {
+public class CallsList extends AppCompatActivity {
     private static final int ID_TEXTVIEWS = 5000;
     private int problemCount = 0;
     private String employeeLogin, employeePosition;
@@ -45,41 +46,53 @@ public class OperatorOrMasterCallsList extends AppCompatActivity {
         DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users/" + employeeLogin);
         userRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override public void onDataChange(@NonNull final DataSnapshot userSnap) {
-                final String shopName = userSnap.child("shop_name").getValue().toString();
-
-                DatabaseReference operatorAndMasterCallsRef = FirebaseDatabase.getInstance().getReference("Calls");
-                operatorAndMasterCallsRef.addValueEventListener(new ValueEventListener() {
+                DatabaseReference сallsRef = FirebaseDatabase.getInstance().getReference("Calls");
+                сallsRef.addValueEventListener(new ValueEventListener() {
                     @SuppressLint("ResourceType")
-                    @Override public void onDataChange(@NonNull DataSnapshot operatorAndMasterCallsSnap) {
+                    @Override public void onDataChange(@NonNull DataSnapshot сallsSnap) {
                         linearLayout.removeAllViews(); //для обновления данных удали все результаты предыдущего поиска
                         callsKeys = new ArrayList<>();
                         problemCount = 0;
-                        if(operatorAndMasterCallsSnap.getValue() == null) //если ветка Urgent_problems пуста/не сущ -> дай знать, что все проблемы уже решены
+                        if(сallsSnap.getValue() == null) //если ветка Urgent_problems пуста/не сущ -> дай знать, что все проблемы уже решены
                             setTitle("Нет вызовов");
                         else {
-                            setTitle("Вас ждут в данных местах");
-                            for (final DataSnapshot singleCallSnap : operatorAndMasterCallsSnap.getChildren()) {
+                            setTitle("Нет вызовов");
+                            for (final DataSnapshot singleCallSnap : сallsSnap.getChildren()) {
                                 final Call thisCall = singleCallSnap.getValue(Call.class);
 
                                 String whoIsNeededPosition = thisCall.getWho_is_needed_position();
                                 String callEquipmentName = thisCall.getEquipment_name();
                                 String callShopName = thisCall.getShop_name();
                                 boolean callIsComplete = thisCall.getComplete();
-                                if (whoIsNeededPosition.equals(employeePosition) && callShopName.equals(shopName) && !callIsComplete) {
+
+                                if (whoIsNeededPosition.equals(employeePosition) && !callIsComplete) {
                                     //условия query: должность вызванного и этого юзера соотвествуют, это цех, за который ответственен данный мастер/оператор,
                                     // а также этот вызов еще не был удовлетворен (тобиш вызываемый еще не пришел)
-                                    boolean operatorIsResponsibleForThisEquipment = false;
+                                    boolean operatorIsResponsibleForThisEquipment = false, masterIsResponsibleForThisShop = false;;
                                     final String equipmentName;
+                                    final String shopName;
                                     if (employeePosition.equals("operator")) //если оператор, нам нужно проверить, это линия, за которую он отвечает?
                                     //если да - добавь этот вызов в список, если нет - не добавляй/не показывай этот вызов оператору
                                     {
+                                        shopName = userSnap.child("shop_name").getValue().toString();
                                         equipmentName = userSnap.child("equipment_name").getValue().toString();
-                                        if (callEquipmentName.equals(equipmentName)) { //если оператор отвесвенен за данную линию
+                                        if (callEquipmentName.equals(equipmentName) && callShopName.equals(shopName) ) { //если оператор отвесвенен за данную линию
                                             operatorIsResponsibleForThisEquipment = true;
                                         }
                                     }
-                                    if ((operatorIsResponsibleForThisEquipment && employeePosition.equals("operator")) || employeePosition.equals("master")) { //если оператор ответсвенен за эту лини. или это цех мастера
+                                    else if (employeePosition.equals("master")) //если мастер, нам нужно проверить, это цех, за который он отвечает?
+                                    //если да - добавь этот вызов в список, если нет - не добавляй/не показывай этот вызов мастеру
+                                    {
+                                        final String shopNameRepairer = userSnap.child("shop_name").getValue().toString();
+                                        if (callShopName.equals(shopNameRepairer)) { //если мастер отвесвенен за данный цех
+                                            masterIsResponsibleForThisShop = true;
+                                        }
+                                    }
+
+                                    if ((operatorIsResponsibleForThisEquipment && employeePosition.equals("operator")) || (employeePosition.equals("master") && masterIsResponsibleForThisShop)
+                                            || employeePosition.equals("repair")) { //если оператор ответсвенен за эту лини. или это цех мастера или это просто ремонтник
                                         //----СОЗДАНИЕ TEXTVIEW, ВНЕСЕНИЕ ДАННЫХ В НЕГО И ИНИЦИАЛИЗАЦИЯ ПАРАМЕТРОВ----//
+                                        setTitle("Вас ждут в данных местах");
                                         TextView callInfo;
                                         callInfo = new TextView(getApplicationContext());
                                         //данные об этой проблеме запишем в строку callInfoFromDB
@@ -121,19 +134,15 @@ public class OperatorOrMasterCallsList extends AppCompatActivity {
                         }
                     }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                    }
+                    @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
                 });
 
             }
 
             @Override public void onCancelled (@NonNull DatabaseError databaseError){ }
-
-
         });
 
-        toggle = InitNavigationBar.setUpNavBar(OperatorOrMasterCallsList.this, getApplicationContext(), getSupportActionBar(), employeeLogin, employeePosition, R.id.calls, R.id.activity_operator_or_master_calls_list); //инициализация navigation bar
+        toggle = InitNavigationBar.setUpNavBar(CallsList.this, getApplicationContext(), getSupportActionBar(), employeeLogin, employeePosition, R.id.calls, R.id.activity_operator_or_master_calls_list); //инициализация navigation bar
     }
 
     @Override public boolean onOptionsItemSelected(MenuItem item) {

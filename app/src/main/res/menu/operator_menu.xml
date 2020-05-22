@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:id="@+id/pult"
-        android:icon="@drawable/pult"
-        android:title="@string/pult_submenu"/>
     <item android:id="@+id/calls"
         android:icon="@drawable/calls"
         android:title="@string/calls_submenu"/>
+    <item android:id="@+id/pult"
+        android:icon="@drawable/pult"
+        android:title="@string/pult_submenu"/>
     <item android:id="@+id/check_equipment"
         android:icon="@drawable/check_equipment"
         android:title="@string/check_equipment_submenu"/>

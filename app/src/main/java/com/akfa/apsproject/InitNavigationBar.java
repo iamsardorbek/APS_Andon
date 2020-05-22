@@ -89,7 +89,7 @@ public class InitNavigationBar {
                             activity.finish();
                             break;
                         case R.id.calls:
-                            Intent openCallsList = new Intent(context, OperatorOrMasterCallsList.class);
+                            Intent openCallsList = new Intent(context, CallsList.class);
                             openCallsList.putExtra("Логин пользователя", employeeLogin);
                             openCallsList.putExtra("Должность", employeePosition);
                             activity.startActivity(openCallsList);

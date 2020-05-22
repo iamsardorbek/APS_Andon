@@ -51,7 +51,6 @@ public class QRScanner extends AppCompatActivity {
     BarcodeDetector barcodeDetector;
     TextView textView, directionsTextView;
     private int equipmentNumber, shopNumber, nomerPunkta, numOfPoints, problemsCount; //кросс-активити переменные QuestPointDynamic
-    private static final int VIBRATION_DURATION = 500;
     private long startTimeMillis; //кросс-активити переменная, передаваемая из QuestPointDynamic
     private boolean detectedOnce = false; //для того, чтобы на уже обнаруженный (расшифрованный) код не реагировал повторно
     private String codeToDetect, shouldOpenPointDynamic, shopName, equipmentName, callFirebaseKey, whoIsCalled;
@@ -232,7 +231,7 @@ public class QRScanner extends AppCompatActivity {
                                 if(shouldOpenPointDynamic.equals("да") || shouldOpenPointDynamic.equals("ремонтник")) {
                                     if (!detectedOnce) {
                                         if (areDetectedAndPassedCodesSame(codeFromQR, codeToDetect)) {
-                                            vibration(VIBRATION_DURATION);
+                                            Vibration.vibration(getApplicationContext());
                                             //создаем интент, в него заносим код успешного распознования
                                             //открываем соответствующий активити (Point Dynamic / RepairerTakePhoto)
                                             if (shouldOpenPointDynamic.equals("да")) { //когда идет переход Verification->QR->PointDynamic
@@ -280,7 +279,7 @@ public class QRScanner extends AppCompatActivity {
                                         //если да, возвращается соответ объект equipmentLine, если нет - null
                                         if(equipmentLine != null) //если такой код сущ и вернули объект
                                         {
-                                            vibration(500);
+                                            Vibration.vibration(getApplicationContext());
                                             Intent intent = new Intent(getApplicationContext(), QuestPointDynamic.class); //начнет ТО проверку с 1-го участка соответ линии
                                             intent.putExtra("Номер участка", 1);
                                             intent.putExtra("Номер цеха", equipmentLine.getShopNo());
@@ -348,7 +347,7 @@ public class QRScanner extends AppCompatActivity {
                                         //retrieve the appropriate qr code value of station from DB, compare it
                                         if(codeFromQR.equals(codeToDetect))
                                         {
-                                            vibration(500);
+                                            Vibration.vibration(getApplicationContext());
                                             //дата-время
                                             final String dateCame;
                                             @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
@@ -458,12 +457,6 @@ public class QRScanner extends AppCompatActivity {
             return true;
         }
         return false;
-    }
-
-    private void vibration(int milliseconds)
-    { //вибрирует
-        Vibrator vibrator = (Vibrator) getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
-        vibrator.vibrate(milliseconds);
     }
 
 }

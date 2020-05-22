@@ -93,49 +93,41 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
             @Override
             public void onDataChange(@NonNull DataSnapshot callsSnap) {
                 for(DataSnapshot singleCallSnap : callsSnap.getChildren()) {
-
-                    if(singleCallSnap.child("problem_key").exists())
-                    {
-                        if(singleCallSnap.child("problem_key").exists()) { //если это вызов прямо из RepairersSeparateProblem
-                            String problemKey = singleCallSnap.child("problem_key").getValue().toString();
-                            boolean isCallComplete = singleCallSnap.child("complete").getValue(Boolean.class);
-                            if (problemKey.equals(IDOfTheProblem) && !isCallComplete) //если оператор еще не пришел, а если он уже пришел и потенциально ушел, можно его вызвать снова
-                            {
-                                String thisCallKey = singleCallSnap.getKey();
-                                DatabaseReference callRef = getInstance().getReference("Calls/" + thisCallKey);
-                                callRef.addValueEventListener(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(@NonNull DataSnapshot callSnap) {
-                                        boolean callSnapComplete = callSnap.child("complete").getValue(Boolean.class);
-                                        if (callSnapComplete) {
-                                            callOperator.setBackgroundResource(R.drawable.call_closed_button);
-                                            callOperator.setText("Оператор прибыл");
-                                            Resources r = getApplicationContext().getResources();
-                                            int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, r.getDisplayMetrics());
-                                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                                            params.setMargins(px, 2 * px, px, 0);
-                                            callOperator.setLayoutParams(params);
-                                            callOperator.setClickable(true); //теперь если вдруг уйдет, можно вызывать снова
-                                            callForOperatorOpen = false;
-                                        } else {
-                                            callForOperatorOpen = true;
-                                            callOperator.setClickable(false); //если есть уже активный вызов оператора, еще раз вызвать его нельзя, а то БД заполнится
-                                            callOperator.setBackgroundResource(R.drawable.call_opened_button);
-                                            callOperator.setText("Оператор вызван");
-                                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                                            params.setMargins(5, 40, 5, 40);
-                                            params.gravity = Gravity.CENTER;
-                                            callOperator.setLayoutParams(params);
-                                        }
+                    if(singleCallSnap.child("problem_key").exists()) { //если это вызов прямо из RepairersSeparateProblem (без разницы какой ремонтник вызвал)
+                        String problemKey = singleCallSnap.child("problem_key").getValue().toString();
+                        boolean isCallComplete = (boolean) singleCallSnap.child("complete").getValue();
+                        if (problemKey.equals(IDOfTheProblem) && !isCallComplete) //если оператор еще не пришел, а если он уже пришел и потенциально ушел, можно его вызвать снова
+                        {
+                            String thisCallKey = singleCallSnap.getKey();
+                            DatabaseReference callRef = getInstance().getReference("Calls/" + thisCallKey);
+                            callRef.addValueEventListener(new ValueEventListener() {
+                                @Override public void onDataChange(@NonNull DataSnapshot callSnap) {
+                                    boolean callSnapComplete = callSnap.child("complete").getValue(Boolean.class);
+                                    if (callSnapComplete) {
+                                        callOperator.setBackgroundResource(R.drawable.call_closed_button);
+                                        callOperator.setText("Оператор прибыл");
+                                        Resources r = getApplicationContext().getResources();
+                                        int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, r.getDisplayMetrics());
+                                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                                        params.setMargins(px, 2 * px, px, 0);
+                                        callOperator.setLayoutParams(params);
+                                        callOperator.setClickable(true); //теперь если вдруг уйдет, можно вызывать снова
+                                        callForOperatorOpen = false;
+                                    } else {
+                                        callForOperatorOpen = true;
+                                        callOperator.setClickable(false); //если есть уже активный вызов оператора, еще раз вызвать его нельзя, а то БД заполнится
+                                        callOperator.setBackgroundResource(R.drawable.call_opened_button);
+                                        callOperator.setText("Оператор вызван");
+                                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                                        params.setMargins(5, 40, 5, 40);
+                                        params.gravity = Gravity.CENTER;
+                                        callOperator.setLayoutParams(params);
                                     }
+                                }
 
-                                    @Override
-                                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                                    }
-                                });
-                            }
+                                @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+                            });
                         }
-
                     }
                 }
             }
