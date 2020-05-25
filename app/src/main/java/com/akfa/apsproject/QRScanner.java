@@ -2,12 +2,16 @@ package com.akfa.apsproject;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -406,8 +410,42 @@ public class QRScanner extends AppCompatActivity {
             AlertDialog diaBox = AskOption(); //конструирует объект диалога, в котором при нажатии на да стираются данные ТО проверки
             diaBox.show();
         }
+        else if(shouldOpenPointDynamic.equals("реагирование на вызов"))
+        { //в этом случае CallsList закрывается во избежание дублирования, поэтому нужно снова открыть его
+            Intent openCallsList = new Intent(getApplicationContext(), CallsList.class);
+            openCallsList.putExtra("Логин пользователя", employeeLogin);
+            openCallsList.putExtra("Должность", employeePosition);
+            startActivity(openCallsList);
+        }
         else //это не оператор/мастер уже начавшие проверку, данные не собраны, можно сразу закрывать сканер
-        {
+        { //или если это конечный активити в стэке, ну не дай Бог
+            if(isTaskRoot()) {
+                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                if (sharedPrefs.getString("Логин пользователя", null) == null) //Еcли в sharedPrefs есть данные юзера, открой соот активти
+                {
+                    stopService(new Intent(getApplicationContext(), BackgroundService.class)); //если до этого уже сервис был включен, выключи сервис
+                    NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
+                    notificationManager.cancelAll();
+                    stopService(new Intent(getApplicationContext(), BackgroundService.class));
+                    final Handler handler = new Handler();
+                    Runnable runnableCode = new Runnable() {
+                        @Override
+                        public void run() {
+                            //do something you want
+                            //stop service
+                            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                            if (sharedPrefs.getString("Логин пользователя", null) == null) //Еcли в sharedPrefs есть данные юзера, открой соот активти
+                            {
+                                stopService(new Intent(getApplicationContext(), BackgroundService.class)); //если до этого уже сервис был включен, выключи сервис
+                            }
+                            NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
+                            notificationManager.cancelAll();
+
+                        }
+                    };
+                    handler.postDelayed(runnableCode, 12000);
+                }
+            }
             super.onBackPressed();
         }
     }
@@ -463,5 +501,4 @@ public class QRScanner extends AppCompatActivity {
         }
         return false;
     }
-
 }
