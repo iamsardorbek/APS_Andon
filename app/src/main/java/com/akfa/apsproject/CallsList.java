@@ -113,7 +113,7 @@ public class CallsList extends AppCompatActivity {
                                             @Override
                                             public void onClick(View v) {
                                                 Intent openQR = new Intent(getApplicationContext(), QRScanner.class);
-                                                openQR.putExtra("Открой PointDynamic", "вызов оператора/мастера"); //описание действия для QR сканера
+                                                openQR.putExtra("Открой PointDynamic", "реагирование на вызов"); //описание действия для QR сканера
                                                 openQR.putExtra("Должность", employeePosition);
                                                 openQR.putExtra("Название линии", thisCall.getEquipment_name());
                                                 openQR.putExtra("Название цеха", thisCall.getShop_name());

@@ -20,7 +20,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="AllowBackup">
-        <activity android:name=".ConfirmCallDialog"></activity>
+        <activity android:name=".AboutApp"></activity>
+        <activity android:name=".ConfirmCallDialog" />
         <activity android:name=".MakeACall" />
         <activity android:name=".CallsList" />
         <activity android:name=".UrgentProblemsList" />
@@ -88,9 +89,10 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
         <service
-            android:enabled="true"
             android:name=".AppLifecycleTrackerService"
+            android:enabled="true"
             android:exported="false"
             android:stopWithTask="false" />
         <service

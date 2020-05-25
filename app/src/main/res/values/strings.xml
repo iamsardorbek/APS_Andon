@@ -89,4 +89,5 @@
     <string name="make_a_call_submenu">Вызвать сотрудника</string>
     <string name="confirm">Подтвердить</string>
     <string name="who_is_called_position">Вызываемый специалист:</string>
+    <string name="about_app">Приложение разработано в 2020 году в Akfa Research and Development Department</string>
 </resources>

@@ -35,6 +35,7 @@ public class MakeACall extends AppCompatActivity implements View.OnTouchListener
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_make_a_call);
         initInstances();
     }

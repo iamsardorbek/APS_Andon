@@ -83,7 +83,6 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
           DatabaseReference userRef = database.getReference("Users/" + employeeLogin);
           findPathToRelevantPult(); //инициализировать pathToRelevantPultQuery для пульта этого юзера
           userRef.addListenerForSingleValueEvent(pathToRelevantPultQuery); //привязать pathToRelevantPultQuery к ветке пользователей (там далее берутся данные о линии, цехе и номере пульта, что запускает потом асинхронный listener для пульта
-          setAndonStates(); //проверь ветку Urgent problems, если там есть проблемы, связанные с нашим пультом, измени соответственно состояние кнопок пульта
       }
       else Toast.makeText(getApplicationContext(), "Ошибка, постарайтесь зайти снова", Toast.LENGTH_LONG).show(); //сработает, если в код сделали изменения и это нарушило стабильность работы приложения
       //напр: забыли приписать putExtras к интенту, открывшему этот активити PultActivity
@@ -138,6 +137,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
                                         //пока данные не пришли с базы, в pultInfo будет показываться "Загрузка данных"
 
                                         initPultRefListener(shopNo, equipmentNo, nomerPulta); //ГЛАВНЫЙ ЭКШН, ВНУТРИ ЭТОЙ ФУНКЦИИ ИДЕТ ПРИВЯЗКА НЕПОСРЕДСТВЕННО К НУЖНОМУ ПУЛЬТУ
+                                        setAndonStates(); //проверь ветку Urgent problems, если там есть проблемы, связанные с нашим пультом, измени соответственно состояние кнопок пульта
                                         return;
                                     }
                                 }
@@ -175,7 +175,6 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
                     setAndonBackground(whoIsNeededIndex, buttonState); //синхронизовать внешнее состояние данной кнопки с состоянием в БД
                 }
                 setAndonsVisibility(true); //когда уже считали все данные с БД, сделать элементы видимыми
-
             }
             @Override public void onCancelled(@NonNull DatabaseError error) { }
         });
@@ -367,6 +366,9 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
     {//обработай нажатие на кнопку, проверяя заблокирована ли она, и реши, какой диалог (ChooseProblematicStationDialog / QRCodeDialog) показать или перевести ее в SOLVED status
         if(btnCondition[whoIsNeededIndex] == 1) //DETECTED
         {//хочет вызвать специалиста
+            btnCondition[whoIsNeededIndex] = 0;
+            updateButton(whoIsNeededIndex);
+
             //startDialogFragment для выбора проблемного участка и вызова специалиста
             DialogFragment dialogFragment = new ChooseProblematicStationDialog();
             Bundle bundle = new Bundle();
@@ -378,7 +380,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
         else if(btnBlocked[whoIsNeededIndex] && btnCondition[whoIsNeededIndex] == 2) //ХОЧЕТ ПЕРЕВЕСТИ В SPECIALIST_CAME, НО специалист не пришел, поэтому показываем юзеру QR Код, чтобы мастер отсканировал
         {
             //если кнопка заблокирована(спец еще не пришел), высветить QR Code
-            btnCondition[whoIsNeededIndex]--; //вернуть в состояние "специалист не пришел, ПРОБЛЕМА"
+            btnCondition[whoIsNeededIndex] = 1; //вернуть в состояние "специалист не пришел, ПРОБЛЕМА"
             updateButton(whoIsNeededIndex);
             //Открыть диалог с QR Кодом
             DialogFragment dialogFragment = new QRCodeDialog();
@@ -444,6 +446,9 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
         timeDetected = sdf1.format(new Date());
         //----считал дату и время----//
 
+        btnCondition[whoIsNeededIndex] = 1;
+        updateButton(whoIsNeededIndex);
+
         //вбить обнаруженную срочную проблему в базу
         thisUrgentProblem.setValue(new UrgentProblem(stationNo, equipmentLineName, shopName, operatorLogin, positionTypes[whoIsNeededIndex], qrRandomCode, dateDetected, timeDetected, DETECTED)); //DETECTED - это строка "DETECTED"
         btnBlocked[whoIsNeededIndex] = true; //задать состояние кнопки блокированным
@@ -456,7 +461,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
     public void onDialogCanceled(int whoIsNeededIndex) {
       //если диалог выбора проблемного участка отменили/закрыли
         //возврати мигающую кнопку в нейтральное состояние SOLVED (0)
-        btnCondition[whoIsNeededIndex]--;
+        btnCondition[whoIsNeededIndex] = 0;
         updateButton(whoIsNeededIndex);
     }
 

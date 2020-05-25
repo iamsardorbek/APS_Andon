@@ -131,8 +131,9 @@ public class QRScanner extends AppCompatActivity {
                 @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
             });
         }
-        else if(shouldOpenPointDynamic.equals("вызов оператора/мастера"))
+        else if(shouldOpenPointDynamic.equals("реагирование на вызов"))
         {
+
             DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference("Shops");
             shopsRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
@@ -147,6 +148,9 @@ public class QRScanner extends AppCompatActivity {
                                 String equipmentNameDB = singleEquipmentSnap.child("equipment_name").getValue().toString();
                                 if(equipmentNameDB.equals(equipmentName))
                                 {
+                                    String directionsText = "Подойдите к\n" + shopName + "\n" + equipmentName + "\nУчасток №" + nomerPunkta;
+                                    directionsTextView.setText(directionsText);
+                                    directionsTextView.setVisibility(View.VISIBLE);
                                     codeToDetect = singleEquipmentSnap.child("QR_codes/qr_" + nomerPunkta).getValue().toString();
                                     return;
                                 }
@@ -341,12 +345,13 @@ public class QRScanner extends AppCompatActivity {
                                         }
                                     }
                                 }
-                                else if(shouldOpenPointDynamic.equals("вызов оператора/мастера"))
+                                else if(shouldOpenPointDynamic.equals("реагирование на вызов"))
                                 {
                                     if (!detectedOnce) {
                                         //retrieve the appropriate qr code value of station from DB, compare it
                                         if(codeFromQR.equals(codeToDetect))
                                         {
+                                            detectedOnce = true; //чтобы повторно не реагировало на коды
                                             Vibration.vibration(getApplicationContext());
                                             //дата-время
                                             final String dateCame;
@@ -368,20 +373,20 @@ public class QRScanner extends AppCompatActivity {
                                 }
                                 else if(shouldOpenPointDynamic.equals("определи адрес"))
                                 {
-                                    for(StationData singleStationData : stationsData)
-                                    {
-                                        if(codeFromQR.equals(singleStationData.getQrCode()))
-                                        {
-
-                                            Intent openMakeACall = new Intent(getApplicationContext(), MakeACall.class);
-                                            openMakeACall.putExtra("Логин пользователя", employeeLogin);
-                                            openMakeACall.putExtra("Должность", employeePosition);
-                                            openMakeACall.putExtra("Название цеха", singleStationData.getShopName());
-                                            openMakeACall.putExtra("Название линии", singleStationData.getEquipmentName());
-                                            openMakeACall.putExtra("Номер участка", singleStationData.getStationNo());
-                                            openMakeACall.putExtra("Кого вызываем", whoIsCalled);
-                                            startActivity(openMakeACall);
-                                            finish();
+                                    if (!detectedOnce) {
+                                        for (StationData singleStationData : stationsData) {
+                                            if (codeFromQR.equals(singleStationData.getQrCode())) {
+                                                detectedOnce = true; //чтобы повторно не реагировало на коды
+                                                Intent openMakeACall = new Intent(getApplicationContext(), MakeACall.class);
+                                                openMakeACall.putExtra("Логин пользователя", employeeLogin);
+                                                openMakeACall.putExtra("Должность", employeePosition);
+                                                openMakeACall.putExtra("Название цеха", singleStationData.getShopName());
+                                                openMakeACall.putExtra("Название линии", singleStationData.getEquipmentName());
+                                                openMakeACall.putExtra("Номер участка", singleStationData.getStationNo());
+                                                openMakeACall.putExtra("Кого вызываем", whoIsCalled);
+                                                startActivity(openMakeACall);
+                                                finish();
+                                            }
                                         }
                                     }
                                     textView.setText("Участок с такой QR-меткой не существует в базе");

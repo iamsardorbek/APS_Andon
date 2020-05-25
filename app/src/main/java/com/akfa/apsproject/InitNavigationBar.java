@@ -124,9 +124,10 @@ public class InitNavigationBar {
                             activity.finish();
                             break;
                         case R.id.about: //инфа про приложение и компанию и иинструкции может
-//                        Intent openAbout = new Intent(getApplicationContext(), About.class);
-//                        startActivity(openAbout);
-                            Toast.makeText(context, "Приложение создано Akfa R&D в 2020 году в Ташкенте.", Toast.LENGTH_SHORT).show();
+                            Intent openAboutApp = new Intent(activity.getApplicationContext(), AboutApp.class);
+                            openAboutApp.putExtra("Логин пользователя", employeeLogin);
+                            openAboutApp.putExtra("Должность", employeePosition);
+                            activity.startActivity(openAboutApp);
                             break;
                         case R.id.log_out: //возвращение в логин page
                             activity.stopService(new Intent(context, BackgroundService.class)); //если до этого уже сервис был включен, выключи сервис
