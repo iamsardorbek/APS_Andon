@@ -9,7 +9,7 @@ public class MaintenanceProblem {
 
     public MaintenanceProblem() { }
 
-    public MaintenanceProblem(String detected_by_employee, String date, String time, String shop_name, String equipment_line_name, int shop_no, int equipment_line_no, int station_no, int subpoint)
+    public MaintenanceProblem(String detected_by_employee, String date, String time, String shop_name, String equipment_line_name, int shop_no, int equipment_line_no, int station_no, int point_no)
     {
         this.solved = false;
         this.detected_by_employee = detected_by_employee;
@@ -18,7 +18,7 @@ public class MaintenanceProblem {
         this.shop_name = shop_name;
         this.equipment_line_name = equipment_line_name;
         this.station_no = station_no;
-        this.point_no = subpoint;
+        this.point_no = point_no;
         this.shop_no = shop_no;
         this.equipment_line_no = equipment_line_no;
     }

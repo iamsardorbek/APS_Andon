@@ -155,7 +155,7 @@ public class RepairersProblemsList extends AppCompatActivity {
                 };
                 handler.postDelayed(runnableCode, 12000);
             }
-            super.onBackPressed();
         }
+        super.onBackPressed();
     }
 }

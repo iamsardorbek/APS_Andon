@@ -177,7 +177,7 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
                 };
                 handler.postDelayed(runnableCode, 12000);
             }
-            super.onBackPressed();
         }
+        super.onBackPressed();
     }
 }

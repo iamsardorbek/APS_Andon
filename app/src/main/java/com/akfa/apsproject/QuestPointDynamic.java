@@ -344,7 +344,6 @@ public class QuestPointDynamic extends AppCompatActivity
             });
             scrollLinearLayout.addView(rg);
         }
-        stationNo++; //подготовим для следующего окна PointDynamic
     }
 
     private void initClickListeners()
@@ -355,21 +354,6 @@ public class QuestPointDynamic extends AppCompatActivity
             {
                 saveCheckingData(numOfPunkts);
                 //checks points' count and refreshes the activity
-                if (stationNo > numOfStations) {
-                    Toast.makeText(getApplicationContext(), "Конец линии", Toast.LENGTH_LONG).show();
-                    //переход на новое окно - QuestEndOfChecking - итоги проверки и следующие шаги
-                    stationNo = 0;
-                    endTimeMillis = System.currentTimeMillis();
-                    durationMillis = endTimeMillis - startTimeMillis;
-                    checkDuration = String.format("%02d мин, %02d сек", TimeUnit.MILLISECONDS.toMinutes(durationMillis),
-                            TimeUnit.MILLISECONDS.toSeconds(durationMillis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(durationMillis)));
-                    Intent intent = new Intent(getApplicationContext(), QuestEndOfChecking.class);
-                    intent.putExtra("Количество обнаруженных проблем", problemsCount);
-                    intent.putExtra("Должность", employeePosition);
-                    intent.putExtra("Логин пользователя", employeeLogin);
-                    startActivity(intent);
-                    finish();
-                }
             }
             else { Toast.makeText(getApplicationContext(), "Заполните состояние каждого пункта", Toast.LENGTH_LONG).show(); }
         }
@@ -431,7 +415,23 @@ public class QuestPointDynamic extends AppCompatActivity
         return true;
     }
 
+    public void startEndOfChecking()
+    {
+        stationNo = 0;
+        endTimeMillis = System.currentTimeMillis();
+        durationMillis = endTimeMillis - startTimeMillis;
+        checkDuration = String.format("%02d мин, %02d сек", TimeUnit.MILLISECONDS.toMinutes(durationMillis),
+                TimeUnit.MILLISECONDS.toSeconds(durationMillis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(durationMillis)));
+        Intent intent = new Intent(getApplicationContext(), QuestEndOfChecking.class);
+        intent.putExtra("Количество обнаруженных проблем", problemsCount);
+        intent.putExtra("Должность", employeePosition);
+        intent.putExtra("Логин пользователя", employeeLogin);
+        startActivity(intent);
+        finish();
+    }
+
     public void qrStart(int stationNo, int equipmentNumber, int shopNumber) {//запустить qr SCANNER
+        stationNo++; //подготовим для следующего окна PointDynamic
         Intent intent = new Intent(getApplicationContext(), QRScanner.class);
         intent.putExtra("Номер цеха", shopNumber);
         intent.putExtra("Номер линии", equipmentNumber);
@@ -491,8 +491,12 @@ public class QuestPointDynamic extends AppCompatActivity
                 }
             }
         }
-        //если все в порядке (проблем на этом участке нет) - запусти qr scanner
-        if(numOfUnphotographedProblem() == -1)   qrStart(stationNo, equipmentNo, shopNo);
+
+        if (stationNo >= numOfStations && numOfUnphotographedProblem() == -1) { //если это последний участок и проблем обнаружено не было
+            //переход на новое окно - QuestEndOfChecking - итоги проверки и следующие шаги
+            startEndOfChecking();
+        }
+        if(stationNo < numOfStations && numOfUnphotographedProblem() == -1) qrStart(stationNo, equipmentNo, shopNo); //если все в порядке (проблем на этом участке нет) - запусти qr scanner
     }
 
     private int numOfUnphotographedProblem() //проходится по массиву photographedProblems и возвращает индекс следующей несфотографированной проблемы
@@ -575,6 +579,10 @@ public class QuestPointDynamic extends AppCompatActivity
                 String problemPushKey = problemPushKeys.get(photoIterator);
                 Toast.makeText(getApplicationContext(), "Сфотографируйте проблему пункта " + (numOfUnphotographedProblem()+1), Toast.LENGTH_LONG).show();
                 dispatchTakePictureIntent(problemPushKey);
+            }
+            else if (stationNo >= numOfStations) { //если это последний участок и все сфоткали
+                //переход на окно QuestEndOfChecking - итоги проверки и следующие шаги
+                startEndOfChecking();
             }
             else
             {//если все сфоткали, запусти QR

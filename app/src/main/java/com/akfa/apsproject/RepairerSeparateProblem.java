@@ -254,7 +254,8 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
                 };
                 handler.postDelayed(runnableCode, 12000);
             }
-            super.onBackPressed();
+
         }
+        super.onBackPressed();
     }
 }
