@@ -42,7 +42,7 @@ public class CallsList extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_operator_or_master_calls_list);
-        setTitle("Загрузка данных...");
+        setTitle("Нет вызовов");
         linearLayout = findViewById(R.id.linearLayout);
         Bundle arguments = getIntent().getExtras();
         employeeLogin = arguments.getString("Логин пользователя");

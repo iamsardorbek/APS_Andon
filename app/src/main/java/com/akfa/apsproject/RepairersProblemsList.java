@@ -87,30 +87,33 @@ public class RepairersProblemsList extends AppCompatActivity {
                 }
                 else
                 {
-                    setTitle("Проблемы на линиях");
                     for(DataSnapshot problemDataSnapshot : problemsSnap.getChildren())
                     { //пройдись по всем проблемах в ветке
                         MaintenanceProblem problem = problemDataSnapshot.getValue(MaintenanceProblem.class); //считай в объект
-                        problemIDs.add(problemDataSnapshot.getKey()); //добавь айди данной проблемы в лист
+                        if(!problem.solved)
+                        {
+                            setTitle("Проблемы на линиях");
+                            problemIDs.add(problemDataSnapshot.getKey()); //добавь айди данной проблемы в лист
 
-                        //инициализация TEXTVIEW
-                        String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nУчасток №" + problem.getStation_no() + "\nПункт №" + problem.getPoint_no();
-                        TextView problemsInfo;
-                        problemsInfo = new TextView(getApplicationContext());
-                        problemsInfo.setText(problemInfoFromDB);
-                        problemsInfo.setPadding(25, 25, 25, 25);
-                        problemsInfo.setId(ID_TEXTVIEWS + problemCount);
-                        problemsInfo.setTextColor(Color.parseColor(getString(R.color.text)));
-                        problemsInfo.setTextSize(13);
-                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                        params.setMargins(20, 25, 20, 25);
-                        problemsInfo.setLayoutParams(params);
-                        problemsInfo.setClickable(true);
-                        problemsInfo.setBackgroundResource(R.drawable.list_group_layout);
-                        problemsInfo.setOnClickListener(textviewClickListener);
-                        //добавить textview в layout
-                        linearLayout.addView(problemsInfo);
-                        problemCount++; //итерируй для уникализации айдишек textview и обращения к лист элементам
+                            //инициализация TEXTVIEW
+                            String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nУчасток №" + problem.getStation_no() + "\nПункт №" + problem.getPoint_no();
+                            TextView problemsInfo;
+                            problemsInfo = new TextView(getApplicationContext());
+                            problemsInfo.setText(problemInfoFromDB);
+                            problemsInfo.setPadding(25, 25, 25, 25);
+                            problemsInfo.setId(ID_TEXTVIEWS + problemCount);
+                            problemsInfo.setTextColor(Color.parseColor(getString(R.color.text)));
+                            problemsInfo.setTextSize(13);
+                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                            params.setMargins(20, 25, 20, 25);
+                            problemsInfo.setLayoutParams(params);
+                            problemsInfo.setClickable(true);
+                            problemsInfo.setBackgroundResource(R.drawable.list_group_layout);
+                            problemsInfo.setOnClickListener(textviewClickListener);
+                            //добавить textview в layout
+                            linearLayout.addView(problemsInfo);
+                            problemCount++; //итерируй для уникализации айдишек textview и обращения к лист элементам
+                        }
                     }
                 }
             }
