@@ -1,15 +1,15 @@
 package com.akfa.apsproject;
 
-            //---------КЛАСС ОБЪЕКТОВ ИСПОЛЬЗУЕТСЯ В PULT И URGENT PROB LIST ДЛЯ УДОБНОЙ РАБОТЫ С ДАННЫМИ ПРО СРОЧНЫЕ ПРОБЛЕМЫ----------//
+//---------КЛАСС ОБЪЕКТОВ ИСПОЛЬЗУЕТСЯ В PULT И URGENT PROB LIST ДЛЯ УДОБНОЙ РАБОТЫ С ДАННЫМИ ПРО СРОЧНЫЕ ПРОБЛЕМЫ----------//
 //---------ДЛЯ ЗАПИСИ NODES В FIREBASE НЕПОСРЕДСТВЕННО ИЗ ОБЪЕКТОВ СУЩ ТРЕБОВАНИЕ, ЧТО У КЛАССА ДОЛЖЕН БЫТЬ ПУСТОЙ КОНСТРУКТОР, PUBLIC ГЕТТЕРЫ---------//
 public class UrgentProblem {
     public String shop_name, equipment_name, qr_random_code, operator_login, who_is_needed_position, date_detected, time_detected, status;
-    public int station_no;
+    public int point_no;
     public UrgentProblem() { }
 
-    public UrgentProblem(int stationNo, String equipmentName, String shopName, String operatorLogin, String whoIsNeededLogin, String qrRandomCode, String dateTimeDetected, String time_detected, String status)
+    public UrgentProblem(int pointNo, String equipmentName, String shopName, String operatorLogin, String whoIsNeededLogin, String qrRandomCode, String dateTimeDetected, String time_detected, String status)
     {
-        this.station_no = stationNo;
+        this.point_no = pointNo;
         this.shop_name = shopName;
         this.equipment_name = equipmentName;
         this.qr_random_code = qrRandomCode;
@@ -20,8 +20,8 @@ public class UrgentProblem {
         this.status = status;
     }
 
-    public int getStation_no() {
-        return station_no;
+    public int getPoint_no() {
+        return point_no;
     }
 
     public String getShop_name() {

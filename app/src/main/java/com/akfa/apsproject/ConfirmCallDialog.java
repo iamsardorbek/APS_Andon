@@ -22,10 +22,10 @@ import com.google.firebase.database.ValueEventListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class ConfirmCallDialog extends DialogFragment  implements View.OnTouchListener{
+public class ConfirmCallDialog extends DialogFragment implements View.OnTouchListener{
     private String whoIsCalled, shopName, equipmentName, employeeLogin;
-    private int stationNo;
-    private TextView whoIsCalledTextview, shopNameTextview, equipmentNameTextview, stationNoTextview;
+    private int pointNo;
+    private TextView whoIsCalledTextview, shopNameTextview, equipmentNameTextview, pointNoTextView;
     private Button confirm, cancel;
 
     @Nullable
@@ -43,19 +43,19 @@ public class ConfirmCallDialog extends DialogFragment  implements View.OnTouchLi
         whoIsCalled = bundle.getString("Вызываемый специалист");
         shopName = bundle.getString("Название цеха");
         equipmentName = bundle.getString("Название линии");
-        stationNo = bundle.getInt("Номер участка");
+        pointNo = bundle.getInt("Номер пункта");
         employeeLogin = bundle.getString("Логин пользователя");
 
         whoIsCalledTextview = view.findViewById(R.id.who_is_called_position);
         shopNameTextview = view.findViewById(R.id.shop);
         equipmentNameTextview = view.findViewById(R.id.equipment);
-        stationNoTextview = view.findViewById(R.id.station_no);
+        pointNoTextView = view.findViewById(R.id.point_no);
 
 
         whoIsCalledTextview.setText(whoIsCalled);
         shopNameTextview.setText(shopName);
         equipmentNameTextview.setText(equipmentName);
-        stationNoTextview.setText(Integer.toString(stationNo));
+        pointNoTextView.setText(Integer.toString(pointNo));
 
         confirm = view.findViewById(R.id.confirm);
         confirm.setOnTouchListener(this);
@@ -73,8 +73,8 @@ public class ConfirmCallDialog extends DialogFragment  implements View.OnTouchLi
                     String callWhoIsNeededPosition = call.getWho_is_needed_position();
                     String callShopName = call.getShop_name();
                     String callEquipmentName = call.getEquipment_name();
-                    int callStationNo = call.getStation_no();
-                    if(!callComplete && callCalledBy.equals(employeeLogin) && callEquipmentName.equals(equipmentName) && callShopName.equals(shopName) && stationNo == callStationNo
+                    int callPointNo = call.getPoint_no();
+                    if(!callComplete && callCalledBy.equals(employeeLogin) && callEquipmentName.equals(equipmentName) && callShopName.equals(shopName) && pointNo == callPointNo
                             && callWhoIsNeededPosition.equals(whoIsCalled))
                     {
                         confirm.setVisibility(View.INVISIBLE);
@@ -108,12 +108,12 @@ public class ConfirmCallDialog extends DialogFragment  implements View.OnTouchLi
                         break;
                     case R.id.confirm: //
                         button.setBackgroundResource(R.drawable.green_rectangle);
-//                        if(spinnerStations.getSelectedItem().toString().equals("Нажмите сюда для выбора участка")) //если юзер не открыл spinner и не выбрал участок
-//                            Toast.makeText(getView().getContext(), "Выберите участок", Toast.LENGTH_SHORT).show();
+//                        if(spinnerStations.getSelectedItem().toString().equals("Нажмите сюда для выбора пункта")) //если юзер не открыл spinner и не выбрал пункт
+//                            Toast.makeText(getView().getContext(), "Выберите пункт", Toast.LENGTH_SHORT).show();
 //                        else
 //                        {
-//                            int stationNo = spinnerStations.getSelectedItemPosition(); //какой участок выбрали (индекс выбранного элемента спиннера)
-//                            listener.submitStationNo(stationNo, equipmentLineName, shopName, operatorLogin, whoIsNeededIndex); //передай в интерфейс функцию данные
+//                            int pointNo = spinnerStations.getSelectedItemPosition(); //какой пункт выбрали (индекс выбранного элемента спиннера)
+//                            listener.submitPointNo(pointNo, equipmentLineName, shopName, operatorLogin, whoIsNeededIndex); //передай в интерфейс функцию данные
 //                            getDialog().dismiss(); // и закрой диалог
 //                        }
                         DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference();
@@ -126,7 +126,7 @@ public class ConfirmCallDialog extends DialogFragment  implements View.OnTouchLi
                         @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
                         timeCalled = sdf1.format(new Date());
                         //----считал дату и время----//
-                        callRef.setValue(new Call(dateCalled, timeCalled, employeeLogin, whoIsCalled, stationNo, equipmentName, shopName, false));
+                        callRef.setValue(new Call(dateCalled, timeCalled, employeeLogin, whoIsCalled, pointNo, equipmentName, shopName, false));
                         getDialog().dismiss();
                         break;
                 }

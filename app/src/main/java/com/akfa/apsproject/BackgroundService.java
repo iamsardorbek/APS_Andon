@@ -48,63 +48,87 @@ public class BackgroundService extends Service {
         createMaintenanceProbsNotificationChannel();
         final String employeePosition = intent.getExtras().getString("Должность");
         final String employeeLogin = intent.getExtras().getString("Логин пользователя");
-        if (!employeePosition.equals("operator")) { //работает у всех кроме оператора, потому что он сам сообщает про срочные и ТО проблемы
+        if (!employeePosition.equals("operator") && !employeePosition.equals("head")) { //работает у всех кроме оператора, потому что он сам сообщает про срочные и ТО проблемы
             //те же дейсвтия повтори с ТО проблемами
             DatabaseReference maintenanceProblemsRef = FirebaseDatabase.getInstance().getReference("Maintenance_problems");
             maintenanceProblemsRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot maintenanceProbsSnap) {
-                    for (DataSnapshot maintenanceProbSnap : maintenanceProbsSnap.getChildren()) {
-                        boolean thisMaintenanceProbIsSolved = (boolean) maintenanceProbSnap.child("solved").getValue();
-                        String thisMaintenanceProbKey = maintenanceProbSnap.getKey();
-                        String whoIsNeededPosition = "repair"; //проблемами ТО занимаются только ремонтники (repairers)
-                        if (!thisMaintenanceProbIsSolved && !maintenanceProblems.contains(thisMaintenanceProbKey) && whoIsNeededPosition.equals(employeePosition)) {
-                            //получить UID проблемы
-                            //если эта об этой проблеме ТО еще уведомление не выводилось
-                            //create and show a notification here
-                            String shopName = maintenanceProbSnap.child("shop_name").getValue().toString();
-                            String equipmentName = maintenanceProbSnap.child("equipment_line_name").getValue().toString();
-                            String stationNo = maintenanceProbSnap.child("station_no").getValue().toString();
-                            String maintenanceProblemInfo = shopName + "\n" + equipmentName + "\nУчасток №" + stationNo;
-                            Intent intent = new Intent(getApplicationContext(), RepairerSeparateProblem.class);
-                            intent.putExtra("Логин пользователя", employeeLogin);
-                            intent.putExtra("Должность", employeePosition);
-                            intent.putExtra("ID проблемы в таблице Maintenance_problems", thisMaintenanceProbKey);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+                    if(maintenanceProbsSnap.exists()) {
 
-                            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), MAINTENANCE_PROBS_CHANNEL_ID)
-                                    .setSmallIcon(R.drawable.aps_icon)
-                                    .setContentTitle("Проблема ТО")
-                                    .setContentText(maintenanceProblemInfo)
-                                    .setStyle(new NotificationCompat.BigTextStyle()
-                                            .bigText(maintenanceProblemInfo))
-                                    .setContentIntent(pendingIntent)
-                                    .setPriority(NotificationCompat.PRIORITY_HIGH);
+                        for (DataSnapshot maintenanceProbSnap : maintenanceProbsSnap.getChildren()) {
+                            boolean thisMaintenanceProbIsSolved = (boolean) maintenanceProbSnap.child("solved").getValue();
+                            String thisMaintenanceProbKey = maintenanceProbSnap.getKey();
+                            String detectedByEmployee = maintenanceProbSnap.child("detected_by_employee").getValue().toString();
+                            String whoIsNeededPosition = "repair"; //проблемами ТО занимаются только ремонтники (repairers)
+                            if (!employeeLogin.equals(detectedByEmployee) && !thisMaintenanceProbIsSolved && !maintenanceProblems.contains(thisMaintenanceProbKey) && whoIsNeededPosition.equals(employeePosition)) {
+                                //получить UID проблемы
+                                //если эта об этой проблеме ТО еще уведомление не выводилось
+                                //create and show a notification here
+                                String shopName = maintenanceProbSnap.child("shop_name").getValue().toString();
+                                String equipmentName = maintenanceProbSnap.child("equipment_line_name").getValue().toString();
+                                String pointNo = maintenanceProbSnap.child(getString(R.string.point_no)).getValue().toString();
+                                String maintenanceProblemInfo = shopName + "\n" + equipmentName + "\nПункт №" + pointNo;
+                                Intent intent = new Intent(getApplicationContext(), RepairerSeparateProblem.class);
+                                intent.putExtra("Логин пользователя", employeeLogin);
+                                intent.putExtra("Должность", employeePosition);
+                                intent.putExtra("ID проблемы в таблице Maintenance_problems", thisMaintenanceProbKey);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
-                            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                            // notificationId is a unique int for each notification that you must define
-                            notificationManager.notify((int) maintanceProblemsNotificationsCount, builder.build());
-                            maintenanceProblems.add(thisMaintenanceProbKey);
-                            maintanceProblemsNotificationsCount++;
+                                NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), MAINTENANCE_PROBS_CHANNEL_ID)
+                                        .setSmallIcon(R.drawable.aps_icon)
+                                        .setContentTitle("Проблема ТО")
+                                        .setContentText(maintenanceProblemInfo)
+                                        .setStyle(new NotificationCompat.BigTextStyle()
+                                                .bigText(maintenanceProblemInfo))
+                                        .setContentIntent(pendingIntent)
+                                        .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+                                NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                                // notificationId is a unique int for each notification that you must define
+                                notificationManager.notify((int) maintanceProblemsNotificationsCount, builder.build());
+                                maintenanceProblems.add(thisMaintenanceProbKey);
+                                maintanceProblemsNotificationsCount++;
+                            }
                         }
+
+                        //укороченная версия уведомлений
+//                        Intent intent = new Intent(getApplicationContext(), RepairerSeparateProblem.class);
+//                        intent.putExtra("Логин пользователя", employeeLogin);
+//                        intent.putExtra("Должность", employeePosition);
+//                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//                        String notificationText = "Существуют " + maintanceProblemsNotificationsCount + " проблем на заводе. Нажмите сюда, чтобы с ними ознакомиться.";
+//                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+//                        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), MAINTENANCE_PROBS_CHANNEL_ID)
+//                        .setSmallIcon(R.drawable.aps_icon)
+//                        .setContentTitle("Проблемы ТО")
+//                        .setContentText(notificationText)
+//                        .setStyle(new NotificationCompat.BigTextStyle()
+//                                .bigText(maintanceProblemsNotificationsCount + " проблем на заводе"))
+//                        .setContentIntent(pendingIntent)
+//                        .setPriority(NotificationCompat.PRIORITY_HIGH);
+//
+//                        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+//                        // notificationId is a unique int for each notification that you must define
+//                        notificationManager.notify((int) maintanceProblemsNotificationsCount, builder.build());
                     }
                 }
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-                }
+                @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
             });
-        }
+    }
 
         final Handler handler = new Handler();
         Runnable runnableCode = new Runnable() {
             @Override public void run() {
-                AudioManager mobilemode = (AudioManager)getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-                mobilemode.setStreamVolume(AudioManager.STREAM_RING, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING),0);
-                mobilemode.setStreamVolume(AudioManager.STREAM_NOTIFICATION, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING),0);
-                mobilemode.setStreamVolume(AudioManager.STREAM_SYSTEM, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING),0);
-                mobilemode.setStreamVolume(AudioManager.STREAM_ALARM, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING),0);
+                if(!employeePosition.equals("head")) {
+                    AudioManager mobilemode = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+                    mobilemode.setStreamVolume(AudioManager.STREAM_RING, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
+                    mobilemode.setStreamVolume(AudioManager.STREAM_NOTIFICATION, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
+                    mobilemode.setStreamVolume(AudioManager.STREAM_SYSTEM, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
+                    mobilemode.setStreamVolume(AudioManager.STREAM_ALARM, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
+                }
 
                 NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 for(int i = 2; i <=notificationCount; i++)
@@ -118,80 +142,81 @@ public class BackgroundService extends Service {
                     urgentProblemsRef.addValueEventListener(new ValueEventListener() { //привязываем слушатель к срочным проблемаам
                         @Override
                         public void onDataChange(@NonNull DataSnapshot urgentProbsSnap) {
-                            for (DataSnapshot urgentProbSnap : urgentProbsSnap.getChildren()) { //пройдись по проблемам и если есть DETECTED проблемы, о которых ты еще не вывел уведомления, сообщи о них в новом уведомлении
-                                String thisUrgentProbStatus = urgentProbSnap.child("status").getValue().toString();
-                                final String thisUrgentProbKey = urgentProbSnap.getKey();
-                                String whoIsNeededPosition = urgentProbSnap.child("who_is_needed_position").getValue().toString();
+                            if(urgentProbsSnap.exists()) {
+                                for (DataSnapshot urgentProbSnap : urgentProbsSnap.getChildren()) { //пройдись по проблемам и если есть DETECTED проблемы, о которых ты еще не вывел уведомления, сообщи о них в новом уведомлении
+                                    String thisUrgentProbStatus = urgentProbSnap.child("status").getValue().toString();
+                                    final String thisUrgentProbKey = urgentProbSnap.getKey();
+                                    String whoIsNeededPosition = urgentProbSnap.child("who_is_needed_position").getValue().toString();
 
-                                if (thisUrgentProbStatus.equals("DETECTED") && whoIsNeededPosition.equals(employeePosition)) {
+                                    if (thisUrgentProbStatus.equals("DETECTED") && whoIsNeededPosition.equals(employeePosition)) {
 
-                                    //получить UID проблемы
-                                    //если эта об этой срочной проблеме еще уведомление не выводилось
-                                    //create and show a notification here
-                                    final String shopName = urgentProbSnap.child("shop_name").getValue().toString();
-                                    String equipmentName = urgentProbSnap.child("equipment_name").getValue().toString();
-                                    String stationNo = urgentProbSnap.child("station_no").getValue().toString();
-                                    final String urgentProblemShortInfo = shopName + "\n" + equipmentName + "\nУчасток №" + stationNo;
+                                        //получить UID проблемы
+                                        //если эта об этой срочной проблеме еще уведомление не выводилось
+                                        //create and show a notification here
+                                        final String shopName = urgentProbSnap.child("shop_name").getValue().toString();
+                                        String equipmentName = urgentProbSnap.child("equipment_name").getValue().toString();
+                                        String pointNo = urgentProbSnap.child(getString(R.string.point_no)).getValue().toString();
+                                        final String urgentProblemShortInfo = shopName + "\n" + equipmentName + "\nПункт №" + pointNo;
 
-                                    if(employeePosition.equals("master"))
-                                    {
-                                        final DatabaseReference masterRef = FirebaseDatabase.getInstance().getReference("Users/" + employeeLogin);
-                                        masterRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                                            @Override public void onDataChange(@NonNull DataSnapshot masterSnap) {
-                                                String masterShopName = masterSnap.child("shop_name").getValue().toString();
-                                                if(masterShopName.equals(shopName))
-                                                {
-                                                    Intent intent = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                                                    intent.putExtra("Логин пользователя", employeeLogin);
-                                                    intent.putExtra("Должность", employeePosition);
-                                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                                    PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+                                        if (employeePosition.equals("master")) {
+                                            final DatabaseReference masterRef = FirebaseDatabase.getInstance().getReference("Users/" + employeeLogin);
+                                            masterRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                                @Override
+                                                public void onDataChange(@NonNull DataSnapshot masterSnap) {
+                                                    String masterShopName = masterSnap.child("shop_name").getValue().toString();
+                                                    if (masterShopName.equals(shopName)) {
+                                                        Intent intent = new Intent(getApplicationContext(), UrgentProblemsList.class);
+                                                        intent.putExtra("Логин пользователя", employeeLogin);
+                                                        intent.putExtra("Должность", employeePosition);
+                                                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
-                                                    NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                                                            .setSmallIcon(R.drawable.aps_icon)
-                                                            .setContentTitle("Срочная проблема")
-                                                            .setContentText(urgentProblemShortInfo)
-                                                            .setStyle(new NotificationCompat.BigTextStyle()
-                                                                    .bigText(urgentProblemShortInfo))
-                                                            .setContentIntent(pendingIntent)
-                                                            .setPriority(NotificationCompat.PRIORITY_MAX);
-                                                    NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                                                    // notificationId is a unique int for each notification that you must define
-                                                    notificationManager.notify((int) notificationCount, builder.build());
-                                                    urgentProblems.add(thisUrgentProbKey); //добавь эту проблему в список уже сообщенных
-                                                    Vibration.vibration(getApplicationContext());
-                                                    notificationCount++;
+                                                        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                                                                .setSmallIcon(R.drawable.aps_icon)
+                                                                .setContentTitle("Срочная проблема")
+                                                                .setContentText(urgentProblemShortInfo)
+                                                                .setStyle(new NotificationCompat.BigTextStyle()
+                                                                        .bigText(urgentProblemShortInfo))
+                                                                .setContentIntent(pendingIntent)
+                                                                .setPriority(NotificationCompat.PRIORITY_MAX);
+                                                        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                                                        // notificationId is a unique int for each notification that you must define
+                                                        notificationManager.notify((int) notificationCount, builder.build());
+                                                        urgentProblems.add(thisUrgentProbKey); //добавь эту проблему в список уже сообщенных
+                                                        Vibration.vibration(getApplicationContext());
+                                                        notificationCount++;
+                                                    }
                                                 }
-                                            }
-                                            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
-                                        });
-                                    }
-                                    else
-                                    {
-                                        Intent intent = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                                        intent.putExtra("Логин пользователя", employeeLogin);
-                                        intent.putExtra("Должность", employeePosition);
-                                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
-                                        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                                                .setSmallIcon(R.drawable.aps_icon)
-                                                .setContentTitle("Срочная проблема")
-                                                .setContentText(urgentProblemShortInfo)
-                                                .setStyle(new NotificationCompat.BigTextStyle()
-                                                        .bigText(urgentProblemShortInfo))
-                                                .setContentIntent(pendingIntent)
-                                                .setPriority(NotificationCompat.PRIORITY_MAX);
-                                        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                                        // notificationId is a unique int for each notification that you must define
-                                        notificationManager.notify((int) notificationCount, builder.build());
-                                        urgentProblems.add(thisUrgentProbKey); //добавь эту проблему в список уже сообщенных
-                                        Vibration.vibration(getApplicationContext());
-                                        notificationCount++;
+                                                @Override
+                                                public void onCancelled(@NonNull DatabaseError databaseError) {
+                                                }
+                                            });
+                                        } else {
+                                            Intent intent = new Intent(getApplicationContext(), UrgentProblemsList.class);
+                                            intent.putExtra("Логин пользователя", employeeLogin);
+                                            intent.putExtra("Должность", employeePosition);
+                                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+
+                                            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                                                    .setSmallIcon(R.drawable.aps_icon)
+                                                    .setContentTitle("Срочная проблема")
+                                                    .setContentText(urgentProblemShortInfo)
+                                                    .setStyle(new NotificationCompat.BigTextStyle()
+                                                            .bigText(urgentProblemShortInfo))
+                                                    .setContentIntent(pendingIntent)
+                                                    .setPriority(NotificationCompat.PRIORITY_MAX);
+                                            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                                            // notificationId is a unique int for each notification that you must define
+                                            notificationManager.notify((int) notificationCount, builder.build());
+                                            urgentProblems.add(thisUrgentProbKey); //добавь эту проблему в список уже сообщенных
+                                            Vibration.vibration(getApplicationContext());
+                                            notificationCount++;
+                                        }
                                     }
                                 }
                             }
-
                         }
 
                         @Override
@@ -207,123 +232,124 @@ public class BackgroundService extends Service {
 
                         callsRef.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override public void onDataChange(@NonNull DataSnapshot callsSnap) {
-                                for(final DataSnapshot callSnap : callsSnap.getChildren())
-                                {
-                                    boolean callComplete = (boolean) callSnap.child("complete").getValue();
-                                    String whoIsNeededPosition = callSnap.child("who_is_needed_position").getValue().toString();
-                                    if(!callComplete && whoIsNeededPosition.equals(employeePosition))
-                                    {
-                                        final String callShopName = callSnap.child("shop_name").getValue().toString();
-                                        switch (employeePosition)
-                                        {
-                                            case "operator":
-                                                DatabaseReference operatorRef = FirebaseDatabase.getInstance().getReference("Users/" + employeeLogin);
-                                                operatorRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                                                    @Override
-                                                    public void onDataChange(@NonNull DataSnapshot userSnap) {
-                                                        String operatorEquipmentName = userSnap.child("equipment_name").getValue().toString();
-                                                        String operatorShopName = userSnap.child("shop_name").getValue().toString();
-                                                        String callEquipmentName = callSnap.child("equipment_name").getValue().toString();
-                                                        if(operatorEquipmentName.equals(callEquipmentName) && operatorShopName.equals(callShopName))
-                                                        {
-                                                            String stationNo = callSnap.child("station_no").getValue().toString();
-                                                            String calledByLogin = callSnap.child("called_by").getValue().toString();
-                                                            String callInfo = calledByLogin + " вызывает вас в " + callShopName + "\n" + callEquipmentName + "\nУчасток №" + stationNo;
-                                                            Intent intent = new Intent(getApplicationContext(), CallsList.class);
-                                                            intent.putExtra("Логин пользователя", employeeLogin);
-                                                            intent.putExtra("Должность", employeePosition);
-                                                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                                            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
-
-                                                            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                                                                    .setSmallIcon(R.drawable.aps_icon)
-                                                                    .setContentTitle("Вас вызывают!")
-                                                                    .setContentText(callInfo)
-                                                                    .setStyle(new NotificationCompat.BigTextStyle()
-                                                                            .bigText(callInfo))
-                                                                    .setContentIntent(pendingIntent)
-                                                                    .setPriority(NotificationCompat.PRIORITY_HIGH);
-
-                                                            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                                                            // notificationId is a unique int for each notification that you must define
-                                                            notificationManager.notify((int) notificationCount, builder.build());
-                                                            Vibration.vibration(getApplicationContext());
-                                                            notificationCount++;
-                                                        }
-
-                                                    }
-
-                                                    @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
-                                                });
-                                                break;
-                                            case "master":
-                                                DatabaseReference masterRef = FirebaseDatabase.getInstance().getReference("Users/" + employeeLogin);
-                                                masterRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                                                    @Override
-                                                    public void onDataChange(@NonNull DataSnapshot userSnap) {
-                                                        String operatorShopName = userSnap.child("shop_name").getValue().toString();
-
-                                                        if(operatorShopName.equals(callShopName))
-                                                        {
+                                if(callsSnap.exists()) {
+                                    for (final DataSnapshot callSnap : callsSnap.getChildren()) {
+                                        boolean callComplete = (boolean) callSnap.child("complete").getValue();
+                                        String whoIsNeededPosition = callSnap.child("who_is_needed_position").getValue().toString();
+                                        if (!callComplete && whoIsNeededPosition.equals(employeePosition)) {
+                                            final String callShopName = callSnap.child("shop_name").getValue().toString();
+                                            switch (employeePosition) {
+                                                case "operator":
+                                                    DatabaseReference operatorRef = FirebaseDatabase.getInstance().getReference("Users/" + employeeLogin);
+                                                    operatorRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                                        @Override
+                                                        public void onDataChange(@NonNull DataSnapshot userSnap) {
+                                                            String operatorEquipmentName = userSnap.child("equipment_name").getValue().toString();
+                                                            String operatorShopName = userSnap.child("shop_name").getValue().toString();
                                                             String callEquipmentName = callSnap.child("equipment_name").getValue().toString();
-                                                            String stationNo = callSnap.child("station_no").getValue().toString();
-                                                            String calledByLogin = callSnap.child("called_by").getValue().toString();
+                                                            if (operatorEquipmentName.equals(callEquipmentName) && operatorShopName.equals(callShopName)) {
+                                                                String pointNo = callSnap.child(getString(R.string.point_no)).getValue().toString();
+                                                                String calledByLogin = callSnap.child("called_by").getValue().toString();
+                                                                String callInfo = calledByLogin + " вызывает вас в " + callShopName + "\n" + callEquipmentName + "\nПункт №" + pointNo;
+                                                                Intent intent = new Intent(getApplicationContext(), CallsList.class);
+                                                                intent.putExtra("Логин пользователя", employeeLogin);
+                                                                intent.putExtra("Должность", employeePosition);
+                                                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                                                PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
-                                                            String callInfo = calledByLogin + " вызывает вас в " + callShopName + "\n" + callEquipmentName + "\nУчасток №" + stationNo;
-                                                            Intent intent = new Intent(getApplicationContext(), CallsList.class);
-                                                            intent.putExtra("Логин пользователя", employeeLogin);
-                                                            intent.putExtra("Должность", employeePosition);
-                                                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                                            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+                                                                NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                                                                        .setSmallIcon(R.drawable.aps_icon)
+                                                                        .setContentTitle("Вас вызывают!")
+                                                                        .setContentText(callInfo)
+                                                                        .setStyle(new NotificationCompat.BigTextStyle()
+                                                                                .bigText(callInfo))
+                                                                        .setContentIntent(pendingIntent)
+                                                                        .setPriority(NotificationCompat.PRIORITY_HIGH);
 
-                                                            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                                                                    .setSmallIcon(R.drawable.aps_icon)
-                                                                    .setContentTitle("Вас вызывают!")
-                                                                    .setContentText(callInfo)
-                                                                    .setStyle(new NotificationCompat.BigTextStyle()
-                                                                            .bigText(callInfo))
-                                                                    .setContentIntent(pendingIntent)
-                                                                    .setPriority(NotificationCompat.PRIORITY_HIGH);
+                                                                NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                                                                // notificationId is a unique int for each notification that you must define
+                                                                notificationManager.notify((int) notificationCount, builder.build());
+                                                                Vibration.vibration(getApplicationContext());
+                                                                notificationCount++;
+                                                            }
 
-                                                            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                                                            // notificationId is a unique int for each notification that you must define
-                                                            notificationManager.notify((int) notificationCount, builder.build());
-                                                            Vibration.vibration(getApplicationContext());
-                                                            notificationCount++;
                                                         }
 
-                                                    }
+                                                        @Override
+                                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                                                        }
+                                                    });
+                                                    break;
+                                                case "master":
+                                                    DatabaseReference masterRef = FirebaseDatabase.getInstance().getReference("Users/" + employeeLogin);
+                                                    masterRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                                        @Override
+                                                        public void onDataChange(@NonNull DataSnapshot userSnap) {
+                                                            String operatorShopName = userSnap.child("shop_name").getValue().toString();
 
-                                                    @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
-                                                });
-                                                break;
-                                            case "repair":
-                                                String callEquipmentName = callSnap.child("equipment_name").getValue().toString();
-                                                String stationNo = callSnap.child("station_no").getValue().toString();
-                                                String calledByLogin = callSnap.child("called_by").getValue().toString();
+                                                            if (operatorShopName.equals(callShopName)) {
+                                                                String callEquipmentName = callSnap.child("equipment_name").getValue().toString();
+                                                                String pointNo = callSnap.child(getString(R.string.point_no)).getValue().toString();
+                                                                String calledByLogin = callSnap.child("called_by").getValue().toString();
 
-                                                String callInfo = calledByLogin + " вызывает вас в " + callShopName + "\n" + callEquipmentName + "\nУчасток №" + stationNo;
-                                                Intent intent = new Intent(getApplicationContext(), CallsList.class);
-                                                intent.putExtra("Логин пользователя", employeeLogin);
-                                                intent.putExtra("Должность", employeePosition);
-                                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                                PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+                                                                String callInfo = calledByLogin + " вызывает вас в " + callShopName + "\n" + callEquipmentName + "\nПункт №" + pointNo;
+                                                                Intent intent = new Intent(getApplicationContext(), CallsList.class);
+                                                                intent.putExtra("Логин пользователя", employeeLogin);
+                                                                intent.putExtra("Должность", employeePosition);
+                                                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                                                PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
-                                                NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                                                        .setSmallIcon(R.drawable.aps_icon)
-                                                        .setContentTitle("Вас вызывают!")
-                                                        .setContentText(callInfo)
-                                                        .setStyle(new NotificationCompat.BigTextStyle()
-                                                                .bigText(callInfo))
-                                                        .setContentIntent(pendingIntent)
-                                                        .setPriority(NotificationCompat.PRIORITY_HIGH);
+                                                                NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                                                                        .setSmallIcon(R.drawable.aps_icon)
+                                                                        .setContentTitle("Вас вызывают!")
+                                                                        .setContentText(callInfo)
+                                                                        .setStyle(new NotificationCompat.BigTextStyle()
+                                                                                .bigText(callInfo))
+                                                                        .setContentIntent(pendingIntent)
+                                                                        .setPriority(NotificationCompat.PRIORITY_HIGH);
 
-                                                NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                                                // notificationId is a unique int for each notification that you must define
-                                                notificationManager.notify((int) notificationCount, builder.build());
-                                                Vibration.vibration(getApplicationContext());
-                                                notificationCount++;
-                                                break;
+                                                                NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                                                                // notificationId is a unique int for each notification that you must define
+                                                                notificationManager.notify((int) notificationCount, builder.build());
+                                                                Vibration.vibration(getApplicationContext());
+                                                                notificationCount++;
+                                                            }
+
+                                                        }
+
+                                                        @Override
+                                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                                                        }
+                                                    });
+                                                    break;
+                                                case "repair":
+                                                    String callEquipmentName = callSnap.child("equipment_name").getValue().toString();
+                                                    String pointNo = callSnap.child(getString(R.string.point_no)).getValue().toString();
+                                                    String calledByLogin = callSnap.child("called_by").getValue().toString();
+
+                                                    String callInfo = calledByLogin + " вызывает вас в " + callShopName + "\n" + callEquipmentName + "\nПункт №" + pointNo;
+                                                    Intent intent = new Intent(getApplicationContext(), CallsList.class);
+                                                    intent.putExtra("Логин пользователя", employeeLogin);
+                                                    intent.putExtra("Должность", employeePosition);
+                                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                                    PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+
+                                                    NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                                                            .setSmallIcon(R.drawable.aps_icon)
+                                                            .setContentTitle("Вас вызывают!")
+                                                            .setContentText(callInfo)
+                                                            .setStyle(new NotificationCompat.BigTextStyle()
+                                                                    .bigText(callInfo))
+                                                            .setContentIntent(pendingIntent)
+                                                            .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+                                                    NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                                                    // notificationId is a unique int for each notification that you must define
+                                                    notificationManager.notify((int) notificationCount, builder.build());
+                                                    Vibration.vibration(getApplicationContext());
+                                                    notificationCount++;
+                                                    break;
+                                            }
                                         }
                                     }
                                 }

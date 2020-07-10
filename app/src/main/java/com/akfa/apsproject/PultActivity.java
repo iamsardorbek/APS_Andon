@@ -8,23 +8,17 @@ import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.DialogFragment;
 
-import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -35,7 +29,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 //----------------PULT----------------//
-public class PultActivity extends AppCompatActivity implements View.OnTouchListener, ChooseProblematicStationDialog.ChooseProblematicStationDialogListener, QRCodeDialog.QRCodeDialogListener { //здесь пульты
+public class PultActivity extends AppCompatActivity implements View.OnTouchListener, ChooseProblematicPointDialog.ChooseProblematicStationDialogListener, QRCodeDialog.QRCodeDialogListener { //здесь пульты
     // all variables
     private final int NUM_OF_BUTTONS = 4;
     private Button[] andons = new Button[NUM_OF_BUTTONS];
@@ -372,7 +366,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
             updateButton(whoIsNeededIndex);
 
             //startDialogFragment для выбора проблемного участка и вызова специалиста
-            DialogFragment dialogFragment = new ChooseProblematicStationDialog();
+            DialogFragment dialogFragment = new ChooseProblematicPointDialog();
             Bundle bundle = new Bundle();
             bundle.putString("Логин пользователя", employeeLogin);
             bundle.putInt("Вызвать специалиста", whoIsNeededIndex);
@@ -433,7 +427,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
     }
 
     @Override
-    public void submitStationNo(int stationNo, String equipmentLineName, String shopName, String operatorLogin, final int whoIsNeededIndex) {
+    public void submitPointNo(int pointNo, String equipmentLineName, String shopName, String operatorLogin, final int whoIsNeededIndex) {
         //интерфейс функция которая вызывается при успешном сообщении о существовании проблемы при правильном выборе проблемного участка и нажатии ОК в диалоге ChooseProblematicStationDialog
         //вбить экстренную проблему в базу, QR генерируется внутри самого диалога
         DatabaseReference thisUrgentProblem = database.getReference().child("Urgent_problems").push(); //вбить новую ветку в urgent problems
@@ -452,7 +446,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
         updateButton(whoIsNeededIndex);
 
         //вбить обнаруженную срочную проблему в базу
-        thisUrgentProblem.setValue(new UrgentProblem(stationNo, equipmentLineName, shopName, operatorLogin, positionTypes[whoIsNeededIndex], qrRandomCode, dateDetected, timeDetected, DETECTED)); //DETECTED - это строка "DETECTED"
+        thisUrgentProblem.setValue(new UrgentProblem(pointNo, equipmentLineName, shopName, operatorLogin, positionTypes[whoIsNeededIndex], qrRandomCode, dateDetected, timeDetected, DETECTED)); //DETECTED - это строка "DETECTED"
         btnBlocked[whoIsNeededIndex] = true; //задать состояние кнопки блокированным
 
         //здесь же добавить БД слушатель, чтобы реагировал позднее на изменения в БД (specialist_came, solved)

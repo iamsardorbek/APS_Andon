@@ -84,13 +84,13 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="@string/repairerProblemStationNumber"
+                    android:text="@string/repairerProblemPointNumber"
                     android:textColor="@color/text"
                     android:textSize="18sp"
                     tools:ignore="NestedWeights" />
 
                 <TextView
-                    android:id="@+id/station_no"
+                    android:id="@+id/point_no"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:padding="5dp"
@@ -114,13 +114,13 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="@string/repairerProblemPointNumber"
+                    android:text="@string/repairerProblemSubpointNumber"
                     android:textColor="@color/text"
                     android:textSize="18sp"
                     tools:ignore="NestedWeights" />
 
                 <TextView
-                    android:id="@+id/point_no"
+                    android:id="@+id/subpoint_no"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:padding="5dp"

@@ -1,26 +1,20 @@
 package com.akfa.apsproject;
 
+import android.app.NotificationManager;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.os.Handler;
+import android.preference.PreferenceManager;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.Button;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
-
-import android.app.NotificationManager;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.res.Resources;
-import android.os.Bundle;
-import android.os.Handler;
-import android.preference.PreferenceManager;
-import android.util.TypedValue;
-import android.view.Gravity;
-import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -28,12 +22,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import static com.google.firebase.database.FirebaseDatabase.getInstance;
-
 public class MakeACall extends AppCompatActivity implements View.OnTouchListener {
     private Button callMaster, callOperator, callRepairer;
     private String employeePosition, employeeLogin, shopName, equipmentName, whoIsCalled;
-    private int stationNo;
+    private int pointNo;
     ActionBarDrawerToggle toggle;
 
     @Override
@@ -68,12 +60,12 @@ public class MakeACall extends AppCompatActivity implements View.OnTouchListener
         {
             shopName = args.getString("Название цеха");
             equipmentName = args.getString("Название линии");
-            stationNo = args.getInt("Номер участка");
+            pointNo = args.getInt(getString(R.string.nomer_punkta_textview_text));
             DialogFragment dialogFragment = new ConfirmCallDialog();
             Bundle bundle = new Bundle();
             bundle.putString("Название цеха", shopName);
             bundle.putString("Название линии", equipmentName);
-            bundle.putInt("Номер участка", stationNo);
+            bundle.putInt(getString(R.string.nomer_punkta_textview_text), pointNo);
             bundle.putString("Логин пользователя", employeeLogin);
             bundle.putString("Вызываемый специалист", whoIsCalled);
             dialogFragment.setArguments(bundle);

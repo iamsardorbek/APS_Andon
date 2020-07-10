@@ -20,7 +20,7 @@
         android:textStyle="bold"/>
 
     <Spinner
-        android:id="@+id/spinner_stations"
+        android:id="@+id/spinner_points"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="10dp"

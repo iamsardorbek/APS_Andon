@@ -3,7 +3,6 @@ package com.akfa.apsproject;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -28,7 +27,7 @@ import java.util.List;
 
 //-------- ДИАЛОГ ВЫБОРА И ИНФОРМИРОВАНИЯ О СРОЧНОЙ НЕПОЛАДКЕ/ПРОБЛЕМЕ ОБНАРУЖЕННОЙ ОПЕРАТОРОМ В PULT ACTIVITY --------//
 //--------ГЛАВНЫЕ ЭЛЕМЕНТЫ: SPINNER С НОМЕРАМИ УЧАСТКОВ ДЛЯ ВЫБОРА, --------//
-public class ChooseProblematicStationDialog extends DialogFragment implements View.OnTouchListener {
+public class ChooseProblematicPointDialog extends DialogFragment implements View.OnTouchListener {
     private ChooseProblematicStationDialogListener listener; //для передачи данных PultActivity через и интерфейс
 
     private int numOfStations;
@@ -42,7 +41,7 @@ public class ChooseProblematicStationDialog extends DialogFragment implements Vi
 
     @Nullable @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        final View view = inflater.inflate(R.layout.dialog_choose_problematic_station, container, false); //связать с xml файлом
+        final View view = inflater.inflate(R.layout.dialog_choose_problematic_point, container, false); //связать с xml файлом
         initInstances(view);
         spinnerArray.add("Нажмите сюда для выбора участка");
 
@@ -65,10 +64,10 @@ public class ChooseProblematicStationDialog extends DialogFragment implements Vi
                                 {
                                     if(equipmentSnap.child("equipment_name").getValue().toString().equals(equipmentLineName)) //нашел нужную линию
                                     {
-                                        numOfStations = Integer.parseInt(equipmentSnap.child("number_of_stations").getValue().toString()); //искомое кол-во участков
+                                        numOfStations = Integer.parseInt(equipmentSnap.child(getString(R.string.number_of_points)).getValue().toString()); //искомое кол-во участков
                                         //ниже: заполни спиннер
                                         for(int i = 1; i <=numOfStations; i++) {
-                                            spinnerArray.add("Участок №" + i);
+                                            spinnerArray.add("Пункт №" + i);
                                         }
                                         ArrayAdapter<String> adapter = new ArrayAdapter<String>(view.getContext(), android.R.layout.simple_spinner_item, spinnerArray);
                                         adapter.setDropDownViewResource(R.layout.spinner_item);
@@ -91,7 +90,7 @@ public class ChooseProblematicStationDialog extends DialogFragment implements Vi
     {
         confirm = view.findViewById(R.id.confirm);
         cancel = view.findViewById(R.id.cancel);
-        spinnerStations = view.findViewById(R.id.spinner_stations);
+        spinnerStations = view.findViewById(R.id.spinner_points);
         cancel.setOnTouchListener(this);
         confirm.setOnTouchListener(this);
 
@@ -101,7 +100,7 @@ public class ChooseProblematicStationDialog extends DialogFragment implements Vi
     }
 
     public interface ChooseProblematicStationDialogListener { //интерфейс чтобы PultActivity и диалог могли общаться
-        void submitStationNo(int stationNo, String equipmentLineName, String shopName, String operatorLogin, int whoIsNeededIndex);
+        void submitPointNo(int pointNo, String equipmentLineName, String shopName, String operatorLogin, int whoIsNeededIndex);
         void onDialogCanceled(int whoIsNeededIndex);
     }
 
@@ -129,12 +128,12 @@ public class ChooseProblematicStationDialog extends DialogFragment implements Vi
                         break;
                     case R.id.confirm: //
                         button.setBackgroundResource(R.drawable.green_rectangle);
-                        if(spinnerStations.getSelectedItem().toString().equals("Нажмите сюда для выбора участка")) //если юзер не открыл spinner и не выбрал участок
-                            Toast.makeText(getView().getContext(), "Выберите участок", Toast.LENGTH_SHORT).show();
+                        if(spinnerStations.getSelectedItem().toString().equals("Нажмите сюда для выбора пункта")) //если юзер не открыл spinner и не выбрал пункт
+                            Toast.makeText(getView().getContext(), "Выберите пункт", Toast.LENGTH_SHORT).show();
                         else
                         {
-                            int stationNo = spinnerStations.getSelectedItemPosition(); //какой участок выбрали (индекс выбранного элемента спиннера)
-                            listener.submitStationNo(stationNo, equipmentLineName, shopName, operatorLogin, whoIsNeededIndex); //передай в интерфейс функцию данные
+                            int pointNo = spinnerStations.getSelectedItemPosition(); //какой пункт выбрали (индекс выбранного элемента спиннера)
+                            listener.submitPointNo(pointNo, equipmentLineName, shopName, operatorLogin, whoIsNeededIndex); //передай в интерфейс функцию данные
                             getDialog().dismiss(); // и закрой диалог
                         }
                         break;

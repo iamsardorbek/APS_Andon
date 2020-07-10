@@ -1,8 +1,5 @@
 package com.akfa.apsproject;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
@@ -10,6 +7,9 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 //-------SPLASH ЭКРАН, КОТОРЫЙ ПОКАЗЫВАЕТСЯ ПРИ ЗАПУСКЕ ПРИЛОЖЕНИЯ--------//
 //-------ЕСЛИ В SHARED PREFS ЕСТЬ ДАННЫЕ О ЮЗЕРЕ, ОТКРЫВАЕТ СООТ. АКТИВИТИ; ЕСЛИ НЕТ - ОТКРЫВАЕТ ЛОГИН АКТИВИТИ
@@ -21,12 +21,7 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash_new);
         getSupportActionBar().hide();
 
-        //чтобы регулировать програмно звук уведомлений
-        NotificationManager n = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        if(!n.isNotificationPolicyAccessGranted()) {
-            Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
-            startActivity(intent);
-        }
+        grantNotificationPolicyAccess(); //дать доступ контролировать звук уведомлений
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         if(sharedPrefs.getString("Логин пользователя", null) != null) //Еcли в sharedPrefs есть данные юзера, открой соот активти
@@ -48,7 +43,7 @@ public class SplashActivity extends AppCompatActivity {
                     keepSplash(openFactoryCondition);
                     break;
                 case "repair":
-                    Intent openProblemsList = new Intent(getApplicationContext(), RepairersProblemsList.class);
+                    Intent openProblemsList = new Intent(getApplicationContext(), QuestMainActivity.class);
                     openProblemsList.putExtra("Логин пользователя", rememberedLogin);
                     openProblemsList.putExtra("Должность", rememberedPosition);
                     keepSplash(openProblemsList);
@@ -59,19 +54,48 @@ public class SplashActivity extends AppCompatActivity {
                     openUrgentProblemsList.putExtra("Логин пользователя", rememberedLogin);
                     openUrgentProblemsList.putExtra("Должность", rememberedPosition);
                     startActivity(openUrgentProblemsList);
+                    break;
+                case "head":
+                    Intent openTodayChecks = new Intent(getApplicationContext(), TodayChecks.class);
+                    openTodayChecks.putExtra("Логин пользователя", rememberedLogin);
+                    openTodayChecks.putExtra("Должность", rememberedPosition);
+                    startActivity(openTodayChecks);
+                    break;
             }
-             //запусти сервис
-            startBGServ(rememberedPosition, rememberedLogin);
-
+            if(!rememberedPosition.equals("head")) {
+                //запусти сервис
+                startBGServ(rememberedPosition, rememberedLogin);
+            }
 
         }
         else
         {
             Intent intent=new Intent(SplashActivity.this, Login.class);
             keepSplash(intent);
-
         }
 
+    }
+
+    private void grantNotificationPolicyAccess(){
+
+        //чтобы регулировать програмно звук уведомлений
+        NotificationManager n = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        if(!n.isNotificationPolicyAccessGranted()) {
+            Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+            if (intent.resolveActivity(getPackageManager()) != null) {
+                //защита от случая, когда активити для предоставления доступа контролировать DND Mode нету (на артель U3)
+                startActivityForResult( intent, 1);
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // создает типа рекурсию, пока не дать доступ контролировать режим Do not disturb
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1) {
+            grantNotificationPolicyAccess();
+        }
     }
 
     private void startBGServ(String rememberedPosition, String rememberedLogin)

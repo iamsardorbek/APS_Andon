@@ -1,14 +1,13 @@
 package com.akfa.apsproject;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
 import com.google.firebase.database.DataSnapshot;
@@ -19,7 +18,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-//--------ЗДЕСЬ ПОКАЗЫВАЕТСЯ ЧЕРТЕЖ ЛИНИИ И 1-Й УЧАСТОК, КУДА ЮЗЕР ДОЛЖЕН НАПРАВИТЬСЯ---------//
+//--------ЗДЕСЬ ПОКАЗЫВАЕТСЯ ЧЕРТЕЖ ЛИНИИ И 1-Й ПУНКТ, КУДА ЮЗЕР ДОЛЖЕН НАПРАВИТЬСЯ---------//
 //--------ОТКРЫВАЕТСЯ ПРИ НАЖАТИИ НА ЭЛЕМЕНТ EXPANDABLE LIST VIEW (ЛИНИЮ) В QUEST MAIN ACTIVITY---------//
 public class MachineLayoutActivity extends AppCompatActivity {
     Button qrScan;
@@ -48,7 +47,6 @@ public class MachineLayoutActivity extends AppCompatActivity {
         equipmentLayout = findViewById(R.id.equipment_layout);
         shopNo = getIntent().getExtras().getInt("Номер цеха");
         equipmentNo = getIntent().getExtras().getInt("Номер линии");
-
         qrScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -56,8 +54,9 @@ public class MachineLayoutActivity extends AppCompatActivity {
                 intent.putExtra("Номер цеха", shopNo);
                 intent.putExtra("Номер линии", equipmentNo);
                 int INITIAL_POINT_NUMBER_FOR_QR = 1;
-                intent.putExtra("Номер участка", INITIAL_POINT_NUMBER_FOR_QR);
+                intent.putExtra(getString(R.string.nomer_punkta_textview_text), INITIAL_POINT_NUMBER_FOR_QR);
                 intent.putExtra("Открой PointDynamic", "да");
+                intent.putExtra(getString(R.string.nomer_punkta_textview_text), 1);
                 String login = getIntent().getExtras().getString("Логин пользователя");
                 intent.putExtra("Логин пользователя", login); //передавать логин пользователя взятый из Firebase
                 int problemsCount = 0;

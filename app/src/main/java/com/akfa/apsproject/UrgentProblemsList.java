@@ -1,12 +1,5 @@
 package com.akfa.apsproject;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
-
 import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.content.Intent;
@@ -21,9 +14,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.material.navigation.NavigationView;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -126,7 +121,7 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
                             TextView problemsInfo;
                             problemsInfo = new TextView(getApplicationContext());
                             //данные об этой проблеме запишем в строку problemInfoFromDB
-                            String problemInfoFromDB = "Цех: " + urgentProblem.getShop_name() + "\nОборудование: " + urgentProblem.getEquipment_name() + "\nУчасток №" + urgentProblem.getStation_no()
+                            String problemInfoFromDB = "Цех: " + urgentProblem.getShop_name() + "\nОборудование: " + urgentProblem.getEquipment_name() + "\nПункт №" + urgentProblem.getPoint_no()
                                     + "\nДата и время обнаружения: " + urgentProblem.getDate_detected() + " " + urgentProblem.getTime_detected();
                             problemsInfo.setText(problemInfoFromDB);
                             problemsInfo.setPadding(25, 25, 25, 25);

@@ -13,8 +13,8 @@
         android:layout_marginHorizontal="5dp"
         android:background="#F5F5F5"
         android:gravity="center"
-        android:padding="5dp"
+        android:padding="10dp"
         android:textColor="@color/blackListItem"
-        android:textSize="16sp"
+        android:textSize="18sp"
         android:textStyle="bold" />
 </LinearLayout>

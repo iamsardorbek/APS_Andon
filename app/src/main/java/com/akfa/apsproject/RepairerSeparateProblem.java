@@ -71,19 +71,19 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
                 //на месте иниц views и задай их текст
                 TextView shopNameTextView = findViewById(R.id.shop_name);
                 TextView equipmentNameTextView = findViewById(R.id.equipment_name);
-                TextView stationNo = findViewById(R.id.station_no);
                 TextView pointNo = findViewById(R.id.point_no);
+                TextView subpointNo = findViewById(R.id.subpoint_no);
                 TextView employeeLogin = findViewById(R.id.employee_login);
                 TextView date = findViewById(R.id.date);
                 shopNameTextView.setText(problem.getShop_name());
                 equipmentNameTextView.setText(problem.getEquipment_line_name());
-                stationNo.setText(Integer.toString(problem.getStation_no()));
                 pointNo.setText(Integer.toString(problem.getPoint_no()));
+                subpointNo.setText(Integer.toString(problem.getSubpoint_no()));
                 employeeLogin.setText(problem.getDetected_by_employee());
                 date.setText(problem.getDate() + " " + problem.getTime());
 
                 //переменные для передачи в QR Scanner
-                nomerPunkta = problem.getStation_no();
+                nomerPunkta = problem.getPoint_no();
                 equipmentName = problem.getEquipment_line_name();
                 equipmentNo = problem.getEquipment_line_no();
                 shopNo = problem.getShop_no();
@@ -150,13 +150,18 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
         problemSolved.setOnTouchListener(this);
         callOperator = findViewById(R.id.call_operator);
         callOperator.setOnTouchListener(this);
+        if(employeePosition.equals("head"))
+        {
+            problemSolved.setVisibility(View.GONE);
+            callOperator.setVisibility(View.GONE);
+        }
     }
 
     private void qrStart(int nomerPunkta, int equipmentNo, int shopNo) { //ЗАПУСК QR SCANNER
         Intent intent = new Intent(getApplicationContext(), QRScanner.class);
         intent.putExtra("Номер цеха", shopNo);
         intent.putExtra("Номер линии", equipmentNo);
-        intent.putExtra("Номер участка", nomerPunkta);
+        intent.putExtra("Номер пункта", nomerPunkta);
         intent.putExtra("Открой PointDynamic", "ремонтник");
         intent.putExtra("Логин пользователя", employeeLogin);
         intent.putExtra("ID проблемы в таблице Maintenance_problems", IDOfTheProblem);
@@ -186,7 +191,7 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
                                 @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
                                 timeCalled = sdf1.format(new Date());
                                 //----считал дату и время----//
-                                newCallRef.setValue(new Call(dateCalled, timeCalled, employeeLogin, "operator", problem.getStation_no(),
+                                newCallRef.setValue(new Call(dateCalled, timeCalled, employeeLogin, "operator", problem.getPoint_no(),
                                         problem.getEquipment_line_name(), problem.getShop_name(), false, IDOfTheProblem));
 
                                 newCallRef.addValueEventListener(new ValueEventListener() {

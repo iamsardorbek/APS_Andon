@@ -10,18 +10,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ExpandableListView;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 
-import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -36,7 +30,7 @@ import java.util.TreeMap;
 //------------ВЫВОДИТ EXPANDABLE LIST VIEW C ЦЕХАМИ И ЛИНИЯМИ------------//
 //------------ТАКЖЕ ЕСТЬ КНОПКА QR СКАНЕРА, ЧТОБЫ СРАЗУ ОТСКАНИРОВАТЬ И НАЧАТЬ ПРОВЕРКУ------------//
 //------------ПРИ НАЖАТИИ НА НАЗВАНИЯ ЛИНИЙ, ПЕРЕВОДИТ В MACHINE LAYOUT ACTIVITY------------//
-public class QuestMainActivity extends AppCompatActivity  {
+public class QuestMainActivity extends AppCompatActivity {
 
     static int equipmentNoGlobal, shopNoGlobal; //глоб переменные, используемые также в EndOfChecking
 
@@ -73,7 +67,7 @@ public class QuestMainActivity extends AppCompatActivity  {
         startWithQR.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //запуск QR сканера отсканировав  qr код 1-го участка любой линии
+                //запуск QR сканера отсканировав  qr код 1-го пункта любой линии
                 Intent openQR = new Intent(getApplicationContext(), QRScanner.class);
                 openQR.putExtra("Открой PointDynamic", "Любой код");
                 openQR.putExtra("Должность", employeePosition);
@@ -96,7 +90,7 @@ public class QuestMainActivity extends AppCompatActivity  {
             public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
                 //пользователь выбрал линию для проверки передаем данные в QRScanner
                 //логин в QRScanner не используется explicitly, он передается в PointDynamic. Таким образом QrScanner выступает посредником передачи логина
-                if(employeePosition.equals("master")) {
+                if(employeePosition.equals("master") || employeePosition.equals("repair")) {
                     shopNoGlobal = groupPosition;
                     equipmentNoGlobal = childPosition;
                 }
@@ -182,6 +176,7 @@ public class QuestMainActivity extends AppCompatActivity  {
                     @Override public void onCancelled(@NonNull DatabaseError databaseError) {}
                 });
                 break;
+            case "repair": //у ремонтника и
             case "master": // у мастера доступ ко всем линиям и цехам
                 DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference("Shops");
                 shopsRef.addListenerForSingleValueEvent(new ValueEventListener()

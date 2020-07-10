@@ -46,7 +46,7 @@
                     android:layout_marginBottom="20dp"
                     android:gravity="center"
                     android:padding="5dp"
-                    android:text="@string/nomer_station_textview"
+                    android:text="@string/nomer_point_textview"
                     android:textColor="@color/text"
                     android:textSize="18sp" />
 
@@ -57,9 +57,22 @@
                     android:orientation="vertical">
 
                 </LinearLayout>
+                <Button
+                    android:id="@+id/point_deactivated"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/edit_red_accent"
+                    android:drawableRight="@drawable/deactivated"
+                    android:paddingEnd="10dp"
+                    android:paddingRight="10dp"
+                    android:text="Пункт не задействован"
+                    android:textColor="@color/text"
+                    tools:ignore="RtlSymmetry" />
 
                 <Button
-                    android:id="@+id/nextPoint"
+                    android:id="@+id/next_point"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom"

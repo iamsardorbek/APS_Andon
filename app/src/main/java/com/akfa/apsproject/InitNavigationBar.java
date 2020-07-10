@@ -9,7 +9,6 @@ import android.preference.PreferenceManager;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -57,6 +56,9 @@ public class InitNavigationBar {
                 break;
             case "quality":
                 navigationView.inflateMenu(R.menu.quality_menu);
+                break;
+            case "head":
+                navigationView.inflateMenu(R.menu.head_staff_menu);
                 break;
             //other positions shouldn't be able to access checking page at all
             //if some changes, u can add a case
@@ -121,6 +123,20 @@ public class InitNavigationBar {
                             openFactoryCondition.putExtra("Логин пользователя", employeeLogin);
                             openFactoryCondition.putExtra("Должность", employeePosition);
                             activity.startActivity(openFactoryCondition);
+                            activity.finish();
+                            break;
+                        case R.id.today_checks:
+                            Intent openTodayChecks = new Intent(context, TodayChecks.class);
+                            openTodayChecks.putExtra("Логин пользователя", employeeLogin);
+                            openTodayChecks.putExtra("Должность", employeePosition);
+                            activity.startActivity(openTodayChecks);
+                            activity.finish();
+                            break;
+                        case R.id.checks_history:
+                            Intent openChecksHistory = new Intent(context, ChecksHistory.class);
+                            openChecksHistory.putExtra("Логин пользователя", employeeLogin);
+                            openChecksHistory.putExtra("Должность", employeePosition);
+                            activity.startActivity(openChecksHistory);
                             activity.finish();
                             break;
                         case R.id.about: //инфа про приложение и компанию и иинструкции может

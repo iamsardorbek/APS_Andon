@@ -1,10 +1,5 @@
 package com.akfa.apsproject;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
-
-//----------ПОКАЗЫВАЕТ, АКТИВНЫЕ ВЫЗОВЫ ДАННОГО ПОЛЬЗОВАТЕЛЯ ДРУГИМИ СПЕЦИАЛИСТАМИ--------//
 import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.content.Intent;
@@ -13,11 +8,14 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -27,6 +25,8 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
+
+//----------ПОКАЗЫВАЕТ, АКТИВНЫЕ ВЫЗОВЫ ДАННОГО ПОЛЬЗОВАТЕЛЯ ДРУГИМИ СПЕЦИАЛИСТАМИ--------//
 
 public class CallsList extends AppCompatActivity {
     private static final int ID_TEXTVIEWS = 5000;
@@ -100,7 +100,7 @@ public class CallsList extends AppCompatActivity {
                                         TextView callInfo;
                                         callInfo = new TextView(getApplicationContext());
                                         //данные об этой проблеме запишем в строку callInfoFromDB
-                                        String callInfoFromDB = "Цех: " + thisCall.getShop_name() + "\nОборудование: " + thisCall.getEquipment_name() + "\nУчасток №" + thisCall.getStation_no()
+                                        String callInfoFromDB = "Цех: " + thisCall.getShop_name() + "\nОборудование: " + thisCall.getEquipment_name() + "\nПункт №" + thisCall.getPoint_no()
                                                 + "\nДата и время вызова: " + thisCall.getDate_called() + " " + thisCall.getTime_called() + "\nВызвал: " + thisCall.getCalled_by();
                                         callInfo.setText(callInfoFromDB);
                                         callInfo.setPadding(25, 25, 25, 25);
@@ -121,7 +121,7 @@ public class CallsList extends AppCompatActivity {
                                                 openQR.putExtra("Должность", employeePosition);
                                                 openQR.putExtra("Название линии", thisCall.getEquipment_name());
                                                 openQR.putExtra("Название цеха", thisCall.getShop_name());
-                                                openQR.putExtra("Номер участка", thisCall.getStation_no());
+                                                openQR.putExtra(getString(R.string.nomer_punkta_textview_text), thisCall.getPoint_no());
                                                 openQR.putExtra("Код вызова", singleCallSnap.getKey());
                                                 openQR.putExtra("Логин пользователя", employeeLogin); //передавать логин пользователя взятый из Firebase
                                                 startActivity(openQR);

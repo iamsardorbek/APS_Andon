@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/check_equipment"
+        android:icon="@drawable/check_equipment"
+        android:title="@string/check_equipment_submenu"/>
     <item android:id="@+id/urgent_problems"
         android:icon="@drawable/urgent_problems"
         android:title="@string/urgent_problems_submenu"/>
@@ -10,8 +13,8 @@
         android:icon="@drawable/problems_list"
         android:title="@string/problems_list_submenu"/>
     <item android:id="@+id/web_monitoring"
-        android:icon="@drawable/web_monitoring"
-        android:title="@string/web_monitoring_submenu"/>
+    android:icon="@drawable/web_monitoring"
+    android:title="@string/web_monitoring_submenu"/>
     <item android:id="@+id/about"
         android:icon="@drawable/about"
         android:title="@string/about_app_submenu"/>

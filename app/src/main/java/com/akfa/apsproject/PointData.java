@@ -1,13 +1,13 @@
 package com.akfa.apsproject;
 
-public class StationData {
+public class PointData {
     private String equipmentName, shopName, qrCode;
-    int  stationNo;
-    public StationData(int stationNo, String equipmentName, String shopName, String qrCode)
+    int pointNo;
+    public PointData(int pointNo, String equipmentName, String shopName, String qrCode)
     {
         this.equipmentName = equipmentName;
         this.shopName = shopName;
-        this.stationNo = stationNo;
+        this.pointNo = pointNo;
         this.qrCode = qrCode;
     }
 
@@ -19,8 +19,8 @@ public class StationData {
         return shopName;
     }
 
-    public int getStationNo() {
-        return stationNo;
+    public int getPointNo() {
+        return pointNo;
     }
 
     public String getQrCode() {

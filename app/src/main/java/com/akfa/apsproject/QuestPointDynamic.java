@@ -1,11 +1,11 @@
 package com.akfa.apsproject;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Camera;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -57,22 +57,24 @@ import java.util.concurrent.TimeUnit;
 
 //----------ОПЕРАТОР/МАСТЕР ОТМЕЧВАЕТ СОСТОЯНИЕ КАЖДОГО ПУНКТА ЛИНИИ (ПОРЯДОК/ПРОБЛЕМА) И ПЕРЕХОД В QR SCANNER----------//
 /*DISCLAIMER: ключевые слова MaintenanceProblem, problems, упоминающиеся в этом классе относятся к проверками обнаруженным при профилактических проверках Maintenance_problems*/
-//"station" - "участок"
+//"point" - "пункт"
 public class QuestPointDynamic extends AppCompatActivity
 {
-    private final int RADIO_GROUP_ID = 5000, REQUEST_IMAGE_CAPTURE  = 1;
+    private final int RADIO_GROUP_ID = 5000, REQUEST_IMAGE_CAPTURE  = 1, REQUEST_REQUIRED_STATION_PROBLEM_IMAGE_CAPTURE = 28, REQUEST_REQUIRED_IMAGE_CAPTURE = 27;
     public static String checkDuration; //длительность проверки в формате ММ:СС
     private long startTimeMillis, endTimeMillis, durationMillis; //считают продолжительность проверки
-    private int stationNo, numOfStations = 0, numOfPunkts = 0, problemsCount, problemsOnThisStation = 0, shopNo, equipmentNo, photoIterator = 0;
+    private int pointNo, numOfPoints = 0, numOfSubpoints = 0, problemsCount, problemsOnThisStation = 0, shopNo, equipmentNo, photoIterator = 0;
     private boolean[] photographedProblems; //для проверки, сфоткали ли все проблемы
-    private String employeeLogin, employeePosition, shopName, equipmentName, currentFileName; //интер-активити перемен-е + имя картинки
+    private boolean mustTakePic = false;
+    private int noSubpointMustTakePic;
+    private String employeeLogin, employeePosition, shopName, equipmentName, pointName, currentFileName; //интер-активити перемен-е + имя картинки
     File currentPicFile;
     List<String> problemPushKeysOfTheWholeCheck; //на случай если нажмет назад, чтобы удалить все проблемы занесенные в БД
     //layout views
     ActionBarDrawerToggle toggle;
     private LinearLayout scrollLinearLayout; //в него добав-ся радиокнопки
-    Button nextPoint;
-    TextView equipmentNameTextView, stationNoTextView; //инфа про линию и участок
+    Button nextPoint, pointDeactivated;
+    TextView equipmentNameTextView, pointInfoTextView; //инфа про линию и пункт
     //Firebase
     FirebaseDatabase db;
     DatabaseReference shopRef;
@@ -92,11 +94,14 @@ public class QuestPointDynamic extends AppCompatActivity
         mStorageRef = FirebaseStorage.getInstance().getReference();
         db = FirebaseDatabase.getInstance();
         shopRef = db.getReference().child("Shops/" + QuestMainActivity.shopNoGlobal);
-        nextPoint = findViewById(R.id.nextPoint);
+        nextPoint = findViewById(R.id.next_point);
+        pointDeactivated = findViewById(R.id.point_deactivated);
+        pointDeactivated.setVisibility(View.GONE);
         equipmentNameTextView = findViewById(R.id.equipmentName);
-        stationNoTextView = findViewById(R.id.nomer_punkta);
-        stationNo = getIntent().getExtras().getInt("Номер участка");
-        if(stationNo == 1) //если проверка тока началась, иниц кол-во проблем к 0, начни отсчитывать продолжительность проверки и открой лист для сохранения ключей репортнутых проблем в БД
+        pointInfoTextView = findViewById(R.id.nomer_punkta);
+        pointNo = getIntent().getExtras().getInt(getString(R.string.nomer_punkta_textview_text));
+        Log.e("pointNo = ", String.valueOf(pointNo));
+        if(pointNo == 1) //если проверка тока началась, иниц кол-во проблем к 0, начни отсчитывать продолжительность проверки и открой лист для сохранения ключей репортнутых проблем в БД
         {
             startTimeMillis = System.currentTimeMillis(); //эта фигня работает только для последнего активити
             problemsCount = 0;
@@ -104,13 +109,17 @@ public class QuestPointDynamic extends AppCompatActivity
         }
         else //если это >1 участка, получи интер-активити данные о процессе проверки
         {
+            if(pointNo == numOfPoints)
+            {
+                nextPoint.setText("Закончить проверку");
+            }
             Bundle arguments = getIntent().getExtras();
             startTimeMillis = arguments.getLong("startTimeMillis");
             problemsCount = arguments.getInt("Количество обнаруженных проблем");
             problemPushKeysOfTheWholeCheck = arguments.getStringArrayList("Коды проблем");
         }
         //общие интер-активти данные
-        stationNoTextView.setText(getString(R.string.nomer_station_textview) + stationNo);
+        pointInfoTextView.setText(getString(R.string.nomer_point_textview) + pointNo);
         scrollLinearLayout = findViewById(R.id.scrollLinearLayout);
         employeeLogin = getIntent().getExtras().getString("Логин пользователя");
         employeePosition = getIntent().getExtras().getString("Должность");
@@ -248,121 +257,155 @@ public class QuestPointDynamic extends AppCompatActivity
     private void setEquipmentData()
     {//иниц кол-во пунктов, участков, назв-е линии
         shopRef.addListenerForSingleValueEvent(new ValueEventListener() { //единожды из БД прочитай данные о конкретном участке и линии
+            @SuppressLint("SetTextI18n")
             @Override public void onDataChange(@NonNull DataSnapshot shopSnap) {
                 // "/Equipment_lines/" + QuestMainActivity.childPositionG
                 shopName = shopSnap.child("shop_name").getValue().toString();
                 DataSnapshot equipmentSnap = shopSnap.child("Equipment_lines/" + QuestMainActivity.equipmentNoGlobal);
                 equipmentName = equipmentSnap.child("equipment_name").getValue().toString();
-                equipmentNameTextView.setText(getString(R.string.equipment_name_textview) + " " + equipmentName);
-                //простое кастование не получается, поэтому приходится писать больше кода
-                Long longNumOfPoints = new Long((long) equipmentSnap.child("number_of_stations").getValue());
-                numOfStations = longNumOfPoints.intValue();
-                Long longNumOfSubpoints = Long.valueOf((long) equipmentSnap.child(Integer.toString(stationNo)).getValue());
-                numOfPunkts = longNumOfSubpoints.intValue();
-                photographedProblems = new boolean[numOfPunkts]; //количество пунктов было установлено, иниц массив photographedProblems
+//                equipmentNameTextView.setText(getString(R.string.equipment_name_textview) + " " + equipmentName);
+                equipmentNameTextView.setText(equipmentName);
+
+                //ссылка к этому участку
+                DataSnapshot thisStationSnap = equipmentSnap.child("Points").child(Integer.toString(pointNo));
+                //название участка
+                Log.e("setEquipmentData pointNo = ", String.valueOf(pointNo));
+                pointName = thisStationSnap.child("point_name").getValue().toString();
+                pointInfoTextView.setText(getString(R.string.nomer_point_textview) + pointNo + "\n " + pointName);
+                //добавление пунктов этого участка
+                int subpointNo = 1;
+                while(thisStationSnap.child("subpoint_" + subpointNo).exists())
+                {
+                    String pointDescription = thisStationSnap.child("subpoint_" + subpointNo).child("description").getValue().toString();
+                    addRadioGroup(subpointNo, pointDescription);
+                    if(thisStationSnap.child("subpoint_" + subpointNo).child("must_take_pic").exists())
+                    {
+                        mustTakePic = true;
+                        noSubpointMustTakePic = subpointNo;
+                    }
+                    subpointNo++;
+
+                }
+                if(thisStationSnap.child("can_be_deactivated").exists())
+                {
+                    pointDeactivated.setVisibility(View.VISIBLE);
+                }
+                numOfPoints = Integer.parseInt(equipmentSnap.child(getString(R.string.number_of_points)).getValue().toString());
+                numOfSubpoints = subpointNo-1;
+//                numOfPunkts = Integer.parseInt(equipmentSnap.child(Integer.toString(pointNo)).getValue().toString());
+                photographedProblems = new boolean[numOfSubpoints]; //количество пунктов было установлено, иниц массив photographedProblems
                 for(int i = 0; i < photographedProblems.length; i++)
                 {
                     photographedProblems[i] = true; //пока проблемы не обнаружены, задай, что все проблемы сфотканы уже
                 }
-                addRadioGroups(); //количество пунктов было установлено, добавь радиокнопки
-                initClickListeners(); //радиокнопки были добавлены, поэтому можно разрешать кликать на "Следующий участок"
+
+
+//                addRadioGroups(); //количество пунктов было установлено, добавь радиокнопки
+                initClickListeners(); //радиокнопки были добавлены, поэтому можно разрешать кликать на "Следующий пункт"
             }
             @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
     }
 
-    private void addRadioGroups() {
-        //creates radiobuttons for a given point with count stationNo
-        for (int i = 1; i <= numOfPunkts; i++) {
-            Context context = getApplicationContext(); //чтобы передать некоторым функциям как параметр
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            layoutParams.gravity = Gravity.CENTER_HORIZONTAL; //расположение посередине род элемента
-            layoutParams.setMargins(20, 0, 20, 0); //ЭТИМ МОЖНО ЗАДАВАТЬ ОТСТУПЫ РАДИОКНОПОК
-            RadioGroup rg = new RadioGroup(context); //create the RadioGroup
-            rg.setId(RADIO_GROUP_ID + i); // На данный момент (10.04) айдишки пунктов варируются 5000-5020
-            //Id задается чтобы к элементу можно было обратиться позже в функции AllRadiosChecked
-            rg.setOrientation(RadioGroup.HORIZONTAL);
-            rg.setGravity(Gravity.CENTER_HORIZONTAL);
-            rg.setWeightSum(2); //ДЛЯ ВЗАИМОРАСПОЛОЖЕНИЯ КНОПОК
-            rg.setPadding(50, 20, 50, 20); //ВНУТРЕННИЙ ОТСТУП
+    private void addRadioGroup(int pointNo, String pointDescription)
+    {
+        Context context = getApplicationContext(); //чтобы передать некоторым функциям как параметр
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        layoutParams.gravity = Gravity.CENTER_HORIZONTAL; //расположение посередине род элемента
+        layoutParams.setMargins(10, 0, 10, 0); //ЭТИМ МОЖНО ЗАДАВАТЬ ОТСТУПЫ РАДИОКНОПОК
+        RadioGroup rg = new RadioGroup(context); //create the RadioGroup
+        rg.setId(RADIO_GROUP_ID + pointNo); // На данный момент (10.04) айдишки пунктов варируются 5000-5020
+        //Id задается чтобы к элементу можно было обратиться позже в функции AllRadiosChecked
+        rg.setOrientation(RadioGroup.HORIZONTAL);
+        rg.setGravity(Gravity.CENTER_HORIZONTAL);
+        rg.setWeightSum(2); //ДЛЯ ВЗАИМОРАСПОЛОЖЕНИЯ КНОПОК
+        rg.setPadding(50, 20, 50, 20); //ВНУТРЕННИЙ ОТСТУП
 
-            //-------Подпись Пункт №Х--------//
-            @SuppressLint("ResourceType") String textColor = getResources().getString(R.color.text);
-            TextView rgTitle = new TextView(context);
-            rgTitle.setText("Пункт № " + i);
-            final int RADIO_GROUP_ELEMENT_ID = 6000;
-            rgTitle.setId(RADIO_GROUP_ELEMENT_ID + i * 10);
-            rgTitle.setTextColor(Color.parseColor("#1F1C26")); //ЦВЕТ ТЕКСТА ЭТОГО TEXTVIEW
-            rgTitle.setBackgroundColor(Color.parseColor(textColor)); //ФОН ЭТОГО TEXTVIEW (СЕЙЧАС БЕЛОВАТЫЙ)
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            params.gravity = Gravity.CENTER_HORIZONTAL;
-            params.setMargins(0, 0, 0, 0); //РАСШИРЯЕТСЯ НА ВЕСЬ РОД VIEW (WIDTH)
-            rgTitle.setLayoutParams(params);
-            rgTitle.setGravity(Gravity.CENTER);
-            rgTitle.setPadding(0, 30, 0, 30);
-            scrollLinearLayout.addView(rgTitle);
+        //-------Подпись Пункт №Х--------//
+        @SuppressLint("ResourceType") String textColor = getResources().getString(R.color.text);
+        TextView rgTitle = new TextView(context);
+        rgTitle.setText(pointNo + ". " + pointDescription);
+        final int RADIO_GROUP_ELEMENT_ID = 6000;
+        rgTitle.setId(RADIO_GROUP_ELEMENT_ID + pointNo * 10);
+        rgTitle.setTextColor(Color.parseColor("#1F1C26")); //ЦВЕТ ТЕКСТА ЭТОГО TEXTVIEW
+        rgTitle.setBackgroundColor(Color.parseColor(textColor)); //ФОН ЭТОГО TEXTVIEW (СЕЙЧАС БЕЛОВАТЫЙ)
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        params.gravity = Gravity.CENTER_HORIZONTAL;
+        params.setMargins(0, 0, 0, 0); //РАСШИРЯЕТСЯ НА ВЕСЬ РОД VIEW (WIDTH)
+        rgTitle.setLayoutParams(params);
+        rgTitle.setGravity(Gravity.CENTER);
+        rgTitle.setPadding(0, 30, 0, 30);
+        scrollLinearLayout.addView(rgTitle);
 
-            RadioButton[] rb = new RadioButton[2];
-            LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            buttonParams.setMargins(300, 0, 300, 0); //ОТСТУПЫ ПО СТОРОНАМ
-            //-------Radiobutton для Проблемы--------//
-            buttonParams.weight = 1; //ОБЕ КНОПКИ ДОЛЖНЫ ИМЕТЬ ОДИН РАЗМЕРЫ
-            LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            rb[0] = (RadioButton) inflater.inflate(R.layout.problem_radiobutton, null); //ЗДЕСЬ МОЖНО ДАТЬ ССЫЛКУ НА XML ДИЗАЙН КНОПКИ
-            rb[0].setText("ПРОБЛЕМА");
-            rb[0].setId(RADIO_GROUP_ELEMENT_ID + (i * 10) + 1);
-            rb[0].setLayoutParams(buttonParams);
-            rb[0].setTextSize(15);
-            //-------Radiobutton для Порядка--------//
+        RadioButton[] rb = new RadioButton[2];
+        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        buttonParams.setMargins(100, 0, 100, 0); //ОТСТУПЫ ПО СТОРОНАМ
+        //-------Radiobutton для Проблемы--------//
+        buttonParams.weight = 1; //ОБЕ КНОПКИ ДОЛЖНЫ ИМЕТЬ ОДИН РАЗМЕРЫ
+        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        rb[0] = (RadioButton) inflater.inflate(R.layout.problem_radiobutton, null); //ЗДЕСЬ МОЖНО ДАТЬ ССЫЛКУ НА XML ДИЗАЙН КНОПКИ
+        rb[0].setText("ПРОБЛЕМА");
+        rb[0].setId(RADIO_GROUP_ELEMENT_ID + (pointNo * 10) + 1);
+        rb[0].setLayoutParams(buttonParams);
+        rb[0].setTextSize(15);
+        //-------Radiobutton для Порядка--------//
 //            rb[1] = new RadioButton(context);
-            rb[1] = (RadioButton) inflater.inflate(R.layout.no_problem_radiobutton, null); //ЗДЕСЬ МОЖНО ДАТЬ ССЫЛКУ НА XML ДИЗАЙН КНОПКИ
-            rb[1].setText("ПОРЯДОК");
-            rb[1].setTextSize(15);
-            rb[1].setId(RADIO_GROUP_ELEMENT_ID + (i * 10) + 2);
-            rb[1].setLayoutParams(buttonParams);
+        rb[1] = (RadioButton) inflater.inflate(R.layout.no_problem_radiobutton, null); //ЗДЕСЬ МОЖНО ДАТЬ ССЫЛКУ НА XML ДИЗАЙН КНОПКИ
+        rb[1].setText("ПОРЯДОК");
+        rb[1].setTextSize(15);
+        rb[1].setId(RADIO_GROUP_ELEMENT_ID + (pointNo * 10) + 2);
+        rb[1].setLayoutParams(buttonParams);
 
-            //-------Добавим все созданные объекты в scrollLinearLayout и инициализируем click listener--------//
-            rg.addView(rb[0], 0, layoutParams);
-            rg.addView(rb[1], 1, layoutParams);
-            rg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(RadioGroup group, int checkedId) {
-                    if(checkedId % 10 == 1)
-                    {
-                        RadioButton rbProblem = findViewById(checkedId), rbNoProblem = findViewById(checkedId+1);
-                        rbProblem.setBackground(getDrawable(R.drawable.problem_radiobutton_checked));
-                        rbNoProblem.setBackground(getDrawable(R.drawable.no_problem_radiobutton));
-                    }
-                    else
-                    {
-                        RadioButton rbProblem = findViewById(checkedId-1), rbNoProblem = findViewById(checkedId);
-                        rbProblem.setBackground(getDrawable(R.drawable.problem_radiobutton));
-                        rbNoProblem.setBackground(getDrawable(R.drawable.no_problem_radiobutton_checked));
-
-                    }
+        //-------Добавим все созданные объекты в scrollLinearLayout и инициализируем click listener--------//
+        rg.addView(rb[0], 0, layoutParams);
+        rg.addView(rb[1], 1, layoutParams);
+        rg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if(checkedId % 10 == 1)
+                {
+                    RadioButton rbProblem = findViewById(checkedId), rbNoProblem = findViewById(checkedId+1);
+                    rbProblem.setBackground(getDrawable(R.drawable.problem_radiobutton_checked));
+                    rbNoProblem.setBackground(getDrawable(R.drawable.no_problem_radiobutton));
                 }
-            });
-            scrollLinearLayout.addView(rg);
-        }
+                else
+                {
+                    RadioButton rbProblem = findViewById(checkedId-1), rbNoProblem = findViewById(checkedId);
+                    rbProblem.setBackground(getDrawable(R.drawable.problem_radiobutton));
+                    rbNoProblem.setBackground(getDrawable(R.drawable.no_problem_radiobutton_checked));
+                }
+            }
+        });
+        scrollLinearLayout.addView(rg);
     }
 
     private void initClickListeners()
-    {//задает listener кнопки след участок
+    {//задает listener кнопки след пункт
         nextPoint.setOnClickListener(new Button.OnClickListener(){
         @SuppressLint("DefaultLocale") @Override public void onClick(View v) {
-            if (AllRadiosChecked(numOfPunkts)) //все радиогруппы были отмечены?
+            if (AllRadiosChecked(numOfSubpoints)) //все радиогруппы были отмечены?
             {
-                saveCheckingData(numOfPunkts);
+                saveCheckingData(numOfSubpoints);
                 //checks points' count and refreshes the activity
             }
             else { Toast.makeText(getApplicationContext(), "Заполните состояние каждого пункта", Toast.LENGTH_LONG).show(); }
         }
         });
+        pointDeactivated.setOnClickListener(new Button.OnClickListener() {
+            @Override public void onClick(View v) {
+                if (pointNo >= numOfPoints) { //если это последний пункт и проблем обнаружено не было
+                    //переход на новое окно - QuestEndOfChecking - итоги проверки и следующие шаги
+                    startEndOfChecking();
+                }
+                else if(pointNo < numOfPoints)
+                    qrStart(pointNo, equipmentNo, shopNo); //если все в порядке (проблем на этом участке нет) - запусти qr scanner
+            }
+        });
     }
 
     @Override
     public void onBackPressed() {
-        if((stationNo-1) > 1) {
+        if((pointNo) > 1) {
             AlertDialog diaBox = AskOption();
             diaBox.show();
         }
@@ -415,9 +458,10 @@ public class QuestPointDynamic extends AppCompatActivity
         return true;
     }
 
+
+    @SuppressLint("DefaultLocale")
     public void startEndOfChecking()
     {
-        stationNo = 0;
         endTimeMillis = System.currentTimeMillis();
         durationMillis = endTimeMillis - startTimeMillis;
         checkDuration = String.format("%02d мин, %02d сек", TimeUnit.MILLISECONDS.toMinutes(durationMillis),
@@ -426,17 +470,35 @@ public class QuestPointDynamic extends AppCompatActivity
         intent.putExtra("Количество обнаруженных проблем", problemsCount);
         intent.putExtra("Должность", employeePosition);
         intent.putExtra("Логин пользователя", employeeLogin);
+
+        String date, time;
+        SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yyyy"); //в firebase нельзя в пути ставить точки
+        date = sdf.format(new Date());
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference();
+        DatabaseReference thisMaintenanceCheckRef = dbRef.child("Maintenance_checks/" + date).push();
+        thisMaintenanceCheckRef.child("checked_by").setValue(employeeLogin);
+        sdf = new SimpleDateFormat("HH:mm");
+        time = sdf.format(new Date());
+        thisMaintenanceCheckRef.child("time_finished").setValue(time);
+        sdf = new SimpleDateFormat("dd.MM.yyyy"); //но в value можно дать данные с точками
+        date = sdf.format(new Date());
+        thisMaintenanceCheckRef.child("date_finished").setValue(date);
+        thisMaintenanceCheckRef.child("shop_name").setValue(shopName);
+        thisMaintenanceCheckRef.child("equipment_name").setValue(equipmentName);
+        thisMaintenanceCheckRef.child("duration").setValue(checkDuration);
+        thisMaintenanceCheckRef.child("num_of_detected_problems").setValue(problemsCount);
         startActivity(intent);
         finish();
+        pointNo = 0;
     }
 
-    public void qrStart(int stationNo, int equipmentNumber, int shopNumber) {//запустить qr SCANNER
-        stationNo++; //подготовим для следующего окна PointDynamic
+    public void qrStart(int pointNo, int equipmentNumber, int shopNumber) {//запустить qr SCANNER
+        pointNo++; //подготовим для следующего окна PointDynamic
         Intent intent = new Intent(getApplicationContext(), QRScanner.class);
         intent.putExtra("Номер цеха", shopNumber);
         intent.putExtra("Номер линии", equipmentNumber);
-        intent.putExtra("Номер участка", stationNo);
-        intent.putExtra("Количество пунктов", numOfStations);
+        intent.putExtra(getString(R.string.nomer_punkta_textview_text), pointNo);
+        intent.putExtra("Количество пунктов", numOfPoints);
         intent.putExtra("startTimeMillis", startTimeMillis);
         intent.putExtra("Открой PointDynamic", "да");
         intent.putExtra("Логин пользователя", employeeLogin);
@@ -462,11 +524,12 @@ public class QuestPointDynamic extends AppCompatActivity
             rg = findViewById(RADIO_GROUP_ID + i);
             if(rg.getCheckedRadioButtonId() % 10 == 1) //case of a problem, not photographed
             {
-                photographedProblems[i-1] = false; //мы в цикле проходимся индексами 1, 2, 3; не начинаем счет с 0, 1, 2, но в photographedProblems нужно обращаться к элементам через 0, 1,2
+                photographedProblems[i-1] = false; //даем знать, что эта проблема еще не сфоткана
+                //мы в цикле проходимся индексами 1, 2, 3; не начинаем счет с 0, 1, 2, но в photographedProblems нужно обращаться к элементам через 0, 1,2
                 problemsCount++; //итерируем кол-во проблем
                 problemsOnThisStation++; //кол-во проблем на именно этом участке
                 //i - номер пункта с проблемой
-                //stationNo - номер участка
+                //pointNo - номер участка
                 //QuestMainActivity.shopNoGlobal - the number of the equipment (номер линии)
                 //QuestMainActivity.equipmentNoGlobal - the number of the shop (номер цеха)
 
@@ -480,30 +543,53 @@ public class QuestPointDynamic extends AppCompatActivity
 
                 DatabaseReference newProbRef = problemsRef.push(); //создай подветку в Maintenance_problems с уник айди
                 //занеси в БД данные об этой проблеме
-                newProbRef.setValue(new MaintenanceProblem(employeeLogin, date, time, shopName, equipmentName, QuestMainActivity.shopNoGlobal, QuestMainActivity.equipmentNoGlobal, stationNo, i));
+                newProbRef.setValue(new MaintenanceProblem(employeeLogin, date, time, shopName, equipmentName, QuestMainActivity.shopNoGlobal, QuestMainActivity.equipmentNoGlobal, pointNo, i));
                 problemPushKey = newProbRef.getKey(); //запиши этот айди в переменную
                 problemPushKeys.add(problemPushKey); //добавь этот айди в лист проблем именно на этом участке
                 problemPushKeysOfTheWholeCheck.add(problemPushKey); //добавь этот айди в лист проблем во время всей проверки этой линии
                 //сфоткайте первую проблему, следующие проблемы фоткаются через запуск камеры через onActivityResult
                 if(problemsOnThisStation == 1) {
                     Toast.makeText(getApplicationContext(), "Сфотографируйте проблему пункта " + i, Toast.LENGTH_LONG).show();
-                    dispatchTakePictureIntent(problemPushKey); //запуск интент камеры
+                    if(noSubpointMustTakePic == 1)
+                    {
+                        mustTakePic = false;
+                        dispatchTakePictureIntent(problemPushKey, REQUEST_REQUIRED_STATION_PROBLEM_IMAGE_CAPTURE); //запуск интент камеры
+                    }
+                    else {
+                        dispatchTakePictureIntent(problemPushKey, REQUEST_IMAGE_CAPTURE); //запуск интент камеры
+                    }
                 }
             }
         }
 
-        if (stationNo >= numOfStations && numOfUnphotographedProblem() == -1) { //если это последний участок и проблем обнаружено не было
+        if(mustTakePic)
+        {
+            mustTakePic = false;
+            //время-дата
+            String date, time;
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+            date = sdf.format(new Date());
+            sdf = new SimpleDateFormat("HH.mm.SS");
+            time = sdf.format(new Date());
+            //конец время-дата
+            String photoName = equipmentName + ", " + pointName + " | " + date + "_" + time;
+            //noPointMustTakePic
+            Toast.makeText(getApplicationContext(), "Сфотографируйте ЗНАЧЕНИЯ МОНИТОРА на данном участке", Toast.LENGTH_LONG).show();
+            dispatchTakePictureIntent(photoName, REQUEST_REQUIRED_IMAGE_CAPTURE);
+        }
+        else if (pointNo >= numOfPoints && numOfUnphotographedProblem() == -1) { //если это последний пункт и проблем обнаружено не было
             //переход на новое окно - QuestEndOfChecking - итоги проверки и следующие шаги
             startEndOfChecking();
         }
-        if(stationNo < numOfStations && numOfUnphotographedProblem() == -1) qrStart(stationNo, equipmentNo, shopNo); //если все в порядке (проблем на этом участке нет) - запусти qr scanner
+        else if(pointNo < numOfPoints && numOfUnphotographedProblem() == -1)
+            qrStart(pointNo, equipmentNo, shopNo); //если все в порядке (проблем на этом участке нет) - запусти qr scanner
     }
 
     private int numOfUnphotographedProblem() //проходится по массиву photographedProblems и возвращает индекс следующей несфотографированной проблемы
     {
-        for(int i = 0; i < numOfPunkts; i++)
+        for(int i = 0; i < numOfSubpoints; i++)
             if(!photographedProblems[i])
-                return i;//номер пункта (они начинаются с 1, а не с 0)
+                return i;//номер подпункта (они начинаются с 1, а не с 0)
         return -1;
     }
 
@@ -520,7 +606,7 @@ public class QuestPointDynamic extends AppCompatActivity
         return image;
     }
 
-    private void dispatchTakePictureIntent(String problemPushKey) { //запуск камеры
+    private void dispatchTakePictureIntent(String problemPushKey, int requestCode) { //запуск камеры
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
@@ -538,7 +624,15 @@ public class QuestPointDynamic extends AppCompatActivity
                 Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), getString(R.string.package_name), photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 currentPicFile = photoFile;
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                try {
+                    startActivityForResult(takePictureIntent, requestCode);
+                }
+                catch (Exception e)
+                {
+                    Log.getStackTraceString(e);
+                    Toast.makeText(getApplicationContext(), "Ошибка камеры, обратитесь в службу поддержки", Toast.LENGTH_SHORT).show();
+                    qrStart(pointNo, equipmentNo, shopNo);
+                }
             }
         }
     }
@@ -547,7 +641,12 @@ public class QuestPointDynamic extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         //обработка результата с камеры
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_IMAGE_CAPTURE  && resultCode == RESULT_OK) {
+        boolean problemOnPictureRequiringStation = false;
+        if(requestCode == REQUEST_REQUIRED_STATION_PROBLEM_IMAGE_CAPTURE)
+        {//если так, сохрани картинку в обоих папках
+            problemOnPictureRequiringStation = true;
+        }
+        if ((requestCode == REQUEST_IMAGE_CAPTURE  && resultCode == RESULT_OK) || problemOnPictureRequiringStation) {
             Uri file = Uri.fromFile(new File(currentPhotoPath));
             StorageReference probPicRef = mStorageRef.child("problem_pictures/" + file.getLastPathSegment());
             //загрузи фотку-файл в Firebase Storage
@@ -578,17 +677,75 @@ public class QuestPointDynamic extends AppCompatActivity
             { //если еще не сфоткали все проблемы, снова запусти камеру
                 String problemPushKey = problemPushKeys.get(photoIterator);
                 Toast.makeText(getApplicationContext(), "Сфотографируйте проблему пункта " + (numOfUnphotographedProblem()+1), Toast.LENGTH_LONG).show();
-                dispatchTakePictureIntent(problemPushKey);
+                dispatchTakePictureIntent(problemPushKey, REQUEST_IMAGE_CAPTURE);
             }
-            else if (stationNo >= numOfStations) { //если это последний участок и все сфоткали
+            else
+            {
+                if(mustTakePic)
+                {
+                    mustTakePic = false;
+                    //время-дата
+                    String date, time;
+                    SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+                    date = sdf.format(new Date());
+                    sdf = new SimpleDateFormat("HH.mm.SS");
+                    time = sdf.format(new Date());
+                    //конец время-дата
+                    String photoName = equipmentName + ", " + pointName + " | " + date + "_" + time;
+                    Toast.makeText(getApplicationContext(), "Сфотографируйте ЗНАЧЕНИЯ МОНИТОРА на данном пункте", Toast.LENGTH_LONG).show();
+                    dispatchTakePictureIntent(photoName, REQUEST_REQUIRED_IMAGE_CAPTURE);
+                }
+                else
+                {
+                    if (pointNo >= numOfPoints) { //если это последний пункт и все сфоткали
+                    //переход на окно QuestEndOfChecking - итоги проверки и следующие шаги
+                    startEndOfChecking();
+                    }
+                    else
+                    {//если все сфоткали, запусти QR
+                        qrStart(pointNo, equipmentNo, shopNo);
+                    }
+                }
+            }
+        }
+        if((requestCode == REQUEST_REQUIRED_IMAGE_CAPTURE  && resultCode == RESULT_OK) || problemOnPictureRequiringStation)
+        {
+            Uri file = Uri.fromFile(new File(currentPhotoPath));
+            String date;
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+            date = sdf.format(new Date());
+            StorageReference probPicRef = mStorageRef.child("required_pictures/" + date + "/" + shopName + "/" + equipmentName + "/" + file.getLastPathSegment());
+            //загрузи фотку-файл в Firebase Storage
+            probPicRef.putFile(file)
+                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        Toast.makeText(getApplicationContext(), "Фотография загружена успешно", Toast.LENGTH_LONG).show();
+                        File picToDelete = new File(currentPhotoPath);
+                        picToDelete.delete(); //удали фотку из памяти телефона (чтобы память не засорялась)
+                    }
+                })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override public void onFailure(@NonNull Exception exception) {
+                            // Handle unsuccessful uploads
+                            exception.printStackTrace();
+                            Toast.makeText(getApplicationContext(), "Ошибка загрузки файла", Toast.LENGTH_LONG).show();
+                        }
+                    })
+                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                            double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+                            //progressbar, можно использовать если будем показывать прогресс загрузки фотки в БД
+                        }
+                    });
+            if (pointNo >= numOfPoints) { //если это последний пункт и все сфоткали
                 //переход на окно QuestEndOfChecking - итоги проверки и следующие шаги
                 startEndOfChecking();
             }
             else
             {//если все сфоткали, запусти QR
-                qrStart(stationNo, equipmentNo, shopNo);
+                qrStart(pointNo, equipmentNo, shopNo);
             }
-
         }
     }
 }

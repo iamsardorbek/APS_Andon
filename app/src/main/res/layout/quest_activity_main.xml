@@ -12,27 +12,17 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-        <ScrollView
+
+        <ExpandableListView
+            android:id="@+id/equipment_list"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="9"
-            app:layout_constraintBottom_toBottomOf="parent"
-            tools:layout_editor_absoluteX="0dp">
+            android:layout_weight="9">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
-
-                <ExpandableListView
-                    android:id="@+id/equipment_list"
-                    android:layout_width="match_parent"
-                    android:layout_height="750dp">
-                </ExpandableListView>
+        </ExpandableListView>
 
 
-            </LinearLayout>
-        </ScrollView>
+
         <Button
             android:id="@+id/start_with_qr"
             android:layout_width="match_parent"

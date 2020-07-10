@@ -38,5 +38,11 @@
         android:text="@string/qr_text_below_scanner"
         android:textColor="@color/text"
         android:textSize='15sp' />
-
+<!--    <ImageButton-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:src="@drawable/flashlight_off"-->
+<!--        android:padding="15dp"-->
+<!--        android:id="@+id/flashlight_control"-->
+<!--        android:layout_gravity="center"/>-->
 </LinearLayout>

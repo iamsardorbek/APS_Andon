@@ -141,11 +141,11 @@
             android:textStyle="bold"
             android:textSize="15sp"
             android:gravity="center"
-            android:text="@string/nomer_station_textview"
+            android:text="@string/nomer_point_textview"
             tools:ignore="NestedWeights" />
 
         <TextView
-            android:id="@+id/station_no"
+            android:id="@+id/point_no"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:textColor="@color/text"

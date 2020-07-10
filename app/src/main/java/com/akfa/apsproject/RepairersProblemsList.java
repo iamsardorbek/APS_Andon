@@ -12,16 +12,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
 
-import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -39,8 +34,8 @@ public class RepairersProblemsList extends AppCompatActivity {
     private int problemCount = 0;
     private String employeeLogin, employeePosition;
     private List<String> problemIDs;
-    LinearLayout linearLayout;
     ActionBarDrawerToggle toggle;
+    LinearLayout linearLayout;
     View.OnClickListener textviewClickListener;
 
     @Override
@@ -96,7 +91,7 @@ public class RepairersProblemsList extends AppCompatActivity {
                             problemIDs.add(problemDataSnapshot.getKey()); //добавь айди данной проблемы в лист
 
                             //инициализация TEXTVIEW
-                            String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nУчасток №" + problem.getStation_no() + "\nПункт №" + problem.getPoint_no();
+                            String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nПункт №" + problem.getPoint_no() + "\nПункт №" + problem.getSubpoint_no();
                             TextView problemsInfo;
                             problemsInfo = new TextView(getApplicationContext());
                             problemsInfo.setText(problemInfoFromDB);

@@ -3,19 +3,21 @@ package com.akfa.apsproject;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.NotificationManager;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.hardware.Camera;
+import android.hardware.camera2.CameraManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Vibrator;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,26 +44,26 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 //--------------ОБЕСПЕЧИВАЕТ ТО, ЧТОБЫ СОТРУДНИКИ ШЛИ НА МЕСТА ВОЗНИКНОВЕНИЯ ПРОБЛЕМ, А НЕ ОТМЕЧАЛИ ПРОБЛЕМЫ РЕШЕННЫМИ/ПРОВЕРКИ ОКОНЧЕННЫМИ ПРОСТО С МЕСТА------------//
 //--------------QR SCANNER ПОЗВОЛЯЕТ ДЕЛАТЬ СВОЕГО РОДА REALITY CHECK-------------//
 //--------------ЕГО ОТКРЫВАЕТ ОПЕРАТОР ПРИ ТО ПРОВЕРКЕ, РЕМОНТНИК ПРИ РЕШЕНИИ ТО ПРОБЛЕМЫ, СПЕЦИАЛИСТ ПРИ РЕШЕНИИ СРОЧНОЙ ПРОБЛЕМЫ---------------//
-public class QRScanner extends AppCompatActivity {
+public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callback{
     SurfaceView surfaceView;
     CameraSource cameraSource;
+    CameraManager mCameraManager;
     BarcodeDetector barcodeDetector;
+    ImageButton flashlightControl;
     TextView textView, directionsTextView;
     private int equipmentNumber, shopNumber, nomerPunkta, numOfPoints, problemsCount; //кросс-активити переменные QuestPointDynamic
     private long startTimeMillis; //кросс-активити переменная, передаваемая из QuestPointDynamic
-    private boolean detectedOnce = false; //для того, чтобы на уже обнаруженный (расшифрованный) код не реагировал повторно
-    private String codeToDetect, shouldOpenPointDynamic, shopName, equipmentName, callFirebaseKey, whoIsCalled;
+    private boolean detectedOnce = false, flashlightOn = false; //для того, чтобы на уже обнаруженный (расшифрованный) код не реагировал повторно
+    private String mCameraId, codeToDetect, shouldOpenPointDynamic, shopName, equipmentName, callFirebaseKey, whoIsCalled;
     private String employeeLogin, employeePosition;
     List<EquipmentLine> equipmentLineList = new ArrayList<>();
     List<String> problemPushKeysOfTheWholeCheck;
-    List<StationData> stationsData;
+    List<PointData> pointsData;
     Bundle arguments;
 
     @Override
@@ -72,6 +74,31 @@ public class QRScanner extends AppCompatActivity {
         initInstances(); //иниц все переменные и объекты
         barcodeDetector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.QR_CODE).build(); //детектор QR кодов инициализировать
         cameraSource = new CameraSource.Builder(this, barcodeDetector).setRequestedPreviewSize(640, 480).build(); //иниц источник камеры
+//        flashlightControl = findViewById(R.id.flashlight_control);
+//        flashlightControl.setVisibility(View.GONE); // пока что спрятать
+//        boolean isFlashAvailable = getApplicationContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT);
+//        if(!isFlashAvailable)
+//        {
+//            flashlightControl.setVisibility(View.GONE);
+//        }
+//        else
+//        {
+//            mCameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+//            try {
+//                mCameraId = mCameraManager.getCameraIdList()[0];
+//            } catch (CameraAccessException e) {
+//                e.printStackTrace();
+//            }
+//            flashlightControl.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    flashlightOn = !flashlightOn;
+//                    switchFlashlight();
+//                }
+//            });
+//
+//
+//        }
         requestCameraPermission(); //в случае разрешения, стартует QR сканер
     }
 
@@ -83,7 +110,7 @@ public class QRScanner extends AppCompatActivity {
         equipmentName = arguments.getString("Название линии");
         shopNumber = arguments.getInt("Номер цеха");
         shopName = arguments.getString("Название цеха");
-        nomerPunkta = arguments.getInt("Номер участка");
+        nomerPunkta = arguments.getInt(getString(R.string.nomer_punkta_textview_text));
         numOfPoints = arguments.getInt("Количество пунктов");
         startTimeMillis = arguments.getLong("startTimeMillis");
         employeeLogin = arguments.getString("Логин пользователя");
@@ -92,6 +119,7 @@ public class QRScanner extends AppCompatActivity {
         problemPushKeysOfTheWholeCheck = arguments.getStringArrayList("Коды проблем");
         callFirebaseKey = arguments.getString("Код вызова");
         whoIsCalled = arguments.getString("Кого вызываем");
+        Log.e("qrscanner init", "equipmentNum = " + equipmentNumber + "\tnomerPunkta = " + nomerPunkta);
 
         //UI объекты
         surfaceView = findViewById(R.id.camerapreview);
@@ -107,7 +135,9 @@ public class QRScanner extends AppCompatActivity {
                 @Override public void onDataChange(@NonNull DataSnapshot shop) {
                     String shopName = shop.child("shop_name").getValue().toString();
                     String equipmentName = shop.child("Equipment_lines/" + equipmentNumber + "/equipment_name").getValue().toString();
-                    String directionsText = "Подойдите к\n" + shopName + "\n" + equipmentName + "\nУчасток №" + nomerPunkta;
+                    Log.e("qrscanner", "equipmentNum = " + equipmentNumber + "\tnomerPunkta = " + nomerPunkta);
+                    String pointName = shop.child("Equipment_lines/" + equipmentNumber + "/Points/" + nomerPunkta + "/point_name").getValue().toString();
+                    String directionsText = "Подойдите к\n" + shopName + "\n" + equipmentName + "\nПункт №" + nomerPunkta + "\n" + pointName;
                     directionsTextView.setText(directionsText);
                     codeToDetect = shop.child("Equipment_lines/" + equipmentNumber + "/QR_codes/qr_" + nomerPunkta).getValue().toString();
                     directionsTextView.setVisibility(View.VISIBLE); //данные получены и directions составлены, сделаем текствью видимым
@@ -147,12 +177,13 @@ public class QRScanner extends AppCompatActivity {
                         String shopNameDB = singleShopSnap.child("shop_name").getValue().toString();
                         if(shopNameDB.equals(shopName))
                         {
-                            for (DataSnapshot singleEquipmentSnap : singleShopSnap.child("Equipment_lines").getChildren())
+                            for(DataSnapshot singleEquipmentSnap : singleShopSnap.child("Equipment_lines").getChildren())
                             {
                                 String equipmentNameDB = singleEquipmentSnap.child("equipment_name").getValue().toString();
                                 if(equipmentNameDB.equals(equipmentName))
                                 {
-                                    String directionsText = "Подойдите к\n" + shopName + "\n" + equipmentName + "\nУчасток №" + nomerPunkta;
+                                    String pointName = singleEquipmentSnap.child("Points/" + nomerPunkta + "/point_name").getValue().toString();
+                                    String directionsText = "Подойдите к\n" + shopName + "\n" + equipmentName + "\nПункт №" + nomerPunkta + "\n" + pointName;
                                     directionsTextView.setText(directionsText);
                                     directionsTextView.setVisibility(View.VISIBLE);
                                     codeToDetect = singleEquipmentSnap.child("QR_codes/qr_" + nomerPunkta).getValue().toString();
@@ -170,7 +201,7 @@ public class QRScanner extends AppCompatActivity {
         {
             directionsTextView.setText("Отсканируйте QR метку ближайшего участка, место определится автоматически");
             directionsTextView.setVisibility(View.VISIBLE);
-            stationsData = new ArrayList<>();
+            pointsData = new ArrayList<>();
             DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference("Shops");
             shopsRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
@@ -182,17 +213,47 @@ public class QRScanner extends AppCompatActivity {
                         for (DataSnapshot singleEquipmentSnap : singleShopSnap.child("Equipment_lines").getChildren())
                         {
                             String equipmentNameDB = singleEquipmentSnap.child("equipment_name").getValue().toString();
-                            int numOfStations = Integer.parseInt(singleEquipmentSnap.child("number_of_stations").getValue().toString());
+                            int numOfStations = Integer.parseInt(singleEquipmentSnap.child(getString(R.string.number_of_points)).getValue().toString());
                             for(int i = 1; i <= numOfStations; i++)
                             {
                                 String thisStationQRCode = singleEquipmentSnap.child("QR_codes/qr_" + i).getValue().toString();
-                                stationsData.add(new StationData(i, equipmentNameDB, shopNameDB, thisStationQRCode));
+                                pointsData.add(new PointData(i, equipmentNameDB, shopNameDB, thisStationQRCode));
                             }
                         }
                     }
                 }
                 @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
             });
+        }
+    }
+
+    public void switchFlashlight()
+    {
+        try {
+            SurfaceHolder mHolder =  surfaceView.getHolder();
+            mHolder.addCallback(this);
+            Camera mCamera = Camera.open();
+            mCamera.setPreviewDisplay(mHolder);
+            if(flashlightOn) {
+// Turn on LED
+                Camera.Parameters params = mCamera.getParameters();
+                params.setFlashMode(Camera.Parameters.FLASH_MODE_ON);
+                mCamera.setParameters(params);
+                mCamera.startPreview();
+            }
+            {
+// Turn off LED
+                Camera.Parameters params = mCamera.getParameters();
+                params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                mCamera.setParameters(params);
+                mCamera.stopPreview();
+                mCamera.release();
+            }
+
+//            mCameraManager.setTorchMode(mCameraId, flashlightOn);
+            Log.e("QRSCANNER", "SWITCHING TORCH STATE:" + flashlightOn + "  | CameraID: " + mCameraId);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -206,20 +267,7 @@ public class QRScanner extends AppCompatActivity {
 
     private void qrScanCameraON()  //стартует cameraSource и QRScanner сам
     {
-        surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
-            @Override public void surfaceCreated(SurfaceHolder holder) {
-                if(ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
-                {//если юзер не дал разрешение на использование камеры, дай ему знать об этом и закрой QR Scanner
-                    Toast.makeText(getApplicationContext(), "У приложения нет разрешения на использование камеры. Вы можете его предоставить в настройках или перезапустив приложение. ", Toast.LENGTH_LONG).show();
-                    finish();
-                    return;
-                }
-                try { cameraSource.start(holder); }
-                catch (IOException e) { e.printStackTrace(); }
-            }
-            @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) { }
-            @Override public void surfaceDestroyed(SurfaceHolder holder) { cameraSource.stop(); }
-        });
+        surfaceView.getHolder().addCallback(this);
 
         barcodeDetector.setProcessor(new Detector.Processor<Barcode>() {
             @Override public void release() { }
@@ -245,7 +293,7 @@ public class QRScanner extends AppCompatActivity {
                                             if (shouldOpenPointDynamic.equals("да")) { //когда идет переход Verification->QR->PointDynamic
                                                 Intent intent = new Intent(getApplicationContext(), QuestPointDynamic.class);
                                                 //кросс-активити данные PointDynamica
-                                                intent.putExtra("Номер участка", nomerPunkta);
+                                                intent.putExtra(getString(R.string.nomer_punkta_textview_text), nomerPunkta);
                                                 intent.putExtra("Количество пунктов", numOfPoints);
                                                 intent.putExtra("startTimeMillis", startTimeMillis);
                                                 intent.putExtra("Логин пользователя", employeeLogin);
@@ -289,7 +337,7 @@ public class QRScanner extends AppCompatActivity {
                                         {
                                             Vibration.vibration(getApplicationContext());
                                             Intent intent = new Intent(getApplicationContext(), QuestPointDynamic.class); //начнет ТО проверку с 1-го участка соответ линии
-                                            intent.putExtra("Номер участка", 1);
+                                            intent.putExtra(getString(R.string.nomer_punkta_textview_text), 1);
                                             intent.putExtra("Номер цеха", equipmentLine.getShopNo());
                                             intent.putExtra("Номер линии", equipmentLine.getEquipmentNo());
                                             intent.putExtra("Логин пользователя", employeeLogin);
@@ -317,7 +365,7 @@ public class QRScanner extends AppCompatActivity {
                                                 for(DataSnapshot singleUrgentProbSnap : urgentProbsSnap.getChildren())
                                                 {
                                                     String codeToDetect = singleUrgentProbSnap.child("qr_random_code").getValue().toString(); //код итерируемой сроч проблемы в БД
-                                                    if(codeFromQR.equals(codeToDetect) && singleUrgentProbSnap.child("status").getValue().toString().equals("DETECTED")) //если то что отсканировал соответствует коду сроч проблемы в БД и специалист не приходил на тот участок
+                                                    if(codeFromQR.equals(codeToDetect) && singleUrgentProbSnap.child("status").getValue().toString().equals("DETECTED")) //если то что отсканировал соответствует коду сроч проблемы в БД и специалист не приходил на тот пункт
                                                     { //отметим, что специалист пришел, что переведет кнопку в состояние SPECIALIST_CAME и она перестанет мигать, а начнет ярко гореть
                                                         String urgentProblemKey = singleUrgentProbSnap.getKey();
                                                         //дата-время
@@ -352,7 +400,7 @@ public class QRScanner extends AppCompatActivity {
                                 else if(shouldOpenPointDynamic.equals("реагирование на вызов"))
                                 {
                                     if (!detectedOnce) {
-                                        //retrieve the appropriate qr code value of station from DB, compare it
+                                        //retrieve the appropriate qr code value of point from DB, compare it
                                         if(codeFromQR.equals(codeToDetect))
                                         {
                                             detectedOnce = true; //чтобы повторно не реагировало на коды
@@ -378,22 +426,22 @@ public class QRScanner extends AppCompatActivity {
                                 else if(shouldOpenPointDynamic.equals("определи адрес"))
                                 {
                                     if (!detectedOnce) {
-                                        for (StationData singleStationData : stationsData) {
-                                            if (codeFromQR.equals(singleStationData.getQrCode())) {
+                                        for (PointData singlePointData : pointsData) {
+                                            if (codeFromQR.equals(singlePointData.getQrCode())) {
                                                 detectedOnce = true; //чтобы повторно не реагировало на коды
                                                 Intent openMakeACall = new Intent(getApplicationContext(), MakeACall.class);
                                                 openMakeACall.putExtra("Логин пользователя", employeeLogin);
                                                 openMakeACall.putExtra("Должность", employeePosition);
-                                                openMakeACall.putExtra("Название цеха", singleStationData.getShopName());
-                                                openMakeACall.putExtra("Название линии", singleStationData.getEquipmentName());
-                                                openMakeACall.putExtra("Номер участка", singleStationData.getStationNo());
+                                                openMakeACall.putExtra("Название цеха", singlePointData.getShopName());
+                                                openMakeACall.putExtra("Название линии", singlePointData.getEquipmentName());
+                                                openMakeACall.putExtra(getString(R.string.nomer_punkta_textview_text), singlePointData.getPointNo());
                                                 openMakeACall.putExtra("Кого вызываем", whoIsCalled);
                                                 startActivity(openMakeACall);
                                                 finish();
                                             }
                                         }
                                     }
-                                    textView.setText("Участок с такой QR-меткой не существует в базе");
+                                    textView.setText("Пункт с такой QR-меткой не существует в базе");
                                 }
                             }
                         }
@@ -406,7 +454,7 @@ public class QRScanner extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         if(nomerPunkta > 1 && (shouldOpenPointDynamic.equals("да")))
-        {//если оператор уже проверяет минимум 2 участок, и хочет выйти из проверки, все данные об этой ТО проверке стираются из БД (Maintenance_problems->subnode + Storage->problem_pictures->picture
+        {//если оператор уже проверяет минимум 2 пункт, и хочет выйти из проверки, все данные об этой ТО проверке стираются из БД (Maintenance_problems->subnode + Storage->problem_pictures->picture
             AlertDialog diaBox = AskOption(); //конструирует объект диалога, в котором при нажатии на да стираются данные ТО проверки
             diaBox.show();
         }
@@ -500,5 +548,23 @@ public class QRScanner extends AppCompatActivity {
             return true;
         }
         return false;
+    }
+
+    @Override public void surfaceCreated(SurfaceHolder holder) {
+        if(ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+        {//если юзер не дал разрешение на использование камеры, дай ему знать об этом и закрой QR Scanner
+            Toast.makeText(getApplicationContext(), "У приложения нет разрешения на использование камеры. Вы можете его предоставить в настройках или перезапустив приложение. ", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+        try { cameraSource.start(holder); }
+        catch (IOException e) { e.printStackTrace(); }
+    }
+    @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+//        parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH)
+
+    }
+    @Override public void surfaceDestroyed(SurfaceHolder holder) {
+
     }
 }
