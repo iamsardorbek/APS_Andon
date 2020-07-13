@@ -5,8 +5,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Camera;
 import android.graphics.Color;
+import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -58,7 +59,7 @@ import java.util.concurrent.TimeUnit;
 //----------ОПЕРАТОР/МАСТЕР ОТМЕЧВАЕТ СОСТОЯНИЕ КАЖДОГО ПУНКТА ЛИНИИ (ПОРЯДОК/ПРОБЛЕМА) И ПЕРЕХОД В QR SCANNER----------//
 /*DISCLAIMER: ключевые слова MaintenanceProblem, problems, упоминающиеся в этом классе относятся к проверками обнаруженным при профилактических проверках Maintenance_problems*/
 //"point" - "пункт"
-public class QuestPointDynamic extends AppCompatActivity
+public class QuestPointDynamic extends AppCompatActivity implements View.OnTouchListener
 {
     private final int RADIO_GROUP_ID = 5000, REQUEST_IMAGE_CAPTURE  = 1, REQUEST_REQUIRED_STATION_PROBLEM_IMAGE_CAPTURE = 28, REQUEST_REQUIRED_IMAGE_CAPTURE = 27;
     public static String checkDuration; //длительность проверки в формате ММ:СС
@@ -69,7 +70,7 @@ public class QuestPointDynamic extends AppCompatActivity
     private int noSubpointMustTakePic;
     private String employeeLogin, employeePosition, shopName, equipmentName, pointName, currentFileName; //интер-активити перемен-е + имя картинки
     File currentPicFile;
-    List<String> problemPushKeysOfTheWholeCheck; //на случай если нажмет назад, чтобы удалить все проблемы занесенные в БД
+    List<String> problemPushKeysOfTheWholeCheck, subpointDescriptions; //на случай если нажмет назад, чтобы удалить все проблемы занесенные в БД
     //layout views
     ActionBarDrawerToggle toggle;
     private LinearLayout scrollLinearLayout; //в него добав-ся радиокнопки
@@ -89,18 +90,22 @@ public class QuestPointDynamic extends AppCompatActivity
         toggle = setUpNavBar();
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void initInstances() {
         getSupportActionBar().hide();
         mStorageRef = FirebaseStorage.getInstance().getReference();
         db = FirebaseDatabase.getInstance();
-        shopRef = db.getReference().child("Shops/" + QuestMainActivity.shopNoGlobal);
+        shopRef = db.getReference().child("Shops/" + QuestListOfEquipment.shopNoGlobal);
         nextPoint = findViewById(R.id.next_point);
+        nextPoint.setOnTouchListener(this);
+        nextPoint.setVisibility(View.GONE);
         pointDeactivated = findViewById(R.id.point_deactivated);
         pointDeactivated.setVisibility(View.GONE);
         equipmentNameTextView = findViewById(R.id.equipmentName);
         pointInfoTextView = findViewById(R.id.nomer_punkta);
         pointNo = getIntent().getExtras().getInt(getString(R.string.nomer_punkta_textview_text));
         Log.e("pointNo = ", String.valueOf(pointNo));
+        subpointDescriptions = new ArrayList<>();
         if(pointNo == 1) //если проверка тока началась, иниц кол-во проблем к 0, начни отсчитывать продолжительность проверки и открой лист для сохранения ключей репортнутых проблем в БД
         {
             startTimeMillis = System.currentTimeMillis(); //эта фигня работает только для последнего активити
@@ -125,6 +130,28 @@ public class QuestPointDynamic extends AppCompatActivity
         employeePosition = getIntent().getExtras().getString("Должность");
         shopNo = getIntent().getExtras().getInt("Номер цеха");
         equipmentNo = getIntent().getExtras().getInt("Номер линии");
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        //дейсвтие при нажатиях на кнопку (отсканировать QR код)
+        switch(event.getAction())
+        {
+            case MotionEvent.ACTION_DOWN:
+                nextPoint.setBackgroundResource(R.drawable.edit_red_accent_pressed); //эффект нажатия
+                break;
+            case MotionEvent.ACTION_UP: //когда уже отпустил, октрой qr
+                //запуск QR сканера отсканировав  qr код 1-го пункта любой линии
+                nextPoint.setBackgroundResource(R.drawable.edit_red_accent);
+                if (AllRadiosChecked(numOfSubpoints)) //все радиогруппы были отмечены?
+                {
+                    saveCheckingData(numOfSubpoints);
+                    //checks points' count and refreshes the activity
+                }
+                else { Toast.makeText(getApplicationContext(), "Заполните состояние каждого пункта", Toast.LENGTH_LONG).show(); }
+                break;
+        }
+        return false;
     }
 
     private ActionBarDrawerToggle setUpNavBar() {
@@ -261,7 +288,7 @@ public class QuestPointDynamic extends AppCompatActivity
             @Override public void onDataChange(@NonNull DataSnapshot shopSnap) {
                 // "/Equipment_lines/" + QuestMainActivity.childPositionG
                 shopName = shopSnap.child("shop_name").getValue().toString();
-                DataSnapshot equipmentSnap = shopSnap.child("Equipment_lines/" + QuestMainActivity.equipmentNoGlobal);
+                DataSnapshot equipmentSnap = shopSnap.child("Equipment_lines/" + QuestListOfEquipment.equipmentNoGlobal);
                 equipmentName = equipmentSnap.child("equipment_name").getValue().toString();
 //                equipmentNameTextView.setText(getString(R.string.equipment_name_textview) + " " + equipmentName);
                 equipmentNameTextView.setText(equipmentName);
@@ -276,8 +303,9 @@ public class QuestPointDynamic extends AppCompatActivity
                 int subpointNo = 1;
                 while(thisStationSnap.child("subpoint_" + subpointNo).exists())
                 {
-                    String pointDescription = thisStationSnap.child("subpoint_" + subpointNo).child("description").getValue().toString();
-                    addRadioGroup(subpointNo, pointDescription);
+                    String subpointDescription = thisStationSnap.child("subpoint_" + subpointNo).child("description").getValue().toString();
+                    subpointDescriptions.add(subpointDescription);
+                    addRadioGroup(subpointNo, subpointDescription);
                     if(thisStationSnap.child("subpoint_" + subpointNo).child("must_take_pic").exists())
                     {
                         mustTakePic = true;
@@ -299,7 +327,7 @@ public class QuestPointDynamic extends AppCompatActivity
                     photographedProblems[i] = true; //пока проблемы не обнаружены, задай, что все проблемы сфотканы уже
                 }
 
-
+                nextPoint.setVisibility(View.VISIBLE);
 //                addRadioGroups(); //количество пунктов было установлено, добавь радиокнопки
                 initClickListeners(); //радиокнопки были добавлены, поэтому можно разрешать кликать на "Следующий пункт"
             }
@@ -381,16 +409,6 @@ public class QuestPointDynamic extends AppCompatActivity
 
     private void initClickListeners()
     {//задает listener кнопки след пункт
-        nextPoint.setOnClickListener(new Button.OnClickListener(){
-        @SuppressLint("DefaultLocale") @Override public void onClick(View v) {
-            if (AllRadiosChecked(numOfSubpoints)) //все радиогруппы были отмечены?
-            {
-                saveCheckingData(numOfSubpoints);
-                //checks points' count and refreshes the activity
-            }
-            else { Toast.makeText(getApplicationContext(), "Заполните состояние каждого пункта", Toast.LENGTH_LONG).show(); }
-        }
-        });
         pointDeactivated.setOnClickListener(new Button.OnClickListener() {
             @Override public void onClick(View v) {
                 if (pointNo >= numOfPoints) { //если это последний пункт и проблем обнаружено не было
@@ -543,7 +561,7 @@ public class QuestPointDynamic extends AppCompatActivity
 
                 DatabaseReference newProbRef = problemsRef.push(); //создай подветку в Maintenance_problems с уник айди
                 //занеси в БД данные об этой проблеме
-                newProbRef.setValue(new MaintenanceProblem(employeeLogin, date, time, shopName, equipmentName, QuestMainActivity.shopNoGlobal, QuestMainActivity.equipmentNoGlobal, pointNo, i));
+                newProbRef.setValue(new MaintenanceProblem(employeeLogin, date, time, shopName, equipmentName, QuestListOfEquipment.shopNoGlobal, QuestListOfEquipment.equipmentNoGlobal, pointNo, i, pointName, subpointDescriptions.get(i-1)));
                 problemPushKey = newProbRef.getKey(); //запиши этот айди в переменную
                 problemPushKeys.add(problemPushKey); //добавь этот айди в лист проблем именно на этом участке
                 problemPushKeysOfTheWholeCheck.add(problemPushKey); //добавь этот айди в лист проблем во время всей проверки этой линии
@@ -607,6 +625,8 @@ public class QuestPointDynamic extends AppCompatActivity
     }
 
     private void dispatchTakePictureIntent(String problemPushKey, int requestCode) { //запуск камеры
+        if(isCameraUsebyApp()) Log.i("TAG", "Камера исп др приложением");
+        else Log.i("TAG", "Камера свободна");
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
@@ -635,6 +655,18 @@ public class QuestPointDynamic extends AppCompatActivity
                 }
             }
         }
+    }
+
+    public boolean isCameraUsebyApp() {
+        Camera camera = null;
+        try {
+            camera = android.hardware.Camera.open();
+        } catch (RuntimeException e) {
+            return true;
+        } finally {
+            if (camera != null) camera.release();
+        }
+        return false;
     }
 
     @Override

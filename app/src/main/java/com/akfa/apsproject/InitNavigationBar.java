@@ -112,7 +112,7 @@ public class InitNavigationBar {
                             activity.finish();
                             break;
                         case R.id.check_equipment: //переход в модуль проверки
-                            Intent openQuest = new Intent(context, QuestMainActivity.class);
+                            Intent openQuest = new Intent(context, QuestListOfEquipment.class);
                             openQuest.putExtra("Логин пользователя", employeeLogin);
                             openQuest.putExtra("Должность", employeePosition);
                             activity.startActivity(openQuest);

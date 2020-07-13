@@ -34,20 +34,22 @@ public class BackgroundService extends Service {
     List<String> maintenanceProblems = new ArrayList<String>(); //для хранения данных об уже обнаруженных простых проблемах
     private long notificationCount = 2, maintanceProblemsNotificationsCount = 100;
     private boolean stopped = false;
-
+    private String employeePosition, employeeLogin;
     @Override
     public void onCreate() {//при создании  сервиса
         createNotificationChannel();
+//        startForegroundWithNotification();
 
-        startForegroundWithNotification();
         super.onCreate();
     }
 
     @Override //при запуске сервиса
     public int onStartCommand(Intent intent, int flags, int startId) {
         createMaintenanceProbsNotificationChannel();
-        final String employeePosition = intent.getExtras().getString("Должность");
-        final String employeeLogin = intent.getExtras().getString("Логин пользователя");
+        employeePosition = intent.getExtras().getString("Должность");
+        employeeLogin = intent.getExtras().getString("Логин пользователя");
+        startForegroundWithNotification();
+
         if (!employeePosition.equals("operator") && !employeePosition.equals("head")) { //работает у всех кроме оператора, потому что он сам сообщает про срочные и ТО проблемы
             //те же дейсвтия повтори с ТО проблемами
             DatabaseReference maintenanceProblemsRef = FirebaseDatabase.getInstance().getReference("Maintenance_problems");
@@ -412,6 +414,32 @@ public class BackgroundService extends Service {
     {
         // система android требует, чтобы вы вывели фоновое уведомление если вы запускаете фоновый независимый сервис
         Intent intent = new Intent(getApplicationContext(), SplashActivity.class);
+        switch (employeePosition)
+        {
+            case "operator":
+                intent = new Intent(getApplicationContext(), PultActivity.class);
+                intent.putExtra("Логин пользователя", employeeLogin);
+                intent.putExtra("Должность", employeePosition);
+                break;
+            case "master":
+                intent = new Intent(getApplicationContext(), QuestListOfEquipment.class); //actually there should be the FactoryCondition.class, but it is incomplete yet
+                intent.putExtra("Логин пользователя", employeeLogin);
+                intent.putExtra("Должность", employeePosition);
+                break;
+            case "repair":
+            case "raw":
+            case "quality":
+                intent = new Intent(getApplicationContext(), UrgentProblemsList.class);
+                intent.putExtra("Логин пользователя", employeeLogin);
+                intent.putExtra("Должность", employeePosition);
+                break;
+            case "head":
+                intent = new Intent(getApplicationContext(), TodayChecks.class);
+                intent.putExtra("Логин пользователя", employeeLogin);
+                intent.putExtra("Должность", employeePosition);
+                break;
+        }
+
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
         Notification notification = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)

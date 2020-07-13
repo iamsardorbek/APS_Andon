@@ -1,5 +1,6 @@
 package com.akfa.apsproject;
 
+import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -7,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ExpandableListView;
@@ -30,7 +32,7 @@ import java.util.TreeMap;
 //------------ВЫВОДИТ EXPANDABLE LIST VIEW C ЦЕХАМИ И ЛИНИЯМИ------------//
 //------------ТАКЖЕ ЕСТЬ КНОПКА QR СКАНЕРА, ЧТОБЫ СРАЗУ ОТСКАНИРОВАТЬ И НАЧАТЬ ПРОВЕРКУ------------//
 //------------ПРИ НАЖАТИИ НА НАЗВАНИЯ ЛИНИЙ, ПЕРЕВОДИТ В MACHINE LAYOUT ACTIVITY------------//
-public class QuestMainActivity extends AppCompatActivity {
+public class QuestListOfEquipment extends AppCompatActivity implements View.OnTouchListener {
 
     static int equipmentNoGlobal, shopNoGlobal; //глоб переменные, используемые также в EndOfChecking
 
@@ -49,32 +51,45 @@ public class QuestMainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.quest_activity_main);
+        setContentView(R.layout.quest_activity_list_of_equipment);
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true); //какой-то месседж компилятору, чтобы drawable resources задаваемые объектам могли быть векторными
 
         initInstances(); //инициализация переменных и кнопки
         initExpandableListView(); //иницилизация выпадающего списка
-        toggle = InitNavigationBar.setUpNavBar(QuestMainActivity.this, getApplicationContext(),  getSupportActionBar(), employeeLogin, employeePosition, R.id.check_equipment, R.id.quest_activity_main);
+        toggle = InitNavigationBar.setUpNavBar(QuestListOfEquipment.this, getApplicationContext(),  getSupportActionBar(), employeeLogin, employeePosition, R.id.check_equipment, R.id.quest_activity_main);
         setTitle("Проверка линий");
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void initInstances()
     {
         //inter-activity values
         employeeLogin = getIntent().getExtras().getString("Логин пользователя");
         employeePosition = getIntent().getExtras().getString("Должность");
         startWithQR = findViewById(R.id.start_with_qr);
-        startWithQR.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        startWithQR.setOnTouchListener(this);
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        //дейсвтие при нажатиях на кнопку (отсканировать QR код)
+        switch(event.getAction())
+        {
+            case MotionEvent.ACTION_DOWN:
+                startWithQR.setBackgroundResource(R.drawable.edit_red_accent_pressed); //эффект нажатия
+                break;
+            case MotionEvent.ACTION_UP: //когда уже отпустил, октрой qr
                 //запуск QR сканера отсканировав  qr код 1-го пункта любой линии
+
+                startWithQR.setBackgroundResource(R.drawable.edit_red_accent);
                 Intent openQR = new Intent(getApplicationContext(), QRScanner.class);
                 openQR.putExtra("Открой PointDynamic", "Любой код");
                 openQR.putExtra("Должность", employeePosition);
                 openQR.putExtra("Логин пользователя", employeeLogin); //передавать логин пользователя взятый из Firebase
                 startActivity(openQR);
-            }
-        });
+                break;
+        }
+        return false;
     }
 
     private void initExpandableListView() {
@@ -95,8 +110,8 @@ public class QuestMainActivity extends AppCompatActivity {
                     equipmentNoGlobal = childPosition;
                 }
                 Intent intent = new Intent(getApplicationContext(), MachineLayoutActivity.class);
-                intent.putExtra("Номер цеха", QuestMainActivity.shopNoGlobal);
-                intent.putExtra("Номер линии", QuestMainActivity.equipmentNoGlobal);
+                intent.putExtra("Номер цеха", QuestListOfEquipment.shopNoGlobal);
+                intent.putExtra("Номер линии", QuestListOfEquipment.equipmentNoGlobal);
                 intent.putExtra("Логин пользователя", employeeLogin); //передавать логин пользователя взятый из Firebase
                 intent.putExtra("Должность", employeePosition);
                 startActivity(intent);

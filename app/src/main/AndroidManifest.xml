@@ -57,7 +57,7 @@
             tools:ignore="LockedOrientationActivity" />
         <activity android:name=".FactoryCondition" /> <!-- QuestAPS activities below -->
         <activity
-            android:name=".QuestMainActivity"
+            android:name=".QuestListOfEquipment"
             android:configChanges="orientation"
             android:screenOrientation="portrait"
             tools:ignore="LockedOrientationActivity" />

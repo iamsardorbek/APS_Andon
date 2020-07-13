@@ -23,7 +23,7 @@
         android:layout_height="200dp"
         android:layout_gravity="center"
         android:contentDescription="@null"
-        android:src="@drawable/aps_icon"/>
+        android:src="@drawable/aps_new_logo"/>
 
     <TextView
         android:id="@+id/tip"

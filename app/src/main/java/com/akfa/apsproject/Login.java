@@ -1,8 +1,6 @@
 package com.akfa.apsproject;
 
 import android.Manifest;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -79,12 +77,12 @@ public class Login extends AppCompatActivity {
                                         openPult.putExtra("Должность", user.child("position").getValue().toString());
                                         startActivity(openPult);
                                     } else if (user.child("position").getValue().toString().equals("master")) {//МАСТЕР
-                                        Intent openUrgentProblemsList = new Intent(getApplicationContext(), QuestMainActivity.class); //actually there should be the FactoryCondition.class, but it is incomplete yet
+                                        Intent openUrgentProblemsList = new Intent(getApplicationContext(), QuestListOfEquipment.class); //actually there should be the FactoryCondition.class, but it is incomplete yet
                                         openUrgentProblemsList.putExtra("Логин пользователя", login);
                                         openUrgentProblemsList.putExtra("Должность", user.child("position").getValue().toString());
                                         startActivity(openUrgentProblemsList);
                                     } else if (user.child("position").getValue().toString().equals("repair")) { //РЕМОНТНИК
-                                        Intent openUrgentProblemsList = new Intent(getApplicationContext(), QuestMainActivity.class);
+                                        Intent openUrgentProblemsList = new Intent(getApplicationContext(), QuestListOfEquipment.class);
                                         openUrgentProblemsList.putExtra("Логин пользователя", login);
                                         openUrgentProblemsList.putExtra("Должность", user.child("position").getValue().toString());
                                         startActivity(openUrgentProblemsList);

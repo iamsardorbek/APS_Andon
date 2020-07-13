@@ -158,7 +158,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
         { //listener будет многоразовым ~ постоянным. Нужно, чтобы он следил за всеми изменениями состояний пульта динамично
             @Override public void onDataChange(@NonNull DataSnapshot pultButtonStates)
             {
-                setTitle("Пульт " + nomerPultaLocal); //app bar текст задаем. ("Пульт 1", "Пульт 2" и тд)
+                setTitle(equipmentName + ". Пульт " + nomerPultaLocal); //app bar текст задаем. ("Пульт 1", "Пульт 2" и тд)
                 //цикл ниже пройдется по каждой кнопке этого пульта: считает состояния кнопок, задаст их background с помощью функции setAndonBackground(int, int)
                 for (DataSnapshot buttonStateSnap : pultButtonStates.getChildren())
                 {

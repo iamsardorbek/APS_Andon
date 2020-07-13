@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/login_background"
     android:id="@+id/quest_activity_main"
-    tools:context=".QuestMainActivity">
+    tools:context=".QuestListOfEquipment">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

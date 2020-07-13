@@ -1,7 +1,9 @@
 package com.akfa.apsproject;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -20,7 +22,7 @@ import com.google.firebase.storage.StorageReference;
 
 //--------ЗДЕСЬ ПОКАЗЫВАЕТСЯ ЧЕРТЕЖ ЛИНИИ И 1-Й ПУНКТ, КУДА ЮЗЕР ДОЛЖЕН НАПРАВИТЬСЯ---------//
 //--------ОТКРЫВАЕТСЯ ПРИ НАЖАТИИ НА ЭЛЕМЕНТ EXPANDABLE LIST VIEW (ЛИНИЮ) В QUEST MAIN ACTIVITY---------//
-public class MachineLayoutActivity extends AppCompatActivity {
+public class MachineLayoutActivity extends AppCompatActivity implements View.OnTouchListener {
     Button qrScan;
     ImageView equipmentLayout;
     private int shopNo, equipmentNo;
@@ -42,14 +44,27 @@ public class MachineLayoutActivity extends AppCompatActivity {
         });
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void initInstances() {
         qrScan = findViewById(R.id.qr_scan);
         equipmentLayout = findViewById(R.id.equipment_layout);
         shopNo = getIntent().getExtras().getInt("Номер цеха");
         equipmentNo = getIntent().getExtras().getInt("Номер линии");
-        qrScan.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        qrScan.setOnTouchListener(this);
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        //дейсвтие при нажатиях на кнопку (отсканировать QR код)
+        switch(event.getAction())
+        {
+            case MotionEvent.ACTION_DOWN:
+                qrScan.setBackgroundResource(R.drawable.edit_red_accent_pressed); //эффект нажатия
+                break;
+            case MotionEvent.ACTION_UP: //когда уже отпустил, октрой qr
+                //запуск QR сканера отсканировав  qr код 1-го пункта любой линии
+
+                qrScan.setBackgroundResource(R.drawable.edit_red_accent);
                 Intent intent = new Intent(getApplicationContext(), QRScanner.class);
                 intent.putExtra("Номер цеха", shopNo);
                 intent.putExtra("Номер линии", equipmentNo);
@@ -64,7 +79,8 @@ public class MachineLayoutActivity extends AppCompatActivity {
                 String position = getIntent().getExtras().getString("Должность");
                 intent.putExtra("Должность", position);
                 startActivity(intent);
-            }
-        });
+                break;
+        }
+        return false;
     }
 }

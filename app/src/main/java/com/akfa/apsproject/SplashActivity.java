@@ -21,8 +21,13 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash_new);
         getSupportActionBar().hide();
 
-        grantNotificationPolicyAccess(); //дать доступ контролировать звук уведомлений
-
+        if(android.os.Build.VERSION.SDK_INT != 27)
+        {
+            grantNotificationPolicyAccess(); //дать доступ контролировать звук уведомлений
+        }
+        else {
+            //!!!! это скорее всего артель u3 (у него api 27) на котором DND функции нету, как проверить dnd mode я еще не знаю, пока это кустарное решение
+        }
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         if(sharedPrefs.getString("Логин пользователя", null) != null) //Еcли в sharedPrefs есть данные юзера, открой соот активти
         {
@@ -37,13 +42,13 @@ public class SplashActivity extends AppCompatActivity {
                     keepSplash(openPult);
                     break;
                 case "master":
-                    Intent openFactoryCondition = new Intent(getApplicationContext(), QuestMainActivity.class); //actually there should be the FactoryCondition.class, but it is incomplete yet
+                    Intent openFactoryCondition = new Intent(getApplicationContext(), QuestListOfEquipment.class); //actually there should be the FactoryCondition.class, but it is incomplete yet
                     openFactoryCondition.putExtra("Логин пользователя", rememberedLogin);
                     openFactoryCondition.putExtra("Должность", rememberedPosition);
                     keepSplash(openFactoryCondition);
                     break;
                 case "repair":
-                    Intent openProblemsList = new Intent(getApplicationContext(), QuestMainActivity.class);
+                    Intent openProblemsList = new Intent(getApplicationContext(), QuestListOfEquipment.class);
                     openProblemsList.putExtra("Логин пользователя", rememberedLogin);
                     openProblemsList.putExtra("Должность", rememberedPosition);
                     keepSplash(openProblemsList);
@@ -80,10 +85,10 @@ public class SplashActivity extends AppCompatActivity {
 
         //чтобы регулировать програмно звук уведомлений
         NotificationManager n = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        if(!n.isNotificationPolicyAccessGranted()) {
-            Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
-            if (intent.resolveActivity(getPackageManager()) != null) {
-                //защита от случая, когда активити для предоставления доступа контролировать DND Mode нету (на артель U3)
+        Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            //защита от случая, когда активити для предоставления доступа контролировать DND Mode нету (на артель U3)
+            if(!n.isNotificationPolicyAccessGranted()) {
                 startActivityForResult( intent, 1);
             }
         }
