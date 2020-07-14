@@ -127,13 +127,13 @@ public class BackgroundService extends Service {
         final Handler handler = new Handler();
         Runnable runnableCode = new Runnable() {
             @Override public void run() {
-//                if(!employeePosition.equals("head")) {
-//                    AudioManager mobilemode = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-//                    mobilemode.setStreamVolume(AudioManager.STREAM_RING, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
-//                    mobilemode.setStreamVolume(AudioManager.STREAM_NOTIFICATION, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
-//                    mobilemode.setStreamVolume(AudioManager.STREAM_SYSTEM, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
-//                    mobilemode.setStreamVolume(AudioManager.STREAM_ALARM, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
-//                }
+                if(!employeePosition.equals("head")) {
+                    AudioManager mobilemode = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+                    mobilemode.setStreamVolume(AudioManager.STREAM_RING, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
+                    mobilemode.setStreamVolume(AudioManager.STREAM_NOTIFICATION, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
+                    mobilemode.setStreamVolume(AudioManager.STREAM_SYSTEM, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
+                    mobilemode.setStreamVolume(AudioManager.STREAM_ALARM, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
+                }
 
 //                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 //                for(int i = 2; i <= notificationCount; i++)
