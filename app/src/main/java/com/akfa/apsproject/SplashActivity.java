@@ -7,10 +7,11 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+
+import java.util.Objects;
 
 //-------SPLASH ЭКРАН, КОТОРЫЙ ПОКАЗЫВАЕТСЯ ПРИ ЗАПУСКЕ ПРИЛОЖЕНИЯ--------//
 //-------ЕСЛИ В SHARED PREFS ЕСТЬ ДАННЫЕ О ЮЗЕРЕ, ОТКРЫВАЕТ СООТ. АКТИВИТИ; ЕСЛИ НЕТ - ОТКРЫВАЕТ ЛОГИН АКТИВИТИ
@@ -20,39 +21,36 @@ public class SplashActivity extends AppCompatActivity {
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_new);
-        getSupportActionBar().hide();
+        Objects.requireNonNull(getSupportActionBar()).hide();
 
         if(android.os.Build.VERSION.SDK_INT != 27)
         {
             grantNotificationPolicyAccess(); //дать доступ контролировать звук уведомлений
         }
-        else {
-            //!!!! это скорее всего артель u3 (у него api 27) на котором DND функции нету, как проверить dnd mode я еще не знаю, пока это кустарное решение
-        }
+//        else {
+//            //!!!! это скорее всего артель u3 (у него api 27) на котором DND функции нету, как проверить dnd mode я еще не знаю, пока это кустарное решение
+//        }
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        if(sharedPrefs.getString("Логин пользователя", null) != null) //Еcли в sharedPrefs есть данные юзера, открой соот активти
+        if(sharedPrefs.getString("Логин пользователя", null) != null && sharedPrefs.getString("Должность", null) != null) //Еcли в sharedPrefs есть данные юзера, открой соот активти
         {
             String rememberedLogin = sharedPrefs.getString("Логин пользователя", null);
             String rememberedPosition = sharedPrefs.getString("Должность", null);
+            UserData.login = rememberedLogin;
+            UserData.position = rememberedPosition;
+
+            assert rememberedPosition != null;
             switch (rememberedPosition)
             {
                 case "operator":
                     Intent openPult = new Intent(getApplicationContext(), PultActivity.class);
-                    openPult.putExtra("Логин пользователя", rememberedLogin);
-                    openPult.putExtra("Должность", rememberedPosition);
                     keepSplash(openPult);
                     break;
                 case "master":
+                case "repair":
                     Intent openFactoryCondition = new Intent(getApplicationContext(), QuestListOfEquipment.class); //actually there should be the FactoryCondition.class, but it is incomplete yet
                     openFactoryCondition.putExtra("Логин пользователя", rememberedLogin);
                     openFactoryCondition.putExtra("Должность", rememberedPosition);
                     keepSplash(openFactoryCondition);
-                    break;
-                case "repair":
-                    Intent openProblemsList = new Intent(getApplicationContext(), QuestListOfEquipment.class);
-                    openProblemsList.putExtra("Логин пользователя", rememberedLogin);
-                    openProblemsList.putExtra("Должность", rememberedPosition);
-                    keepSplash(openProblemsList);
                     break;
                 case "raw":
                 case "quality":
@@ -89,6 +87,7 @@ public class SplashActivity extends AppCompatActivity {
         Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
         if (intent.resolveActivity(getPackageManager()) != null) {
             //защита от случая, когда активити для предоставления доступа контролировать DND Mode нету (на артель U3)
+            assert n != null;
             if(!n.isNotificationPolicyAccessGranted()) {
                 startActivityForResult( intent, 1);
             }
@@ -108,8 +107,6 @@ public class SplashActivity extends AppCompatActivity {
     {
         stopService(new Intent(getBaseContext(), BackgroundService.class)); //если до этого уже сервис для другого аккаунта был включен и произошел повторный логин, для безопасности выключи сервис
         Intent startBackgroundService = new Intent(getApplicationContext(), BackgroundService.class);
-        startBackgroundService.putExtra("Должность", rememberedPosition);
-        startBackgroundService.putExtra("Логин пользователя", rememberedLogin);
         //эта функция запускает фоновый сервис проверки наличия новообнаруженных проблем и неполадок
         ContextCompat.startForegroundService(getApplicationContext(), startBackgroundService);
     }

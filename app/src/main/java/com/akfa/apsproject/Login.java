@@ -1,19 +1,16 @@
 package com.akfa.apsproject;
 
 import android.Manifest;
-import android.content.Context;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -47,13 +44,6 @@ public class Login extends AppCompatActivity {
         //возьми разрешение использования камеры
         int permissionStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
         if (permissionStatus == PackageManager.PERMISSION_DENIED) { ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.CAMERA}, 0); }
-//        permissionStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_NOTIFICATION_POLICY);
-//        if (permissionStatus == PackageManager.PERMISSION_DENIED) { ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_NOTIFICATION_POLICY}, 0); }
-//        NotificationManager n = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-//        if(!n.isNotificationPolicyAccessGranted()) {
-//            Intent intent = new Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
-//            startActivity(intent);
-//        }
 
         initInstances();
         enter.setOnClickListener(new View.OnClickListener() {
@@ -68,73 +58,8 @@ public class Login extends AppCompatActivity {
                 }
                 else {
                     loading.setVisibility(View.VISIBLE); //кликнул, пока БД не считали, стоит надпись ЗАГРУЗКА ДАННЫХ
-                    DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("Users/" + login); //ссылка на node именно этого пользователя
-                    dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override public void onDataChange(@NonNull DataSnapshot user) {
-                            loading.setVisibility(View.INVISIBLE);
-                            if (user.exists()) // если подветка такая существует
-                            {//3 ifs with boolean checker functions in condition: isOperator, isMaster, isRepairer
-                                if (user.child("password").getValue().toString().equals(password)) { //если и пароль введен правильно (проверка с подветкой user->password
-                                    if(!user.child("active_session_android_id").exists()) {
-                                        String androidID = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
-                                        DatabaseReference userRef = user.getRef();
-                                        userRef.child("active_session_android_id").setValue(androidID);
-
-                                        if (user.child("position").getValue().toString().equals("operator")) { //ОПЕРАТОР
-                                            Intent openPult = new Intent(getApplicationContext(), PultActivity.class); //открой пульт
-                                            openPult.putExtra("Логин пользователя", login);
-                                            openPult.putExtra("Должность", user.child("position").getValue().toString());
-                                            startActivity(openPult);
-                                        } else if (user.child("position").getValue().toString().equals("master")) {//МАСТЕР
-                                            Intent openUrgentProblemsList = new Intent(getApplicationContext(), QuestListOfEquipment.class); //actually there should be the FactoryCondition.class, but it is incomplete yet
-                                            openUrgentProblemsList.putExtra("Логин пользователя", login);
-                                            openUrgentProblemsList.putExtra("Должность", user.child("position").getValue().toString());
-                                            startActivity(openUrgentProblemsList);
-                                        } else if (user.child("position").getValue().toString().equals("repair")) { //РЕМОНТНИК
-                                            Intent openUrgentProblemsList = new Intent(getApplicationContext(), QuestListOfEquipment.class);
-                                            openUrgentProblemsList.putExtra("Логин пользователя", login);
-                                            openUrgentProblemsList.putExtra("Должность", user.child("position").getValue().toString());
-                                            startActivity(openUrgentProblemsList);
-                                        } else if (user.child("position").getValue().toString().equals("raw") || user.child("position").getValue().toString().equals("quality")) { //ОТК / СЫРЬЕ
-                                            Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                                            openUrgentProblemsList.putExtra("Логин пользователя", login);
-                                            openUrgentProblemsList.putExtra("Должность", user.child("position").getValue().toString());
-                                            startActivity(openUrgentProblemsList);
-                                        } else if (user.child("position").getValue().toString().equals("head")) {
-                                            Intent openTodayChecks = new Intent(getApplicationContext(), TodayChecks.class);
-                                            openTodayChecks.putExtra("Логин пользователя", login);
-                                            openTodayChecks.putExtra("Должность", user.child("position").getValue().toString());
-                                            startActivity(openTodayChecks);
-                                        }
-
-                                        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                                        SharedPreferences.Editor editor = sharedPrefs.edit();
-                                        editor.putString("Логин пользователя", login);
-                                        editor.putString("Должность", user.child("position").getValue().toString());
-                                        editor.commit(); //запиши данные в sharedPref
-
-                                        if (!user.child("position").getValue().toString().equals("head")) {
-                                            //если это любой специалист, кроме ГЛАВНЫХ, включи фоновый сервис слежения за появлением проблем (срочный и ТО), вызовов
-                                            //при появлении проблемы, будет отправлять уведомление
-                                            stopService(new Intent(getBaseContext(), BackgroundService.class)); //если до этого уже сервис для другого аккаунта был включен и произошел повторный логин
-                                            Intent startBackgroundService = new Intent(getApplicationContext(), BackgroundService.class);
-                                            startBackgroundService.putExtra("Должность", user.child("position").getValue().toString()); //уведомления сортируются в зависимости от должности и логина пользователя
-                                            startBackgroundService.putExtra("Логин пользователя", user.getKey());
-                                            ContextCompat.startForegroundService(getApplicationContext(), startBackgroundService);//эта функция запускает фоновый сервис
-                                            startService(new Intent(getApplicationContext(), AppLifecycleTrackerService.class));
-                                            finish();
-                                        }
-                                    }
-                                    else
-                                    { Toast.makeText(getApplicationContext(), "Выйдите из аккаунта на другом устройстве", Toast.LENGTH_LONG).show(); }
-                                }
-                                else { Toast.makeText(getApplicationContext(), "Неверный пароль", Toast.LENGTH_LONG).show(); }
-                            }
-                            else { Toast.makeText(getApplicationContext(), "Такого пользователя не существует\nВнимательно заполните поля", Toast.LENGTH_LONG).show(); }
-                        }
-
-                        @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
-                    });
+                    DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users/" + login); //ссылка на node именно этого пользователя
+                    userRef.addListenerForSingleValueEvent(userValueEventListener); //главные действия проходят в листенере, описанном ниже
                 }
             }
         });
@@ -148,5 +73,84 @@ public class Login extends AppCompatActivity {
         enter = findViewById(R.id.enter);
         loading = findViewById(R.id.loading);
         loading.setVisibility(View.INVISIBLE);
+    }
+
+    private ValueEventListener userValueEventListener = new ValueEventListener() {
+        @Override public void onDataChange(@NonNull DataSnapshot user) {
+            loading.setVisibility(View.INVISIBLE);
+            if (user.exists()) // если подветка такая существует
+            {//3 ifs with boolean checker functions in condition: isOperator, isMaster, isRepairer
+                try {
+                    if (password.equals(user.child("password").getValue().toString())) { //если и пароль введен правильно (проверка с подветкой user->password
+                        if(!user.child("active_session_android_id").exists()) {
+                            @SuppressLint("HardwareIds") String androidID = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+                            DatabaseReference userRef = user.getRef();
+                            userRef.child("active_session_android_id").setValue(androidID);
+
+                            String position = user.child("position").getValue().toString();
+                            saveUserData(position);
+                            switch (user.child("position").getValue().toString())
+                            {
+                                case "operator":
+                                    Intent openPult = new Intent(getApplicationContext(), PultActivity.class); //открой пульт
+                                    openPult.putExtra("Логин пользователя", login);
+                                    openPult.putExtra("Должность", user.child("position").getValue().toString());
+                                    startActivity(openPult);
+                                    break;
+                                case "master":
+                                case "repair":
+                                case "raw":
+                                case "quality":
+                                    Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class);
+                                    openUrgentProblemsList.putExtra("Логин пользователя", login);
+                                    openUrgentProblemsList.putExtra("Должность", user.child("position").getValue().toString());
+                                    startActivity(openUrgentProblemsList);
+                                    break;
+                                case "head":
+                                    Intent openTodayChecks = new Intent(getApplicationContext(), TodayChecks.class);
+                                    openTodayChecks.putExtra("Логин пользователя", login);
+                                    openTodayChecks.putExtra("Должность", user.child("position").getValue().toString());
+                                    startActivity(openTodayChecks);
+                                    break;
+                            }
+
+
+
+                            if (!user.child("position").getValue().toString().equals("head")) {
+                                //если это любой специалист, кроме ГЛАВНЫХ, включи фоновый сервис слежения за появлением проблем (срочный и ТО), вызовов
+                                //при появлении проблемы, будет отправлять уведомление
+                                stopService(new Intent(getBaseContext(), BackgroundService.class)); //если до этого уже сервис для другого аккаунта был включен и произошел повторный логин
+                                Intent startBackgroundService = new Intent(getApplicationContext(), BackgroundService.class);
+                                startBackgroundService.putExtra("Должность", user.child("position").getValue().toString()); //уведомления сортируются в зависимости от должности и логина пользователя
+                                startBackgroundService.putExtra("Логин пользователя", user.getKey());
+                                ContextCompat.startForegroundService(getApplicationContext(), startBackgroundService);//эта функция запускает фоновый сервис
+                                startService(new Intent(getApplicationContext(), AppLifecycleTrackerService.class));
+                                finish();
+                            }
+                        }
+                        else
+                        { Toast.makeText(getApplicationContext(), "Выйдите из аккаунта на другом устройстве", Toast.LENGTH_LONG).show(); }
+                    }
+                    else { Toast.makeText(getApplicationContext(), "Неверный пароль", Toast.LENGTH_LONG).show(); }
+                }
+                catch (NullPointerException npe)
+                {
+                    ExceptionProcessing.processException(npe, "Несостыковка в базе данных.", getApplicationContext(), Login.this);
+                }
+            }
+            else { Toast.makeText(getApplicationContext(), "Такого пользователя не существует\nВнимательно заполните поля", Toast.LENGTH_LONG).show(); }
+        }
+
+        @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+    };
+
+    private void saveUserData(String position) {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+        editor.putString("Логин пользователя", login);
+        editor.putString("Должность", position);
+        editor.commit(); //запиши данные в sharedPref
+        UserData.login = login;
+        UserData.position = position;
     }
 }

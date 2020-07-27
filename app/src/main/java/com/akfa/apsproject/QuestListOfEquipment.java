@@ -44,8 +44,6 @@ public class QuestListOfEquipment extends AppCompatActivity implements View.OnTo
     HashMap<String, List<String>> listItem;
     private ExpandableListViewAdapter adapter;
 
-
-    private String employeeLogin, employeePosition; //кросс-активити переменные
     private ActionBarDrawerToggle toggle; //для нав бара
 
     @Override
@@ -56,7 +54,7 @@ public class QuestListOfEquipment extends AppCompatActivity implements View.OnTo
 
         initInstances(); //инициализация переменных и кнопки
         initExpandableListView(); //иницилизация выпадающего списка
-        toggle = InitNavigationBar.setUpNavBar(QuestListOfEquipment.this, getApplicationContext(),  getSupportActionBar(), employeeLogin, employeePosition, R.id.check_equipment, R.id.quest_activity_main);
+        toggle = InitNavigationBar.setUpNavBar(QuestListOfEquipment.this, getApplicationContext(),  getSupportActionBar(), UserData.login, UserData.position, R.id.check_equipment, R.id.quest_activity_main);
         setTitle("Проверка линий");
     }
 
@@ -64,8 +62,6 @@ public class QuestListOfEquipment extends AppCompatActivity implements View.OnTo
     private void initInstances()
     {
         //inter-activity values
-        employeeLogin = getIntent().getExtras().getString("Логин пользователя");
-        employeePosition = getIntent().getExtras().getString("Должность");
         startWithQR = findViewById(R.id.start_with_qr);
         startWithQR.setOnTouchListener(this);
     }
@@ -84,8 +80,8 @@ public class QuestListOfEquipment extends AppCompatActivity implements View.OnTo
                 startWithQR.setBackgroundResource(R.drawable.edit_red_accent);
                 Intent openQR = new Intent(getApplicationContext(), QRScanner.class);
                 openQR.putExtra("Действие", "Любой код");
-                openQR.putExtra("Должность", employeePosition);
-                openQR.putExtra("Логин пользователя", employeeLogin); //передавать логин пользователя взятый из Firebase
+                openQR.putExtra("Должность", UserData.position);
+                openQR.putExtra("Логин пользователя", UserData.login); //передавать логин пользователя взятый из Firebase
                 startActivity(openQR);
                 break;
         }
@@ -105,15 +101,15 @@ public class QuestListOfEquipment extends AppCompatActivity implements View.OnTo
             public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
                 //пользователь выбрал линию для проверки передаем данные в QRScanner
                 //логин в QRScanner не используется explicitly, он передается в PointDynamic. Таким образом QrScanner выступает посредником передачи логина
-                if(employeePosition.equals("master") || employeePosition.equals("repair")) {
+                if(UserData.position.equals("master") || UserData.position.equals("repair")) {
                     shopNoGlobal = groupPosition;
                     equipmentNoGlobal = childPosition;
                 }
                 Intent intent = new Intent(getApplicationContext(), MachineLayoutActivity.class);
                 intent.putExtra("Номер цеха", QuestListOfEquipment.shopNoGlobal);
                 intent.putExtra("Номер линии", QuestListOfEquipment.equipmentNoGlobal);
-                intent.putExtra("Логин пользователя", employeeLogin); //передавать логин пользователя взятый из Firebase
-                intent.putExtra("Должность", employeePosition);
+                intent.putExtra("Логин пользователя", UserData.login); //передавать логин пользователя взятый из Firebase
+                intent.putExtra("Должность", UserData.position);
                 startActivity(intent);
                 return false;
             }
@@ -131,11 +127,11 @@ public class QuestListOfEquipment extends AppCompatActivity implements View.OnTo
 
     TreeMap<Integer,  Shop> shopsMap = new TreeMap<>();
     private void initListData() {//добавить данные в раскрывающийся список
-        switch (employeePosition)
+        switch (UserData.position)
         { //динамически добавляет данные о доступных для этого юзера линий для проверки (мастер может проверить все линии во всех цехах; оператор может проверить только одну линию)
             case "operator":
                 //у оператора есть возможность провести проверку только на своей линии, поэтому в ExpandableListView покажем только его линию
-                DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users/" + employeeLogin); //ссылка на ветку этого юзера (чтобы получить назв-я его цеха и линии)
+                DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users/" + UserData.login); //ссылка на ветку этого юзера (чтобы получить назв-я его цеха и линии)
                 userRef.addListenerForSingleValueEvent(new ValueEventListener()
                 {
                     @Override public void onDataChange(@NonNull DataSnapshot user)
