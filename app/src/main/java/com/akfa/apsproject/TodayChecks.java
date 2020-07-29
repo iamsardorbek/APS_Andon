@@ -43,7 +43,7 @@ public class TodayChecks extends AppCompatActivity {
         setContentView(R.layout.activity_today_checks);
         setTitle("Загрузка данных..."); //если нет проблем, надо сделать: нету проблем
         initInstances();
-        toggle = InitNavigationBar.setUpNavBar(TodayChecks.this, getApplicationContext(),  getSupportActionBar(), employeeLogin, employeePosition, R.id.today_checks, R.id.activity_today_checks);
+        toggle = InitNavigationBar.setUpNavBar(TodayChecks.this, getApplicationContext(),  getSupportActionBar(),  R.id.today_checks, R.id.activity_today_checks);
 
     }
 

@@ -43,7 +43,7 @@ public class QuestEndOfChecking extends AppCompatActivity implements View.OnTouc
 
         initInstances(); //инициализировать переменные и объекты views
         //currentMenuID is set to -1 because when you click on Проверка линий u should be taken to QuestMainActivity
-        toggle = InitNavigationBar.setUpNavBar(QuestEndOfChecking.this, getApplicationContext(),  getSupportActionBar(), employeeLogin, employeePosition, -1, R.id.quest_activity_end_of_checking); //настроить нав бар
+        toggle = InitNavigationBar.setUpNavBar(QuestEndOfChecking.this, getApplicationContext(),  getSupportActionBar(), -1, R.id.quest_activity_end_of_checking); //настроить нав бар
         setTitle("Проверка линий");
 
         DatabaseReference equipmentRef = FirebaseDatabase.getInstance().getReference("Shops/" + QuestListOfEquipment.shopNoGlobal);

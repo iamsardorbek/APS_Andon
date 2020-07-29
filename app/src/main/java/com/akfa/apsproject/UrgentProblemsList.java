@@ -1,13 +1,9 @@
 package com.akfa.apsproject;
 
 import android.annotation.SuppressLint;
-import android.app.NotificationManager;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -25,6 +21,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Objects;
+
 public class UrgentProblemsList extends AppCompatActivity implements View.OnTouchListener {
     //ЭТОТ КЛАСС СОЗДАН ДЛЯ ТОГО, ЧТО ПОКАЗЫВАТЬ СПЕЦИАЛИСТАМ СООТВЕТСТВУЯ ИХ СПЕЦИАЛЬНОСТИ (МАСТЕР, ОТК, РЕМОНТ И ДР) СПИСОК СРОЧНЫХ ПРОБЛЕМ,
     //ОБНАРУЖЕННЫХ ОПЕРАТОРАМИ И СООБЩЕННЫХ ЧЕРЕЗ ПУЛЬТЫ
@@ -34,7 +32,6 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
     private Button qrScan; //кнопка, которая стоит внизу, чтобы сразу отсканировать код на экране оператора
     ActionBarDrawerToggle toggle; //для работы navigation bar, инициализируется возвращаемым значением функции setUpNavBar()
     LinearLayout linearLayout; //vertical linear layout, который находится внутри ScrollView; в него и будем добавлять в отдельных textview данные об отдельных срочных проблемах
-    String employeeLogin, employeePosition; //логин и должность сотрудника-пользователя, которые мы получим из intent(предыдущих окон)
     View.OnClickListener textviewClickListener; //слушатель кликов textviews
 
     @Override
@@ -43,17 +40,16 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
         setContentView(R.layout.activity_urgent_problems_list);
 
         initInstances(); //иниуиализация объектов дизайна и глобальных переменных
-        toggle = InitNavigationBar.setUpNavBar(UrgentProblemsList.this, getApplicationContext(), getSupportActionBar(), employeeLogin, employeePosition, R.id.urgent_problems, R.id.activity_urgent_problems_list); //инициализация navigation bar
+        toggle = InitNavigationBar.setUpNavBar(UrgentProblemsList.this, getApplicationContext(), Objects.requireNonNull(getSupportActionBar()), R.id.urgent_problems, R.id.activity_urgent_problems_list); //инициализация navigation bar
         addProblemsFromDatabase(); //добавление срочных проблем в linearLayout динамично
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void initInstances()
     {//иниуиализация объектов дизайна и глобальных переменных
         qrScan = findViewById(R.id.qr_scan);
         linearLayout = findViewById(R.id.linearLayout);
         qrScan.setOnTouchListener(this);
-        employeeLogin = getIntent().getExtras().getString("Логин пользователя");
-        employeePosition = getIntent().getExtras().getString("Должность");
         initTextViewClickListener();
     }
 
@@ -71,7 +67,7 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
         };
     }
 
-    @Override
+    @SuppressLint("ClickableViewAccessibility") @Override
     public boolean onTouch(View v, MotionEvent event) {
         //дейсвтие при нажатиях на кнопку (отсканировать QR код)
         switch(event.getAction())
@@ -91,7 +87,7 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
         return false;
     }
 
-    @Override public boolean onOptionsItemSelected(MenuItem item) {
+    @Override public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 //функция нужная, чтобы нав бар работал
         if(toggle.onOptionsItemSelected(item))
             return true;
@@ -112,32 +108,35 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
                     setTitle("Срочные проблемы на линиях"); //AppBar надпись задать
                     for(DataSnapshot urgentProblemSnap : urgentProblemsSnap.getChildren())
                     { //цикл проходит по каждой срочной проблеме, чтобы получить о ней данные и занести их в виде отдельных textviews в linearLayout
-                        UrgentProblem urgentProblem = urgentProblemSnap.getValue(UrgentProblem.class); //считываем данные прямо в объект UrgentProblem
-                        String whoIsNeededPosition = urgentProblem.getWho_is_needed_position(); //специалист какого профиля нужен (должность: master, quality, raw)
-                        if(whoIsNeededPosition.equals(employeePosition) && urgentProblemSnap.child("status").getValue().toString().equals("DETECTED")) {
-                            //условия query: срочная проблема нуждается во вмешании специалиста с профилем, соответствующим профилю данного пользователя (который пользуется сейчас приложением)
-                            //а также проблемой еще никто из спецов не занимался, она все еще в состоянии DETECTED
-                            //----СОЗДАНИЕ TEXTVIEW, ВНЕСЕНИЕ ДАННЫХ В НЕГО И ИНИЦИАЛИЗАЦИЯ ПАРАМЕТРОВ----//
-                            TextView problemsInfo;
-                            problemsInfo = new TextView(getApplicationContext());
-                            //данные об этой проблеме запишем в строку problemInfoFromDB
-                            String problemInfoFromDB = "Цех: " + urgentProblem.getShop_name() + "\nОборудование: " + urgentProblem.getEquipment_name() + "\nПункт №" + urgentProblem.getPoint_no()
-                                    + "\nДата и время обнаружения: " + urgentProblem.getDate_detected() + " " + urgentProblem.getTime_detected();
-                            problemsInfo.setText(problemInfoFromDB);
-                            problemsInfo.setPadding(25, 25, 25, 25);
-                            problemsInfo.setId(ID_TEXTVIEWS + problemCount);
-                            problemsInfo.setTextColor(Color.parseColor(getString(R.color.text)));
-                            problemsInfo.setTextSize(13);
-                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                            params.setMargins(20, 25, 20, 25);
-                            problemsInfo.setLayoutParams(params);
-                            problemsInfo.setClickable(true);
-                            problemsInfo.setBackgroundResource(R.drawable.list_group_layout);
-                            problemsInfo.setOnClickListener(textviewClickListener);
-                            //----КОНЕЦ ИНИЦИАЛИЗАЦИИ TEXTVIEW ДЛЯ СРОЧНОЙ ПРОБЛЕМЫ----//
-                            linearLayout.addView(problemsInfo); //добавить textview в linearLayout
-                            problemCount++; //итерировать для уникализации айдишек textviews
-                        }
+                        try { //если ошибка в БД, эта проблема просто не будет высвечена в списке
+                            UrgentProblem urgentProblem = urgentProblemSnap.getValue(UrgentProblem.class); //считываем данные прямо в объект UrgentProblem
+                            String whoIsNeededPosition = urgentProblem.getWho_is_needed_position(); //специалист какого профиля нужен (должность: master, quality, raw)
+                            if(UserData.position.equals(whoIsNeededPosition) && urgentProblemSnap.child("status").getValue().toString().equals("DETECTED")) {
+                                //условия query: срочная проблема нуждается во вмешании специалиста с профилем, соответствующим профилю данного пользователя (который пользуется сейчас приложением)
+                                //а также проблемой еще никто из спецов не занимался, она все еще в состоянии DETECTED
+                                //----СОЗДАНИЕ TEXTVIEW, ВНЕСЕНИЕ ДАННЫХ В НЕГО И ИНИЦИАЛИЗАЦИЯ ПАРАМЕТРОВ----//
+                                TextView problemsInfo;
+                                problemsInfo = new TextView(getApplicationContext());
+                                //данные об этой проблеме запишем в строку problemInfoFromDB
+                                String problemInfoFromDB = "Цех: " + urgentProblem.getShop_name() + "\nОборудование: " + urgentProblem.getEquipment_name() + "\nПункт №" + urgentProblem.getPoint_no()
+                                        + "\nДата и время обнаружения: " + urgentProblem.getDate_detected() + " " + urgentProblem.getTime_detected();
+                                problemsInfo.setText(problemInfoFromDB);
+                                problemsInfo.setPadding(25, 25, 25, 25);
+                                problemsInfo.setId(ID_TEXTVIEWS + problemCount);
+                                problemsInfo.setTextColor(Color.parseColor(getString(R.color.text)));
+                                problemsInfo.setTextSize(13);
+                                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                                params.setMargins(20, 25, 20, 25);
+                                problemsInfo.setLayoutParams(params);
+                                problemsInfo.setClickable(true);
+                                problemsInfo.setBackgroundResource(R.drawable.list_group_layout);
+                                problemsInfo.setOnClickListener(textviewClickListener);
+                                //----КОНЕЦ ИНИЦИАЛИЗАЦИИ TEXTVIEW ДЛЯ СРОЧНОЙ ПРОБЛЕМЫ----//
+                                linearLayout.addView(problemsInfo); //добавить textview в linearLayout
+                                problemCount++; //итерировать для уникализации айдишек textviews
+                            }
+
+                        } catch (NullPointerException npe) {ExceptionProcessing.processException(npe);}
                     }
                 }
             }

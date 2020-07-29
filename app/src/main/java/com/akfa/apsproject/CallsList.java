@@ -146,7 +146,7 @@ public class CallsList extends AppCompatActivity {
             @Override public void onCancelled (@NonNull DatabaseError databaseError){ }
         });
 
-        toggle = InitNavigationBar.setUpNavBar(CallsList.this, getApplicationContext(), getSupportActionBar(), employeeLogin, employeePosition, R.id.calls, R.id.activity_operator_or_master_calls_list); //инициализация navigation bar
+        toggle = InitNavigationBar.setUpNavBar(CallsList.this, getApplicationContext(), getSupportActionBar(), R.id.calls, R.id.activity_operator_or_master_calls_list); //инициализация navigation bar
     }
 
     @Override public boolean onOptionsItemSelected(MenuItem item) {

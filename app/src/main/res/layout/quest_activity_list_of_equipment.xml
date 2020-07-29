@@ -8,6 +8,16 @@
     android:background="@drawable/login_background"
     android:id="@+id/quest_activity_main"
     tools:context=".QuestListOfEquipment">
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Не удалось загрузить данные о линиях или несостыковка базы данных.\nМы уже работаем над этой проблемой"
+        android:textColor="@color/text"
+        android:id="@+id/exception_text"
+        android:textSize="20sp"
+        android:padding="5dp"
+        android:visibility="gone"
+        android:gravity="center"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

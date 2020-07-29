@@ -44,7 +44,7 @@ public class RepairersProblemsList extends AppCompatActivity {
         setContentView(R.layout.repairers_activity_problems_list);
         setTitle("Загрузка данных..."); //если нет проблем, надо сделать: нету проблем
         initInstances();
-        toggle = InitNavigationBar.setUpNavBar(RepairersProblemsList.this, getApplicationContext(),  getSupportActionBar(), employeeLogin, employeePosition, R.id.problems_list, R.id.repairers_activity);
+        toggle = InitNavigationBar.setUpNavBar(RepairersProblemsList.this, getApplicationContext(),  getSupportActionBar(), R.id.problems_list, R.id.repairers_activity);
         addProblemsFromDatabase();
     }
     private void initInstances()

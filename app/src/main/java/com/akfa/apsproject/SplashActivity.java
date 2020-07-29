@@ -48,15 +48,11 @@ public class SplashActivity extends AppCompatActivity {
                 case "master":
                 case "repair":
                     Intent openFactoryCondition = new Intent(getApplicationContext(), QuestListOfEquipment.class); //actually there should be the FactoryCondition.class, but it is incomplete yet
-                    openFactoryCondition.putExtra("Логин пользователя", rememberedLogin);
-                    openFactoryCondition.putExtra("Должность", rememberedPosition);
                     keepSplash(openFactoryCondition);
                     break;
                 case "raw":
                 case "quality":
                     Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                    openUrgentProblemsList.putExtra("Логин пользователя", rememberedLogin);
-                    openUrgentProblemsList.putExtra("Должность", rememberedPosition);
                     startActivity(openUrgentProblemsList);
                     break;
                 case "head":

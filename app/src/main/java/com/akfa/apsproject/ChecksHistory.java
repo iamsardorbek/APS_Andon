@@ -48,7 +48,7 @@ public class ChecksHistory extends AppCompatActivity {
         setContentView(R.layout.activity_checks_history);
         setTitle("Загрузка данных..."); //если нет проблем, надо сделать: нету проблем
         initInstances();
-        toggle = InitNavigationBar.setUpNavBar(ChecksHistory.this, getApplicationContext(),  getSupportActionBar(), employeeLogin, employeePosition, R.id.checks_history, R.id.activity_checks_history);
+        toggle = InitNavigationBar.setUpNavBar(ChecksHistory.this, getApplicationContext(),  getSupportActionBar(), R.id.checks_history, R.id.activity_checks_history);
     }
 
     private void initInstances() {

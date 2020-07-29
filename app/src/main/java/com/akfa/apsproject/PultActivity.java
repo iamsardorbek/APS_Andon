@@ -71,7 +71,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
             findPathToRelevantPult(); //инициализировать pathToRelevantPultQuery для пульта этого юзера
             userRef.addListenerForSingleValueEvent(pathToRelevantPultQuery); //привязать pathToRelevantPultQuery к ветке пользователей (там далее берутся данные о линии, цехе и номере пульта, что запускает потом асинхронный listener для пульта
             //напр: забыли приписать putExtras к интенту, открывшему этот активити PultActivity
-            toggle = InitNavigationBar.setUpNavBar(PultActivity.this, getApplicationContext(), getSupportActionBar(), UserData.login, UserData.position, R.id.pult, R.id.activity_main); //setUpNavBar выполняет все действия и возвращает toggle, которые используется в функции onOptionsItemSelected()
+            toggle = InitNavigationBar.setUpNavBar(PultActivity.this, getApplicationContext(), getSupportActionBar(), R.id.pult, R.id.activity_main); //setUpNavBar выполняет все действия и возвращает toggle, которые используется в функции onOptionsItemSelected()
         }
         catch (NullPointerException npe) {ExceptionProcessing.processException(npe, "Несостыковка в базе данных.", getApplicationContext(), this);}
         setTitle("Загрузка данных...");

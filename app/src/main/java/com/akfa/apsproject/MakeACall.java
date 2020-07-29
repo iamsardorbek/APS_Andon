@@ -141,7 +141,7 @@ public class MakeACall extends AppCompatActivity implements View.OnTouchListener
             }
             @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
-        toggle = InitNavigationBar.setUpNavBar(MakeACall.this, getApplicationContext(),  getSupportActionBar(), employeeLogin, employeePosition, R.id.make_a_call, R.id.activity_make_a_call);
+        toggle = InitNavigationBar.setUpNavBar(MakeACall.this, getApplicationContext(),  getSupportActionBar(), R.id.make_a_call, R.id.activity_make_a_call);
     }
 
     @Override

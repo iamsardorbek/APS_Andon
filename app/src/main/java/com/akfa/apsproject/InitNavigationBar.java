@@ -24,7 +24,7 @@ import static android.content.Context.NOTIFICATION_SERVICE;
 
 public class InitNavigationBar {
 
-    public static ActionBarDrawerToggle setUpNavBar(final Activity activity, final Context context, ActionBar actionBar, final String employeeLogin, final String employeePosition, final int currentMenuID, final int currentActivityID)
+    public static ActionBarDrawerToggle setUpNavBar(final Activity activity, final Context context, ActionBar actionBar, final int currentMenuID, final int currentActivityID)
     {
         //---------код связанный с nav bar---------//
         //настрой actionBar
@@ -41,9 +41,9 @@ public class InitNavigationBar {
         navigationView = activity.findViewById(R.id.nv);
         View headerView = navigationView.getHeaderView(0);
         TextView userInfo = headerView.findViewById(R.id.user_info);
-        userInfo.setText(employeeLogin);
+        userInfo.setText(UserData.login);
         navigationView.getMenu().clear();
-        switch(employeePosition){ //у каждого специалиста свое меню выводится в nav bar
+        switch(UserData.position){ //у каждого специалиста свое меню выводится в nav bar
             case "operator":
                 navigationView.inflateMenu(R.menu.operator_menu);
                 break;
@@ -80,8 +80,6 @@ public class InitNavigationBar {
                     switch (id) {
                         case R.id.urgent_problems:
                             Intent openUrgentProblemsList = new Intent(context, UrgentProblemsList.class);
-                            openUrgentProblemsList.putExtra("Логин пользователя", employeeLogin);
-                            openUrgentProblemsList.putExtra("Должность", employeePosition);
                             activity.startActivity(openUrgentProblemsList);
                             activity.finish();
                             break;
@@ -157,7 +155,7 @@ public class InitNavigationBar {
                             editor.commit();
                             Intent logOut = new Intent(context, Login.class);
                             logOut.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users/" + employeeLogin);
+                            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users/" + UserData.login);
                             userRef.child("active_session_android_id").removeValue();
                             activity.startActivity(logOut);
                             activity.finish();

@@ -25,7 +25,7 @@ public class FactoryCondition extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.factory_condition);
         initInstances();
-        toggle = InitNavigationBar.setUpNavBar(FactoryCondition.this, getApplicationContext(),  getSupportActionBar(), employeeLogin, employeePosition, R.id.web_monitoring, R.id.factory_condition);
+        toggle = InitNavigationBar.setUpNavBar(FactoryCondition.this, getApplicationContext(),  getSupportActionBar(), R.id.web_monitoring, R.id.factory_condition);
         setTitle("Веб-мониторинг");
         //иниц WebView
         webview.setWebViewClient(new WebViewClient());

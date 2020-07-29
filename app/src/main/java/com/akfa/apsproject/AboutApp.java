@@ -22,7 +22,7 @@ public class AboutApp extends AppCompatActivity {
         setTitle("О приложении");
         employeeLogin = getIntent().getExtras().getString("Логин пользователя");
         employeePosition = getIntent().getExtras().getString("Должность");
-        toggle = InitNavigationBar.setUpNavBar(AboutApp.this, getApplicationContext(),  getSupportActionBar(), employeeLogin, employeePosition, R.id.about, R.id.activity_about_app);
+        toggle = InitNavigationBar.setUpNavBar(AboutApp.this, getApplicationContext(),  getSupportActionBar(), R.id.about, R.id.activity_about_app);
     }
 
     @Override

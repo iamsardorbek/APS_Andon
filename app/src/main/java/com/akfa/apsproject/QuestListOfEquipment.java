@@ -1,17 +1,14 @@
 package com.akfa.apsproject;
 
 import android.annotation.SuppressLint;
-import android.app.NotificationManager;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ExpandableListView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -54,7 +51,7 @@ public class QuestListOfEquipment extends AppCompatActivity implements View.OnTo
 
         initInstances(); //инициализация переменных и кнопки
         initExpandableListView(); //иницилизация выпадающего списка
-        toggle = InitNavigationBar.setUpNavBar(QuestListOfEquipment.this, getApplicationContext(),  getSupportActionBar(), UserData.login, UserData.position, R.id.check_equipment, R.id.quest_activity_main);
+        toggle = InitNavigationBar.setUpNavBar(QuestListOfEquipment.this, getApplicationContext(),  getSupportActionBar(), R.id.check_equipment, R.id.quest_activity_main);
         setTitle("Проверка линий");
     }
 
@@ -66,6 +63,7 @@ public class QuestListOfEquipment extends AppCompatActivity implements View.OnTo
         startWithQR.setOnTouchListener(this);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         //дейсвтие при нажатиях на кнопку (отсканировать QR код)
@@ -95,7 +93,14 @@ public class QuestListOfEquipment extends AppCompatActivity implements View.OnTo
         listItem = new HashMap<>(); //для названий линий
         adapter = new ExpandableListViewAdapter(this, listGroup, listItem); //адаптер задает элементы expListView сам
         expandableListView.setAdapter(adapter);
+        try{
         initListData(); //получить данные из БД и записать их в спец
+        }
+        catch (NullPointerException npe) {
+            ExceptionProcessing.processException(npe);
+            TextView exceptionText = findViewById(R.id.exception_text);
+            exceptionText.setVisibility(View.VISIBLE);
+        }
         expandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
             public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
@@ -148,7 +153,7 @@ public class QuestListOfEquipment extends AppCompatActivity implements View.OnTo
                                 { //считать данные объекта цеха в объект Shop (aka распарсить данные с файрбейз снэпшот в объект)
                                     shopNo = Integer.parseInt(shop.getKey());
                                     String shopName = (String) shop.child("shop_name").getValue();
-                                    if (shopName.equals(userShopName)) //оппа, наша ветка юзера нашлась
+                                    if (userShopName.equals(shopName)) //оппа, наша ветка юзера нашлась
                                     {
                                         Shop currentShop = new Shop(shopName); //сохранить данные о цехе в объекте Shop
                                         DataSnapshot equipmentLines = shop.child("Equipment_lines");
