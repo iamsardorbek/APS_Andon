@@ -24,7 +24,9 @@ public class AppLifecycleTrackerService extends Service {
         {
             stopService(new Intent(getApplicationContext(), BackgroundService.class)); //если до этого уже сервис был включен, выключи сервис
             NotificationManager notificationManager = (NotificationManager)  getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
-            notificationManager.cancelAll();
+            if (notificationManager != null) {
+                notificationManager.cancelAll();
+            }
             stopService(new Intent(getApplicationContext(), BackgroundService.class));
             final Handler handler = new Handler();
             Runnable runnableCode = new Runnable() {
@@ -38,7 +40,9 @@ public class AppLifecycleTrackerService extends Service {
                         stopService(new Intent(getApplicationContext(), BackgroundService.class)); //если до этого уже сервис был включен, выключи сервис
                     }
                     NotificationManager notificationManager = (NotificationManager)  getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
-                    notificationManager.cancelAll();
+                    if (notificationManager != null) {
+                        notificationManager.cancelAll();
+                    }
 
                 }
             };
@@ -48,9 +52,7 @@ public class AppLifecycleTrackerService extends Service {
         super.onTaskRemoved(rootIntent);
     }
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
+    @Nullable @Override public IBinder onBind(Intent intent) {
         return null;
     }
 }

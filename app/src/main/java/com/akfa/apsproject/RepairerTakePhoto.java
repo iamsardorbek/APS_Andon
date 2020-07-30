@@ -1,14 +1,10 @@
 package com.akfa.apsproject;
 
 import android.annotation.SuppressLint;
-import android.app.NotificationManager;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.view.MotionEvent;
 import android.view.View;
@@ -27,7 +23,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.Objects;
 
 //----------ПОСЛЕ ОТСКАНИРОВАНИЯ РЕМОНТНИКОМ QR ПРОБЛЕМНОГО УЧАСТКА, ЭТОТ АКТИВИТИ  СПРАШИВАЕТ, ---------//
 // ---------ХОЧЕТ ЛИ ОН СФОТКАТЬ РЕШЕНИЕ, ЕСЛИ ДА - ЗАПУСК КАМЕРЫ, ЕСЛИ НЕТ - ВОЗВРАТ В REPAIRERS PROBLEMS LIST---------//
@@ -40,20 +36,28 @@ public class RepairerTakePhoto extends AppCompatActivity implements View.OnTouch
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_repairer_take_photo);
-        initInstances();
+        try {
+            initInstances();
+        }
+        catch (NullPointerException npe)
+        {
+            ExceptionProcessing.processException(npe);
+            finish();
+        }
 
     }
 
     @SuppressLint("ClickableViewAccessibility")
     private void initInstances()
     {
-        problemPushKey = getIntent().getExtras().getString("ID проблемы в таблице Maintenance_problems");
+        problemPushKey = Objects.requireNonNull(getIntent().getExtras()).getString("ID проблемы в таблице Maintenance_problems");
         takePic = findViewById(R.id.take_pic);
         dontTakePic = findViewById(R.id.dont_take_pic);
         takePic.setOnTouchListener(this);
         dontTakePic.setOnTouchListener(this);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouch(View button, MotionEvent event) {
         switch (event.getAction())
@@ -83,7 +87,7 @@ public class RepairerTakePhoto extends AppCompatActivity implements View.OnTouch
 
     String currentPhotoPath; //the string of uri of where file is located
 
-    private File createImageFile(String problemPushKey) throws IOException {
+    private File createImageFile(String problemPushKey) {
         // Create an image file name - our case will be the id of problem
 //        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmm").format(new Date());
         String currentFileName = problemPushKey + "_SOLVED.jpg";
@@ -99,20 +103,12 @@ public class RepairerTakePhoto extends AppCompatActivity implements View.OnTouch
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             // Create the File where the photo should go
-            File photoFile = null;
-            try {
-                photoFile = createImageFile(problemPushKey);
-            } catch (IOException ex) {
-                // Error occurred while creating the File
-                Toast.makeText(getApplicationContext(), "Error creating the file", Toast.LENGTH_LONG).show();
-            }
+            File photoFile = createImageFile(problemPushKey);
             // Continue only if the File was successfully created
-            if (photoFile != null) {
-                //ЗАПУСТИ КАМЕРУ
-                Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), getString(R.string.package_name), photoFile); //создай файл в памяти телефона
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-            }
+            //ЗАПУСТИ КАМЕРУ
+            Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), getString(R.string.package_name), photoFile); //создай файл в памяти телефона
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
     }
 
@@ -126,6 +122,7 @@ public class RepairerTakePhoto extends AppCompatActivity implements View.OnTouch
             StorageReference mStorageRef = FirebaseStorage.getInstance().getReference();
             StorageReference probPicRef = mStorageRef.child("solved_problem_pictures/" + file.getLastPathSegment());
             probPicRef.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @SuppressWarnings("ResultOfMethodCallIgnored")
                 @Override public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                     Toast.makeText(getApplicationContext(), "Фотография загружена успешно", Toast.LENGTH_LONG).show();
                     File picToDelete = new File(currentPhotoPath);
@@ -141,8 +138,8 @@ public class RepairerTakePhoto extends AppCompatActivity implements View.OnTouch
                 })
                 .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
                     @Override
-                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                        double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+                    public void onProgress(@NonNull UploadTask.TaskSnapshot taskSnapshot) {
+//                        double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
                         //progressbar
                     }
                 });

@@ -1,12 +1,8 @@
 package com.akfa.apsproject;
 
 import android.annotation.SuppressLint;
-import android.app.NotificationManager;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -22,6 +18,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import java.util.Objects;
 
 //----------------------АКТИВИТИ, ВЫВОДЯЩЕЕ ИТОГИ ТО ПРОВЕРКИ----------------------//
 public class QuestEndOfChecking extends AppCompatActivity implements View.OnTouchListener {
@@ -40,26 +38,29 @@ public class QuestEndOfChecking extends AppCompatActivity implements View.OnTouc
         super.onCreate(savedInstanceState);
         setContentView(R.layout.quest_activity_end_of_checking);
         setTitle(R.string.endOfChecking); //задать текст app bar как "Проверка линии закончена"
+        try {
+            initInstances(); //инициализировать переменные и объекты views
 
-        initInstances(); //инициализировать переменные и объекты views
-        //currentMenuID is set to -1 because when you click on Проверка линий u should be taken to QuestMainActivity
-        toggle = InitNavigationBar.setUpNavBar(QuestEndOfChecking.this, getApplicationContext(),  getSupportActionBar(), -1, R.id.quest_activity_end_of_checking); //настроить нав бар
-        setTitle("Проверка линий");
+            //currentMenuID is set to -1 because when you click on Проверка линий u should be taken to QuestMainActivity
+            toggle = InitNavigationBar.setUpNavBar(QuestEndOfChecking.this, getApplicationContext(), Objects.requireNonNull(getSupportActionBar()), -1, R.id.quest_activity_end_of_checking); //настроить нав бар
+            setTitle("Проверка линий");
 
-        DatabaseReference equipmentRef = FirebaseDatabase.getInstance().getReference("Shops/" + QuestListOfEquipment.shopNoGlobal);
-        equipmentRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override public void onDataChange(@NonNull DataSnapshot shopSnap) {
-                shop.setText(shopSnap.child("shop_name").getValue().toString()); //название цеха записать в текствью shop
-                String equipmentLineName = shopSnap.child("Equipment_lines/" + QuestListOfEquipment.equipmentNoGlobal + "/equipment_name").getValue().toString(); //название линии записать в текствью equipmentLine
-                equipmentLine.setText(equipmentLineName);
-            }
-            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
-        });
-
+            DatabaseReference equipmentRef = FirebaseDatabase.getInstance().getReference("Shops/" + QuestListOfEquipment.shopNoGlobal);
+            equipmentRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override public void onDataChange(@NonNull DataSnapshot shopSnap) {
+                    shop.setText(Objects.requireNonNull(shopSnap.child("shop_name").getValue()).toString()); //название цеха записать в текствью shop
+                    String equipmentLineName = Objects.requireNonNull(shopSnap.child("Equipment_lines/" + QuestListOfEquipment.equipmentNoGlobal + "/equipment_name").getValue()).toString(); //название линии записать в текствью equipmentLine
+                    equipmentLine.setText(equipmentLineName);
+                }
+                @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+            });
+        }
+        catch (AssertionError | NullPointerException e) {ExceptionProcessing.processException(e);}
         newChecking = findViewById(R.id.newChecking);
         newChecking.setOnTouchListener(this);
     }
 
+    @SuppressLint("SetTextI18n")
     private void initInstances()
     {
         //инициализируем все элементы дизайна
@@ -69,9 +70,8 @@ public class QuestEndOfChecking extends AppCompatActivity implements View.OnTouc
         checkingDuration = findViewById(R.id.checkingDuration);
         //инициализируем все переменные, переданные в arguments
         Bundle arguments = getIntent().getExtras();
+        assert arguments != null;
         int problemsCount = arguments.getInt("Количество обнаруженных проблем");
-        employeeLogin = getIntent().getExtras().getString("Логин пользователя");
-        employeePosition = getIntent().getExtras().getString("Должность");
 
         //задать текста в textviews с данными
         shop.setText(Integer.toString(QuestListOfEquipment.shopNoGlobal)); //для подстраховки задаем номер цеха
@@ -80,6 +80,7 @@ public class QuestEndOfChecking extends AppCompatActivity implements View.OnTouc
         checkingDuration.setText(QuestPointDynamic.checkDuration); //задаем в textview checkingDuration продолжительность проверки в мм:сс
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         //дейсвтие при нажатиях на кнопку (отсканировать QR код)

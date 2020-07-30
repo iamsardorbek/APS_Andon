@@ -73,7 +73,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
             //напр: забыли приписать putExtras к интенту, открывшему этот активити PultActivity
             toggle = InitNavigationBar.setUpNavBar(PultActivity.this, getApplicationContext(), getSupportActionBar(), R.id.pult, R.id.activity_main); //setUpNavBar выполняет все действия и возвращает toggle, которые используется в функции onOptionsItemSelected()
         }
-        catch (NullPointerException npe) {ExceptionProcessing.processException(npe, "Несостыковка в базе данных.", getApplicationContext(), this);}
+        catch (NullPointerException npe) {ExceptionProcessing.processException(npe, getResources().getString(R.string.database_npe_toast), getApplicationContext(), this);}
         setTitle("Загрузка данных...");
     }
 
@@ -419,7 +419,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
     }
 
     @Override
-    public void submitPointNo(int pointNo, String equipmentLineName, String shopName, String operatorLogin, final int whoIsNeededIndex) {
+    public void submitPointNo(int pointNo, String equipmentLineName, String shopName, final int whoIsNeededIndex) {
         //интерфейс функция которая вызывается при успешном сообщении о существовании проблемы при правильном выборе проблемного участка и нажатии ОК в диалоге ChooseProblematicStationDialog
         //вбить экстренную проблему в базу, QR генерируется внутри самого диалога
         DatabaseReference thisUrgentProblem = database.getReference().child("Urgent_problems").push(); //вбить новую ветку в urgent problems
@@ -438,7 +438,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
         updateButton(whoIsNeededIndex);
 
         //вбить обнаруженную срочную проблему в базу
-        thisUrgentProblem.setValue(new UrgentProblem(pointNo, nomerPulta, equipmentLineName, shopName, operatorLogin, positionTypes[whoIsNeededIndex], qrRandomCode, dateDetected, timeDetected, DETECTED)); //DETECTED - это строка "DETECTED"
+        thisUrgentProblem.setValue(new UrgentProblem(pointNo, nomerPulta, equipmentLineName, shopName, UserData.login, positionTypes[whoIsNeededIndex], qrRandomCode, dateDetected, timeDetected, DETECTED)); //DETECTED - это строка "DETECTED"
         btnBlocked[whoIsNeededIndex] = true; //задать состояние кнопки блокированным
 
         //здесь же добавить БД слушатель, чтобы реагировал позднее на изменения в БД (specialist_came, solved)

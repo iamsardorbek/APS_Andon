@@ -2,7 +2,6 @@ package com.akfa.apsproject;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -25,6 +24,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import java.util.Objects;
 
 //---------ДАЕТ ПОЛЬЗОВАТЕЛЮ АВТОРИЗОВАТЬСЯ-------//
 //---------ЕСЛИ ПРИ ПРЕДЫДУЩЕМ ЛОГИНЕ ЧЕКНУЛ "ЗАПОМНИТЬ МЕНЯ", SPLASHACTIVITY ПРОПУСТИТ ЛОГИН АКТИВИТИ-------//
@@ -67,7 +68,7 @@ public class Login extends AppCompatActivity {
 
     private void initInstances()
     {//иниц views
-        getSupportActionBar().hide();
+        Objects.requireNonNull(getSupportActionBar()).hide();
         loginView = findViewById(R.id.access_login);
         passwordView = findViewById(R.id.password);
         enter = findViewById(R.id.enter);
@@ -81,20 +82,18 @@ public class Login extends AppCompatActivity {
             if (user.exists()) // если подветка такая существует
             {//3 ifs with boolean checker functions in condition: isOperator, isMaster, isRepairer
                 try {
-                    if (password.equals(user.child("password").getValue().toString())) { //если и пароль введен правильно (проверка с подветкой user->password
+                    if (password.equals(Objects.requireNonNull(user.child("password").getValue()).toString())) { //если и пароль введен правильно (проверка с подветкой user->password
                         if(!user.child("active_session_android_id").exists()) {
                             @SuppressLint("HardwareIds") String androidID = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
                             DatabaseReference userRef = user.getRef();
                             userRef.child("active_session_android_id").setValue(androidID);
 
-                            String position = user.child("position").getValue().toString();
+                            String position = Objects.requireNonNull(user.child("position").getValue()).toString();
                             saveUserData(position);
-                            switch (user.child("position").getValue().toString())
+                            switch (Objects.requireNonNull(user.child("position").getValue()).toString())
                             {
                                 case "operator":
                                     Intent openPult = new Intent(getApplicationContext(), PultActivity.class); //открой пульт
-                                    openPult.putExtra("Логин пользователя", login);
-                                    openPult.putExtra("Должность", user.child("position").getValue().toString());
                                     startActivity(openPult);
                                     break;
                                 case "master":
@@ -102,27 +101,21 @@ public class Login extends AppCompatActivity {
                                 case "raw":
                                 case "quality":
                                     Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                                    openUrgentProblemsList.putExtra("Логин пользователя", login);
-                                    openUrgentProblemsList.putExtra("Должность", user.child("position").getValue().toString());
                                     startActivity(openUrgentProblemsList);
                                     break;
                                 case "head":
                                     Intent openTodayChecks = new Intent(getApplicationContext(), TodayChecks.class);
-                                    openTodayChecks.putExtra("Логин пользователя", login);
-                                    openTodayChecks.putExtra("Должность", user.child("position").getValue().toString());
                                     startActivity(openTodayChecks);
                                     break;
                             }
 
 
 
-                            if (!user.child("position").getValue().toString().equals("head")) {
+                            if (!Objects.requireNonNull(user.child("position").getValue()).toString().equals("head")) {
                                 //если это любой специалист, кроме ГЛАВНЫХ, включи фоновый сервис слежения за появлением проблем (срочный и ТО), вызовов
                                 //при появлении проблемы, будет отправлять уведомление
                                 stopService(new Intent(getBaseContext(), BackgroundService.class)); //если до этого уже сервис для другого аккаунта был включен и произошел повторный логин
                                 Intent startBackgroundService = new Intent(getApplicationContext(), BackgroundService.class);
-                                startBackgroundService.putExtra("Должность", user.child("position").getValue().toString()); //уведомления сортируются в зависимости от должности и логина пользователя
-                                startBackgroundService.putExtra("Логин пользователя", user.getKey());
                                 ContextCompat.startForegroundService(getApplicationContext(), startBackgroundService);//эта функция запускает фоновый сервис
                                 startService(new Intent(getApplicationContext(), AppLifecycleTrackerService.class));
                                 finish();
@@ -135,7 +128,7 @@ public class Login extends AppCompatActivity {
                 }
                 catch (NullPointerException npe)
                 {
-                    ExceptionProcessing.processException(npe, "Несостыковка в базе данных.", getApplicationContext(), Login.this);
+                    ExceptionProcessing.processException(npe, getResources().getString(R.string.database_npe_toast), getApplicationContext(), Login.this);
                 }
             }
             else { Toast.makeText(getApplicationContext(), "Такого пользователя не существует\nВнимательно заполните поля", Toast.LENGTH_LONG).show(); }
@@ -144,6 +137,8 @@ public class Login extends AppCompatActivity {
         @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
     };
 
+    @SuppressWarnings("deprecation")
+    @SuppressLint("ApplySharedPref")
     private void saveUserData(String position) {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPrefs.edit();

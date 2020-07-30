@@ -5,7 +5,7 @@ public class Call {
     public String date_called, time_called, called_by, who_is_needed_position, equipment_name, shop_name, problem_key;
     public int point_no;
     public boolean complete; //удовлетворил ли оператор/мастер вызов
-    public Call(){};
+    public Call(){}
     public Call(String date_called, String time_called, String called_by, String who_is_needed_position, int point_no, String equipment_name, String shop_name, boolean complete, String problem_key){
         this.date_called = date_called;
         this.time_called = time_called;

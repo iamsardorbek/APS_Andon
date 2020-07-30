@@ -34,7 +34,7 @@
         <activity android:name=".CallsList" />
         <activity android:name=".UrgentProblemsList" />
         <activity android:name=".RepairerTakePhoto" />
-        <activity android:name=".MachineLayoutActivity" />
+        <activity android:name=".QuestMachineLayoutActivity" />
         <activity
             android:name=".SplashActivity"
             android:configChanges="orientation"

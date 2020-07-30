@@ -24,7 +24,7 @@ import com.google.firebase.storage.StorageReference;
 public class SeparateCheckDetails extends AppCompatActivity {
     LinearLayout linearLayout;
     TextView checkInfo;
-    private String employeeLogin, employeePosition, date, shopName, equipmentName;
+    private String date, shopName, equipmentName;
     Bundle args;
 
     @Override
@@ -32,14 +32,16 @@ public class SeparateCheckDetails extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_separate_check_details);
         setTitle("Детали проверки ТО"); //если нет проблем, надо сделать: нету проблем
-        initInstances();
+        try {
+            initInstances();
+        } catch (AssertionError ae) {
+            ExceptionProcessing.processException(ae, getResources().getString(R.string.activity_called_outside_or_wrong_intent_call), getApplicationContext(), SeparateCheckDetails.this);
+        }
     }
-
+    @SuppressLint("SetTextI18n")
     private void initInstances() {
         args = getIntent().getExtras();
-        employeeLogin = args.getString("Логин пользователя");
-        employeePosition = args.getString("Должность");
-        date = args.getString("Должность");
+        assert args != null;
         shopName = args.getString("Название цеха");
         equipmentName = args.getString("Название линии");
         date = args.getString("Дата");

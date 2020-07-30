@@ -98,4 +98,10 @@
     <string name="point_no">point_no</string>
     <string name="number_of_points">number_of_points</string>
     <string name="nomer_punkta_textview_text">Номер пункта</string>
+    <string name="program_issue_toast">Техническая проблема. Простите за неудобство. Мы уже над этим работаем</string>
+    <string name="database_npe_toast">Несостыковка в базе данных.</string>
+    <string name="qr_scanner_msg_on_detect_address">Отсканируйте QR метку ближайшего участка, место определится автоматически</string>
+    <string name="qr_scanner_solve_urgent_problem_msg">Отсканируйте код, сгенерированный на устройстве оператора, который сообщил о данной проблеме. Возможно, QR Код на экране оператора устарел. Нужно закрыть диалог и заново нажать на мигающую кнопку.</string>
+    <string name="such_qr_doesnt_exist">Пункт с такой QR-меткой не существует в базе</string>
+    <string name="activity_called_outside_or_wrong_intent_call">Запрещено показывать окна приложения при вызове извне.</string>
 </resources>

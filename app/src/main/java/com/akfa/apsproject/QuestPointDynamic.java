@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -49,11 +48,12 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 //----------ОПЕРАТОР/МАСТЕР ОТМЕЧВАЕТ СОСТОЯНИЕ КАЖДОГО ПУНКТА ЛИНИИ (ПОРЯДОК/ПРОБЛЕМА) И ПЕРЕХОД В QR SCANNER----------//
@@ -63,12 +63,12 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
 {
     private final int RADIO_GROUP_ID = 5000, REQUEST_IMAGE_CAPTURE  = 1, REQUEST_REQUIRED_STATION_PROBLEM_IMAGE_CAPTURE = 28, REQUEST_REQUIRED_IMAGE_CAPTURE = 27;
     public static String checkDuration; //длительность проверки в формате ММ:СС
-    private long startTimeMillis, endTimeMillis, durationMillis; //считают продолжительность проверки
+    private long startTimeMillis;
     private int pointNo, numOfPoints = 0, numOfSubpoints = 0, problemsCount, problemsOnThisStation = 0, shopNo, equipmentNo, photoIterator = 0;
     private boolean[] photographedProblems; //для проверки, сфоткали ли все проблемы
     private boolean mustTakePic = false;
     private int noSubpointMustTakePic;
-    private String employeeLogin, employeePosition, shopName, equipmentName, pointName, currentFileName; //интер-активити перемен-е + имя картинки
+    private String shopName, equipmentName, pointName;
     File currentPicFile;
     List<String> problemPushKeysOfTheWholeCheck, subpointDescriptions; //на случай если нажмет назад, чтобы удалить все проблемы занесенные в БД
     //layout views
@@ -85,14 +85,19 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.quest_activity_point_dynamic);
-        initInstances(); //иниц views, переменные, БД
-        setEquipmentData(); //иниц кол-во пунктов, участков, назв-е линии
-        toggle = setUpNavBar();
+        try {
+            initInstances(); //иниц views, переменные, БД
+            setEquipmentData(); //иниц кол-во пунктов, участков, назв-е линии
+            toggle = setUpNavBar();
+        }
+        catch (NullPointerException npe) {
+            ExceptionProcessing.processException(npe, getResources().getString(R.string.program_issue_toast), getApplicationContext());
+        }
     }
 
-    @SuppressLint("ClickableViewAccessibility")
+    @SuppressLint({"ClickableViewAccessibility", "SetTextI18n"})
     private void initInstances() {
-        getSupportActionBar().hide();
+        Objects.requireNonNull(getSupportActionBar()).hide();
         mStorageRef = FirebaseStorage.getInstance().getReference();
         db = FirebaseDatabase.getInstance();
         shopRef = db.getReference().child("Shops/" + QuestListOfEquipment.shopNoGlobal);
@@ -103,7 +108,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
         pointDeactivated.setVisibility(View.GONE);
         equipmentNameTextView = findViewById(R.id.equipmentName);
         pointInfoTextView = findViewById(R.id.nomer_punkta);
-        pointNo = getIntent().getExtras().getInt(getString(R.string.nomer_punkta_textview_text));
+        pointNo = Objects.requireNonNull(getIntent().getExtras()).getInt(getString(R.string.nomer_punkta_textview_text));
         Log.e("pointNo = ", String.valueOf(pointNo));
         subpointDescriptions = new ArrayList<>();
         if(pointNo == 1) //если проверка тока началась, иниц кол-во проблем к 0, начни отсчитывать продолжительность проверки и открой лист для сохранения ключей репортнутых проблем в БД
@@ -126,12 +131,11 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
         //общие интер-активти данные
         pointInfoTextView.setText(getString(R.string.nomer_point_textview) + pointNo);
         scrollLinearLayout = findViewById(R.id.scrollLinearLayout);
-        employeeLogin = getIntent().getExtras().getString("Логин пользователя");
-        employeePosition = getIntent().getExtras().getString("Должность");
         shopNo = getIntent().getExtras().getInt("Номер цеха");
         equipmentNo = getIntent().getExtras().getInt("Номер линии");
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         //дейсвтие при нажатиях на кнопку (отсканировать QR код)
@@ -158,7 +162,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
         //---------код связанный с nav bar---------//
         //настрой actionBar
         ActionBar actionBar = getSupportActionBar();
-        actionBar.show();
+        Objects.requireNonNull(actionBar).show();
         setTitle("Проверка линий");
         //настрой сам навигейшн бар
         final DrawerLayout drawerLayout;
@@ -172,10 +176,10 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
         navigationView = findViewById(R.id.nv);
         View headerView = navigationView.getHeaderView(0);
         TextView userInfo = headerView.findViewById(R.id.user_info);
-        userInfo.setText(employeeLogin);
+        userInfo.setText(UserData.login);
 //        здесь адаптируем меню в нав баре в зависимости от уровня доступа пользователя: мастер/оператор, у ремонтника нет прав проверки
         navigationView.getMenu().clear();
-        switch(employeePosition){
+        switch(UserData.position){
             case "operator":
                 navigationView.inflateMenu(R.menu.operator_menu);
                 break;
@@ -216,15 +220,17 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
 
     private AlertDialog askOptionOnNavigationBarClicked(final int menuItemId)
     {//тут если юзер захочет выйти из проверки, данные должны стереться, поэтому выводится диалог для этого
-        AlertDialog myQuittingDialogBox = new AlertDialog.Builder(this).setTitle("Закончить проверку").setMessage("Вы уверены, что хотите закончить проверку? Данные не будут сохранены.")
+        return new AlertDialog.Builder(this).setTitle("Закончить проверку").setMessage("Вы уверены, что хотите закончить проверку? Данные не будут сохранены.")
                 .setIcon(R.drawable.close)
                 .setPositiveButton("Да", new DialogInterface.OnClickListener() {
+                    @SuppressLint("ApplySharedPref")
+                    @SuppressWarnings("deprecation")
                     public void onClick(DialogInterface dialog, int whichButton) {
                         DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference("Maintenance_problems");
-                        for(String problemPushKey : problemPushKeysOfTheWholeCheck)
+                        for(String problemPushKey1 : problemPushKeysOfTheWholeCheck)
                         { //удали все проблемы, о которых репортнул юзер в текущей проверке
-                            problemsRef.child(problemPushKey).setValue(null);
-                            StorageReference problemPicRef = mStorageRef.child("problem_pictures/" + problemPushKey + ".jpg");
+                            problemsRef.child(problemPushKey1).setValue(null);
+                            StorageReference problemPicRef = mStorageRef.child("problem_pictures/" + problemPushKey1 + ".jpg");
                             problemPicRef.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void aVoid) {
@@ -238,20 +244,14 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                         {
                             case R.id.urgent_problems:
                                 Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                                openUrgentProblemsList.putExtra("Логин пользователя", employeeLogin);
-                                openUrgentProblemsList.putExtra("Должность", employeePosition);
                                 startActivity(openUrgentProblemsList);
                                 break;
                             case R.id.pult:
                                 Intent openMainActivity = new Intent(getApplicationContext(), PultActivity.class);
-                                openMainActivity.putExtra("Логин пользователя", employeeLogin);
-                                openMainActivity.putExtra("Должность", employeePosition);
                                 startActivity(openMainActivity);
                                 break;
                             case R.id.web_monitoring:
                                 Intent openFactoryCondition = new Intent(getApplicationContext(), FactoryCondition.class);
-                                openFactoryCondition.putExtra("Логин пользователя", employeeLogin);
-                                openFactoryCondition.putExtra("Должность", employeePosition);
                                 startActivity(openFactoryCondition);
                                 break;
                             case R.id.about: //инфа про приложение и компанию и иинструкции может
@@ -278,7 +278,6 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                     }
                 })
                 .create();
-        return myQuittingDialogBox;
     }
 
     private void setEquipmentData()
@@ -287,23 +286,36 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
             @SuppressLint("SetTextI18n")
             @Override public void onDataChange(@NonNull DataSnapshot shopSnap) {
                 // "/Equipment_lines/" + QuestMainActivity.childPositionG
-                shopName = shopSnap.child("shop_name").getValue().toString();
+
+                shopName = Objects.requireNonNull(shopSnap.child("shop_name").getValue()).toString();
                 DataSnapshot equipmentSnap = shopSnap.child("Equipment_lines/" + QuestListOfEquipment.equipmentNoGlobal);
-                equipmentName = equipmentSnap.child("equipment_name").getValue().toString();
-//                equipmentNameTextView.setText(getString(R.string.equipment_name_textview) + " " + equipmentName);
+                equipmentName = Objects.requireNonNull(equipmentSnap.child("equipment_name").getValue()).toString();
                 equipmentNameTextView.setText(equipmentName);
 
                 //ссылка к этому участку
                 DataSnapshot thisStationSnap = equipmentSnap.child("Points").child(Integer.toString(pointNo));
                 //название участка
                 Log.e("setEquipmentData pointNo = ", String.valueOf(pointNo));
-                pointName = thisStationSnap.child("point_name").getValue().toString();
+                try { //если в БД не указано имя пункта point_name (забыли)
+                    pointName = Objects.requireNonNull(thisStationSnap.child("point_name").getValue()).toString();
+                }
+                catch (NullPointerException npe) {
+                    ExceptionProcessing.processException(npe);
+                    pointName = "";
+                }
                 pointInfoTextView.setText(getString(R.string.nomer_point_textview) + pointNo + "\n " + pointName);
                 //добавление пунктов этого участка
                 int subpointNo = 1;
                 while(thisStationSnap.child("subpoint_" + subpointNo).exists())
                 {
-                    String subpointDescription = thisStationSnap.child("subpoint_" + subpointNo).child("description").getValue().toString();
+                    String subpointDescription;
+                    try {
+                        subpointDescription = Objects.requireNonNull(thisStationSnap.child("subpoint_" + subpointNo).child("description").getValue()).toString();
+                    }
+                    catch (NullPointerException npe) { //на случай если неправильно заполнили или удалили определенный подпункт
+                        ExceptionProcessing.processException(npe);
+                        subpointDescription = "Подпункт №" + subpointNo;
+                    }
                     subpointDescriptions.add(subpointDescription);
                     addRadioGroup(subpointNo, subpointDescription);
                     if(thisStationSnap.child("subpoint_" + subpointNo).child("must_take_pic").exists())
@@ -314,19 +326,15 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                     subpointNo++;
 
                 }
+                numOfSubpoints = subpointNo-1;
+                photographedProblems = new boolean[numOfSubpoints]; //количество пунктов было установлено, иниц массив photographedProblems
+                //пока проблемы не обнаружены, задай, что все проблемы сфотканы уже
+                Arrays.fill(photographedProblems, true); //заполни массив trues
                 if(thisStationSnap.child("can_be_deactivated").exists())
                 {
                     pointDeactivated.setVisibility(View.VISIBLE);
                 }
-                numOfPoints = Integer.parseInt(equipmentSnap.child(getString(R.string.number_of_points)).getValue().toString());
-                numOfSubpoints = subpointNo-1;
-//                numOfPunkts = Integer.parseInt(equipmentSnap.child(Integer.toString(pointNo)).getValue().toString());
-                photographedProblems = new boolean[numOfSubpoints]; //количество пунктов было установлено, иниц массив photographedProblems
-                for(int i = 0; i < photographedProblems.length; i++)
-                {
-                    photographedProblems[i] = true; //пока проблемы не обнаружены, задай, что все проблемы сфотканы уже
-                }
-
+                numOfPoints = Integer.parseInt(Objects.requireNonNull(equipmentSnap.child(getString(R.string.number_of_points)).getValue()).toString());
                 nextPoint.setVisibility(View.VISIBLE);
 //                addRadioGroups(); //количество пунктов было установлено, добавь радиокнопки
                 initClickListeners(); //радиокнопки были добавлены, поэтому можно разрешать кликать на "Следующий пункт"
@@ -335,6 +343,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
         });
     }
 
+    @SuppressLint({"SetTextI18n", "InflateParams"})
     private void addRadioGroup(int pointNo, String pointDescription)
     {
         Context context = getApplicationContext(); //чтобы передать некоторым функциям как параметр
@@ -371,14 +380,23 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
         //-------Radiobutton для Проблемы--------//
         buttonParams.weight = 1; //ОБЕ КНОПКИ ДОЛЖНЫ ИМЕТЬ ОДИН РАЗМЕРЫ
         LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        rb[0] = (RadioButton) inflater.inflate(R.layout.problem_radiobutton, null); //ЗДЕСЬ МОЖНО ДАТЬ ССЫЛКУ НА XML ДИЗАЙН КНОПКИ
+        try {
+            assert inflater != null;
+            rb[0] = (RadioButton) inflater.inflate(R.layout.problem_radiobutton, null); //ЗДЕСЬ МОЖНО ДАТЬ ССЫЛКУ НА XML ДИЗАЙН КНОПКИ
+            rb[1] = (RadioButton) inflater.inflate(R.layout.no_problem_radiobutton, null); //ЗДЕСЬ МОЖНО ДАТЬ ССЫЛКУ НА XML ДИЗАЙН КНОПКИ
+
+        }
+        catch (AssertionError ae)
+        {//если тот xml файл был потерян или проблема с inflater
+            ExceptionProcessing.processException(ae);
+            rb[0] = new RadioButton(context);
+            rb[1] = new RadioButton(context);
+        }
         rb[0].setText("ПРОБЛЕМА");
         rb[0].setId(RADIO_GROUP_ELEMENT_ID + (pointNo * 10) + 1);
         rb[0].setLayoutParams(buttonParams);
         rb[0].setTextSize(15);
         //-------Radiobutton для Порядка--------//
-//            rb[1] = new RadioButton(context);
-        rb[1] = (RadioButton) inflater.inflate(R.layout.no_problem_radiobutton, null); //ЗДЕСЬ МОЖНО ДАТЬ ССЫЛКУ НА XML ДИЗАЙН КНОПКИ
         rb[1].setText("ПОРЯДОК");
         rb[1].setTextSize(15);
         rb[1].setId(RADIO_GROUP_ELEMENT_ID + (pointNo * 10) + 2);
@@ -415,8 +433,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                     //переход на новое окно - QuestEndOfChecking - итоги проверки и следующие шаги
                     startEndOfChecking();
                 }
-                else if(pointNo < numOfPoints)
-                    qrStart(pointNo, equipmentNo, shopNo); //если все в порядке (проблем на этом участке нет) - запусти qr scanner
+                else qrStart(pointNo, equipmentNo, shopNo); //если все в порядке (проблем на этом участке нет) - запусти qr scanner
             }
         });
     }
@@ -432,16 +449,16 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
 
     private AlertDialog AskOption()
     { //конструирует диалог выходящий при желании пользователя остнаовить проверку
-        AlertDialog myQuittingDialogBox = new AlertDialog.Builder(this).setTitle("Закончить проверку").setMessage("Вы уверены, что хотите закончить проверку? Данные не будут сохранены.")
+        return new AlertDialog.Builder(this).setTitle("Закончить проверку").setMessage("Вы уверены, что хотите закончить проверку? Данные не будут сохранены.")
                 .setIcon(R.drawable.close)
                 .setPositiveButton("Да", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton)
                     {
                         DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference("Maintenance_problems");
-                        for(String problemPushKey : problemPushKeysOfTheWholeCheck)
+                        for(String problemPushKey1 : problemPushKeysOfTheWholeCheck)
                         {
-                            problemsRef.child(problemPushKey).setValue(null);
-                            StorageReference problemPicRef = mStorageRef.child("problem_pictures/" + problemPushKey + ".jpg");
+                            problemsRef.child(problemPushKey1).setValue(null);
+                            StorageReference problemPicRef = mStorageRef.child("problem_pictures/" + problemPushKey1 + ".jpg");
                             problemPicRef.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void aVoid) {
@@ -459,7 +476,6 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                     }
                 })
                 .create();
-        return myQuittingDialogBox;
     }
 
     private boolean AllRadiosChecked(int numOfRadioGroups)
@@ -477,24 +493,23 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
     }
 
 
-    @SuppressLint("DefaultLocale")
+    @SuppressLint({"DefaultLocale", "SimpleDateFormat"})
     public void startEndOfChecking()
     {
-        endTimeMillis = System.currentTimeMillis();
-        durationMillis = endTimeMillis - startTimeMillis;
+        long endTimeMillis = System.currentTimeMillis();
+        //считают продолжительность проверки
+        long durationMillis = endTimeMillis - startTimeMillis;
         checkDuration = String.format("%02d мин, %02d сек", TimeUnit.MILLISECONDS.toMinutes(durationMillis),
                 TimeUnit.MILLISECONDS.toSeconds(durationMillis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(durationMillis)));
         Intent intent = new Intent(getApplicationContext(), QuestEndOfChecking.class);
         intent.putExtra("Количество обнаруженных проблем", problemsCount);
-        intent.putExtra("Должность", employeePosition);
-        intent.putExtra("Логин пользователя", employeeLogin);
 
         String date, time;
         SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yyyy"); //в firebase нельзя в пути ставить точки
         date = sdf.format(new Date());
         DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference();
         DatabaseReference thisMaintenanceCheckRef = dbRef.child("Maintenance_checks/" + date).push();
-        thisMaintenanceCheckRef.child("checked_by").setValue(employeeLogin);
+        thisMaintenanceCheckRef.child("checked_by").setValue(UserData.login);
         sdf = new SimpleDateFormat("HH:mm");
         time = sdf.format(new Date());
         thisMaintenanceCheckRef.child("time_finished").setValue(time);
@@ -519,9 +534,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
         intent.putExtra("Количество пунктов", numOfPoints);
         intent.putExtra("startTimeMillis", startTimeMillis);
         intent.putExtra("Действие", "Открой PointDynamic");
-        intent.putExtra("Логин пользователя", employeeLogin);
         intent.putExtra("Количество обнаруженных проблем", problemsCount);
-        intent.putExtra("Должность", employeePosition);
         intent.putStringArrayListExtra("Коды проблем", (ArrayList<String>) problemPushKeysOfTheWholeCheck);
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY); //не сохранять qr сканер в tray
         startActivity(intent);
@@ -530,7 +543,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
 
     String problemPushKey; //айдишка текущей проблемы, по которой мы проходимся в цикле ниже
     List<String> problemPushKeys = new ArrayList<>(); //айдишки всех обнаруженных проблем
-    @SuppressLint("ResourceType")
+    @SuppressLint({"ResourceType", "SimpleDateFormat"})
     private void saveCheckingData(int numOfRadioGroups)
     { //this function is called in case all radiogroups are checked and
         //the user hits "next point".
@@ -553,7 +566,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
 
                 //время-дата
                 String date, time;
-                SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+                @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
                 date = sdf.format(new Date());
                 sdf = new SimpleDateFormat("HH:mm");
                 time = sdf.format(new Date());
@@ -561,7 +574,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
 
                 DatabaseReference newProbRef = problemsRef.push(); //создай подветку в Maintenance_problems с уник айди
                 //занеси в БД данные об этой проблеме
-                newProbRef.setValue(new MaintenanceProblem(employeeLogin, date, time, shopName, equipmentName, QuestListOfEquipment.shopNoGlobal, QuestListOfEquipment.equipmentNoGlobal, pointNo, i, pointName, subpointDescriptions.get(i-1)));
+                newProbRef.setValue(new MaintenanceProblem(date, time, shopName, equipmentName, QuestListOfEquipment.shopNoGlobal, QuestListOfEquipment.equipmentNoGlobal, pointNo, i, pointName, subpointDescriptions.get(i-1)));
                 problemPushKey = newProbRef.getKey(); //запиши этот айди в переменную
                 problemPushKeys.add(problemPushKey); //добавь этот айди в лист проблем именно на этом участке
                 problemPushKeysOfTheWholeCheck.add(problemPushKey); //добавь этот айди в лист проблем во время всей проверки этой линии
@@ -612,11 +625,11 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
     }
 
     String currentPhotoPath; //the string of uri of where file is located, используется в процессе сохранения переданной из CameraIntent фотки
-    private File createImageFile(String problemPushKey) throws IOException {
+    private File createImageFile(String problemPushKey) {
         // Create an image file name - our case will be the id of problem
 //        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmm").format(new Date());
-        String problemKeyID = problemPushKey; //инициализируй эту переменную к unique key проблемы
-        currentFileName = problemKeyID + ".jpg"; //название фотки
+        //интер-активити перемен-е + имя картинки
+        String currentFileName = problemPushKey + ".jpg"; //название фотки
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES); //директория для пользования только твоим прилдожнием
         File image = new File(storageDir, currentFileName);
         // Save a file: path for use with ACTION_VIEW intents
@@ -625,50 +638,44 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
     }
 
     private void dispatchTakePictureIntent(String problemPushKey, int requestCode) { //запуск камеры
-        if(isCameraUsebyApp()) Log.i("TAG", "Камера исп др приложением");
-        else Log.i("TAG", "Камера свободна");
+//        if(isCameraUsebyApp()) Log.i("TAG", "Камера исп др приложением");
+//        else Log.i("TAG", "Камера свободна");
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             // Create the File where the photo should go
-            File photoFile = null;
-            try {
-                photoFile = createImageFile(problemPushKey); //создай файл с названием сордержащим айди проблемы
-            } catch (IOException ex) {
-                // Error occurred while creating the File
-                Toast.makeText(getApplicationContext(), "Error creating the file", Toast.LENGTH_LONG).show();
-            }
+            File photoFile;
+            photoFile = createImageFile(problemPushKey); //создай файл с названием сордержащим айди проблемы
             // Continue only if the File was successfully created
-            if (photoFile != null) {
-                //непосредственно запуск активити камеры
-                Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), getString(R.string.package_name), photoFile);
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                currentPicFile = photoFile;
-                try {
-                    startActivityForResult(takePictureIntent, requestCode);
-                }
-                catch (Exception e)
-                {
-                    Log.getStackTraceString(e);
-                    Toast.makeText(getApplicationContext(), "Ошибка камеры, обратитесь в службу поддержки", Toast.LENGTH_SHORT).show();
-                    qrStart(pointNo, equipmentNo, shopNo);
-                }
+            //непосредственно запуск активити камеры
+            Uri photoURI = FileProvider.getUriForFile(getApplicationContext(), getString(R.string.package_name), photoFile);
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+            currentPicFile = photoFile;
+            try {
+                startActivityForResult(takePictureIntent, requestCode);
+            }
+            catch (Exception e)
+            {
+                Log.getStackTraceString(e);
+                Toast.makeText(getApplicationContext(), "Ошибка камеры, обратитесь в службу поддержки", Toast.LENGTH_SHORT).show();
+                qrStart(pointNo, equipmentNo, shopNo);
             }
         }
     }
 
-    public boolean isCameraUsebyApp() {
-        Camera camera = null;
-        try {
-            camera = android.hardware.Camera.open();
-        } catch (RuntimeException e) {
-            return true;
-        } finally {
-            if (camera != null) camera.release();
-        }
-        return false;
-    }
+//    public boolean isCameraUsebyApp() {
+//        Camera camera = null;
+//        try {
+//            camera = android.hardware.Camera.open();
+//        } catch (RuntimeException e) {
+//            return true;
+//        } finally {
+//            if (camera != null) camera.release();
+//        }
+//        return false;
+//    }
 
+    @SuppressLint("SimpleDateFormat")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         //обработка результата с камеры
@@ -683,6 +690,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
             StorageReference probPicRef = mStorageRef.child("problem_pictures/" + file.getLastPathSegment());
             //загрузи фотку-файл в Firebase Storage
             probPicRef.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @SuppressWarnings("ResultOfMethodCallIgnored")
                         @Override public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                             Toast.makeText(getApplicationContext(), "Фотография загружена успешно", Toast.LENGTH_LONG).show();
                             File picToDelete = new File(currentPhotoPath);
@@ -698,8 +706,8 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                     })
                     .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
                         @Override
-                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                            double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+                        public void onProgress(@NonNull UploadTask.TaskSnapshot taskSnapshot) {
+//                            double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
                             //progressbar, можно использовать если будем показывать прогресс загрузки фотки в БД
                         }
                     });
@@ -718,7 +726,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                     mustTakePic = false;
                     //время-дата
                     String date, time;
-                    SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+                    @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
                     date = sdf.format(new Date());
                     sdf = new SimpleDateFormat("HH.mm.SS");
                     time = sdf.format(new Date());
@@ -750,6 +758,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
             //загрузи фотку-файл в Firebase Storage
             probPicRef.putFile(file)
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @SuppressWarnings("ResultOfMethodCallIgnored")
                     @Override public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                         Toast.makeText(getApplicationContext(), "Фотография загружена успешно", Toast.LENGTH_LONG).show();
                         File picToDelete = new File(currentPhotoPath);
@@ -765,8 +774,8 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                     })
                     .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
                         @Override
-                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                            double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+                        public void onProgress(@NonNull UploadTask.TaskSnapshot taskSnapshot) {
+//                            double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
                             //progressbar, можно использовать если будем показывать прогресс загрузки фотки в БД
                         }
                     });

@@ -13,6 +13,8 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics;
 public class ExceptionProcessing {
     public static void processException(Throwable throwable, String toastMsg, Context context, Activity activity)
     {
+        throwable.printStackTrace();
+        addUserDataToRecord();
         FirebaseCrashlytics.getInstance().recordException(throwable);
         Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show();
         Intent openSplash = new Intent(context, SplashActivity.class);
@@ -22,6 +24,8 @@ public class ExceptionProcessing {
 
     public static void processException(Throwable throwable, String toastMsg, Context context, BackgroundService backgroundService)
     {
+        throwable.printStackTrace();
+        addUserDataToRecord();
         FirebaseCrashlytics.getInstance().recordException(throwable);
         Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show();
         Intent openSplash = new Intent(context, SplashActivity.class);
@@ -29,13 +33,34 @@ public class ExceptionProcessing {
         backgroundService.stopSelf();
     }
 
+    public static void processException(Throwable throwable, String toastMsg, Context context) {
+        throwable.printStackTrace();
+        addUserDataToRecord();
+        FirebaseCrashlytics.getInstance().recordException(throwable);
+        Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show();
+        Intent openSplash = new Intent(context, SplashActivity.class);
+        context.startActivity(openSplash);
+    }
+
     public static void processException(Throwable throwable, Context context) {
+        throwable.printStackTrace();
+        addUserDataToRecord();
         FirebaseCrashlytics.getInstance().recordException(throwable);
         Intent openSplash = new Intent(context, SplashActivity.class);
         context.startActivity(openSplash);
     }
 
     public static void processException(Throwable throwable) {
+        throwable.printStackTrace();
+        addUserDataToRecord();
         FirebaseCrashlytics.getInstance().recordException(throwable);
+    }
+
+    private static void addUserDataToRecord()
+    {
+        if(!UserData.login.equals(""))
+        {
+            FirebaseCrashlytics.getInstance().recordException(new Exception("Login: " + UserData.login + "\nPosition: " + UserData.position));
+        }
     }
 }

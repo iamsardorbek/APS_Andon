@@ -23,7 +23,7 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash_new);
         Objects.requireNonNull(getSupportActionBar()).hide();
 
-        if(android.os.Build.VERSION.SDK_INT != 27)
+        if(android.os.Build.VERSION.SDK_INT == 27)
         {
             grantNotificationPolicyAccess(); //дать доступ контролировать звук уведомлений
         }
@@ -53,13 +53,11 @@ public class SplashActivity extends AppCompatActivity {
                 case "raw":
                 case "quality":
                     Intent openUrgentProblemsList = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                    startActivity(openUrgentProblemsList);
+                    keepSplash(openUrgentProblemsList);
                     break;
                 case "head":
                     Intent openTodayChecks = new Intent(getApplicationContext(), TodayChecks.class);
-                    openTodayChecks.putExtra("Логин пользователя", rememberedLogin);
-                    openTodayChecks.putExtra("Должность", rememberedPosition);
-                    startActivity(openTodayChecks);
+                    keepSplash(openTodayChecks);
                     break;
             }
             if(!rememberedPosition.equals("head")) {
@@ -108,7 +106,7 @@ public class SplashActivity extends AppCompatActivity {
     }
 
     private void keepSplash(final Intent intent)
-    {
+    { //отвечает за пару секунд сплеша, все активити вызывать через него, передавая интент в аргумент
         handler=new Handler();
         handler.postDelayed(new Runnable() {
             @Override public void run() {

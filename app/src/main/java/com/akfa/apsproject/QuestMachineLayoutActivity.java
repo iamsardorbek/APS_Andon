@@ -7,6 +7,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,9 +21,11 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.util.Objects;
+
 //--------ЗДЕСЬ ПОКАЗЫВАЕТСЯ ЧЕРТЕЖ ЛИНИИ И 1-Й ПУНКТ, КУДА ЮЗЕР ДОЛЖЕН НАПРАВИТЬСЯ---------//
 //--------ОТКРЫВАЕТСЯ ПРИ НАЖАТИИ НА ЭЛЕМЕНТ EXPANDABLE LIST VIEW (ЛИНИЮ) В QUEST MAIN ACTIVITY---------//
-public class MachineLayoutActivity extends AppCompatActivity implements View.OnTouchListener {
+public class QuestMachineLayoutActivity extends AppCompatActivity implements View.OnTouchListener {
     Button qrScan;
     ImageView equipmentLayout;
     private int shopNo, equipmentNo;
@@ -35,10 +38,17 @@ public class MachineLayoutActivity extends AppCompatActivity implements View.OnT
         equipmentLayoutRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override public void onDataChange(@NonNull DataSnapshot equipmentLayoutSnap) {
                 //setTitle()
-                String equipmentLayoutPicName = equipmentLayoutSnap.getValue().toString(); //получи название картинки содержащей чертеж оборудования
-                StorageReference equipmentLayoutFolder = FirebaseStorage.getInstance().getReference( "equipment_layouts"); //загрузи ту картинку из Storage - > equipment_layouts
-                StorageReference equipmentLayoutPic = equipmentLayoutFolder.child(equipmentLayoutPicName);
-                Glide.with(getApplicationContext()).load(equipmentLayoutPic).into(equipmentLayout); //поставь картинку в ImageView
+                try {
+                    String equipmentLayoutPicName = Objects.requireNonNull(equipmentLayoutSnap.getValue()).toString(); //получи название картинки содержащей чертеж оборудования
+                    StorageReference equipmentLayoutFolder = FirebaseStorage.getInstance().getReference( "equipment_layouts"); //загрузи ту картинку из Storage - > equipment_layouts
+                    StorageReference equipmentLayoutPic = equipmentLayoutFolder.child(equipmentLayoutPicName);
+                    Glide.with(getApplicationContext()).load(equipmentLayoutPic).into(equipmentLayout); //поставь картинку в ImageView
+                }catch (NullPointerException npe) {
+                    ExceptionProcessing.processException(npe);
+                    TextView exceptionTextView = findViewById(R.id.exception_text); //сообщение, что скачать картинку не удалось
+                    exceptionTextView.setVisibility(View.VISIBLE);
+                    equipmentLayout.setVisibility(View.GONE);
+                }
             }
             @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
@@ -48,11 +58,19 @@ public class MachineLayoutActivity extends AppCompatActivity implements View.OnT
     private void initInstances() {
         qrScan = findViewById(R.id.qr_scan);
         equipmentLayout = findViewById(R.id.equipment_layout);
-        shopNo = getIntent().getExtras().getInt("Номер цеха");
-        equipmentNo = getIntent().getExtras().getInt("Номер линии");
+        try {
+            shopNo = Objects.requireNonNull(getIntent().getExtras()).getInt("Номер цеха");
+            equipmentNo = getIntent().getExtras().getInt("Номер линии");
+        } catch (NullPointerException npe) {
+            ExceptionProcessing.processException(npe);
+            TextView exceptionTextView = findViewById(R.id.exception_text); //сообщение, что скачать картинку не удалось
+            exceptionTextView.setVisibility(View.VISIBLE);
+            equipmentLayout.setVisibility(View.GONE);
+        }
         qrScan.setOnTouchListener(this);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         //дейсвтие при нажатиях на кнопку (отсканировать QR код)
@@ -72,12 +90,8 @@ public class MachineLayoutActivity extends AppCompatActivity implements View.OnT
                 intent.putExtra(getString(R.string.nomer_punkta_textview_text), INITIAL_POINT_NUMBER_FOR_QR);
                 intent.putExtra("Действие", "Открой PointDynamic");
                 intent.putExtra(getString(R.string.nomer_punkta_textview_text), 1);
-                String login = getIntent().getExtras().getString("Логин пользователя");
-                intent.putExtra("Логин пользователя", login); //передавать логин пользователя взятый из Firebase
                 int problemsCount = 0;
                 intent.putExtra("Количество обнаруженных проблем", problemsCount);
-                String position = getIntent().getExtras().getString("Должность");
-                intent.putExtra("Должность", position);
                 startActivity(intent);
                 break;
         }

@@ -1,13 +1,9 @@
 package com.akfa.apsproject;
 
 import android.annotation.SuppressLint;
-import android.app.NotificationManager;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -25,6 +21,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 //----------ПОКАЗЫВАЕТ СПИСОК ТО ПРОБЛЕМ НА ЗАВОДЕ-------//
 //----------ПРИ НАЖАТИИ НА TextView С ПРОБЛЕМОЙ, ОТКРЫВАЕТ RepairersSeparateProblem---------//
@@ -32,7 +29,6 @@ import java.util.List;
 public class RepairersProblemsList extends AppCompatActivity {
     private final int ID_TEXTVIEWS = 5000;
     private int problemCount = 0;
-    private String employeeLogin, employeePosition;
     private List<String> problemIDs;
     ActionBarDrawerToggle toggle;
     LinearLayout linearLayout;
@@ -44,13 +40,11 @@ public class RepairersProblemsList extends AppCompatActivity {
         setContentView(R.layout.repairers_activity_problems_list);
         setTitle("Загрузка данных..."); //если нет проблем, надо сделать: нету проблем
         initInstances();
-        toggle = InitNavigationBar.setUpNavBar(RepairersProblemsList.this, getApplicationContext(),  getSupportActionBar(), R.id.problems_list, R.id.repairers_activity);
+        toggle = InitNavigationBar.setUpNavBar(RepairersProblemsList.this, getApplicationContext(), Objects.requireNonNull(getSupportActionBar()), R.id.problems_list, R.id.repairers_activity);
         addProblemsFromDatabase();
     }
     private void initInstances()
-    {//иниц кросс-активити перем-х
-        employeeLogin = getIntent().getExtras().getString("Логин пользователя");
-        employeePosition = getIntent().getExtras().getString("Должность");
+    {
         linearLayout = findViewById(R.id.linearLayout);
         problemIDs = new ArrayList<>();
         //к каждому textview проблемы будет прикреплен этот listener
@@ -61,8 +55,6 @@ public class RepairersProblemsList extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(), RepairerSeparateProblem.class);
                 String IDOfSelectedProblem = problemIDs.get(nomerProblemy);
                 intent.putExtra("ID проблемы в таблице Maintenance_problems", IDOfSelectedProblem);
-                intent.putExtra("Логин пользователя", employeeLogin);
-                intent.putExtra("Должность", employeePosition);
                 startActivity(intent);
             }
         };
@@ -84,30 +76,17 @@ public class RepairersProblemsList extends AppCompatActivity {
                 {
                     for(DataSnapshot problemDataSnapshot : problemsSnap.getChildren())
                     { //пройдись по всем проблемах в ветке
-                        MaintenanceProblem problem = problemDataSnapshot.getValue(MaintenanceProblem.class); //считай в объект
-                        if(!problem.solved)
-                        {
-                            setTitle("Проблемы на линиях");
-                            problemIDs.add(problemDataSnapshot.getKey()); //добавь айди данной проблемы в лист
+                        try {
 
-                            //инициализация TEXTVIEW
-                            String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nПункт №" + problem.getPoint_no() + "\nПункт №" + problem.getSubpoint_no();
-                            TextView problemsInfo;
-                            problemsInfo = new TextView(getApplicationContext());
-                            problemsInfo.setText(problemInfoFromDB);
-                            problemsInfo.setPadding(25, 25, 25, 25);
-                            problemsInfo.setId(ID_TEXTVIEWS + problemCount);
-                            problemsInfo.setTextColor(Color.parseColor(getString(R.color.text)));
-                            problemsInfo.setTextSize(13);
-                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                            params.setMargins(20, 25, 20, 25);
-                            problemsInfo.setLayoutParams(params);
-                            problemsInfo.setClickable(true);
-                            problemsInfo.setBackgroundResource(R.drawable.list_group_layout);
-                            problemsInfo.setOnClickListener(textviewClickListener);
-                            //добавить textview в layout
-                            linearLayout.addView(problemsInfo);
-                            problemCount++; //итерируй для уникализации айдишек textview и обращения к лист элементам
+                            MaintenanceProblem problem = problemDataSnapshot.getValue(MaintenanceProblem.class); //считай в объект
+                            if(!Objects.requireNonNull(problem).solved)
+                            {
+                                setTitle("Проблемы на линиях");
+                                problemIDs.add(problemDataSnapshot.getKey()); //добавь айди данной проблемы в лист
+                                addAMaintenanceProblem(problem);
+                            }
+                        } catch (NullPointerException npe) {
+                            ExceptionProcessing.processException(npe);
                         }
                     }
                 }
@@ -117,8 +96,31 @@ public class RepairersProblemsList extends AppCompatActivity {
         });
     }
 
+    @SuppressLint("ResourceType")
+    private void addAMaintenanceProblem(MaintenanceProblem problem)
+    {
+        //инициализация TEXTVIEW
+        String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nПункт №" + problem.getPoint_no() + "\nПункт №" + problem.getSubpoint_no();
+        TextView problemsInfo;
+        problemsInfo = new TextView(getApplicationContext());
+        problemsInfo.setText(problemInfoFromDB);
+        problemsInfo.setPadding(25, 25, 25, 25);
+        problemsInfo.setId(ID_TEXTVIEWS + problemCount);
+        problemsInfo.setTextColor(Color.parseColor(getString(R.color.text)));
+        problemsInfo.setTextSize(13);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        params.setMargins(20, 25, 20, 25);
+        problemsInfo.setLayoutParams(params);
+        problemsInfo.setClickable(true);
+        problemsInfo.setBackgroundResource(R.drawable.list_group_layout);
+        problemsInfo.setOnClickListener(textviewClickListener);
+        //добавить textview в layout
+        linearLayout.addView(problemsInfo);
+        problemCount++; //итерируй для уникализации айдишек textview и обращения к лист элементам
+    }
+
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
         if(toggle.onOptionsItemSelected(item))
             return true;

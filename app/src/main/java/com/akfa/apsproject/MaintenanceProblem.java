@@ -9,11 +9,11 @@ public class MaintenanceProblem {
 
     public MaintenanceProblem() { }
 
-    public MaintenanceProblem(String detected_by_employee, String date, String time, String shop_name, String equipment_line_name, int shop_no, int equipment_line_no,
+    public MaintenanceProblem(String date, String time, String shop_name, String equipment_line_name, int shop_no, int equipment_line_no,
                               int point_no, int subpoint_no, String point_name, String subpoint_description)
     {
         this.solved = false;
-        this.detected_by_employee = detected_by_employee;
+        this.detected_by_employee = UserData.login;
         this.date = date;
         this.time = time;
         this.shop_name = shop_name;

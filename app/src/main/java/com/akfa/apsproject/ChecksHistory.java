@@ -1,15 +1,11 @@
 package com.akfa.apsproject;
 
 import android.annotation.SuppressLint;
-import android.app.NotificationManager;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Bundle;
-import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 public class ChecksHistory extends AppCompatActivity {
     private final int ID_CHECKS = 5000;
@@ -38,7 +35,6 @@ public class ChecksHistory extends AppCompatActivity {
     LinearLayout linearLayout;
     View.OnClickListener textviewClickListener;
     ActionBarDrawerToggle toggle;
-    private String employeeLogin, employeePosition;
     final List<MaintenanceCheck> maintenanceChecks = new ArrayList<>();
     private int totalChecksCount = 0, todayNotCheckedEquipmentCount = 0, todayChecksCount = 0;
 
@@ -48,20 +44,16 @@ public class ChecksHistory extends AppCompatActivity {
         setContentView(R.layout.activity_checks_history);
         setTitle("Загрузка данных..."); //если нет проблем, надо сделать: нету проблем
         initInstances();
-        toggle = InitNavigationBar.setUpNavBar(ChecksHistory.this, getApplicationContext(),  getSupportActionBar(), R.id.checks_history, R.id.activity_checks_history);
+        toggle = InitNavigationBar.setUpNavBar(ChecksHistory.this, getApplicationContext(), Objects.requireNonNull(getSupportActionBar()), R.id.checks_history, R.id.activity_checks_history);
     }
 
     private void initInstances() {
-        employeeLogin = getIntent().getExtras().getString("Логин пользователя");
-        employeePosition = getIntent().getExtras().getString("Должность");
         linearLayout = findViewById(R.id.linearLayout);
         textviewClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View textView) {
                 int checkIndex = textView.getId() - ID_CHECKS;
                 Intent openSeparateCheckDetails = new Intent(getApplicationContext(), SeparateCheckDetails.class);
-                openSeparateCheckDetails.putExtra("Логин пользователя", employeeLogin);
-                openSeparateCheckDetails.putExtra("Должность", employeePosition);
                 openSeparateCheckDetails.putExtra("Название цеха", maintenanceChecks.get(checkIndex).getShop_name());
                 openSeparateCheckDetails.putExtra("Название линии", maintenanceChecks.get(checkIndex).getEquipment_name());
                 openSeparateCheckDetails.putExtra("Дата", maintenanceChecks.get(checkIndex).getDate_finished());
@@ -85,9 +77,9 @@ public class ChecksHistory extends AppCompatActivity {
 
                 for(final DataSnapshot oneDaySnap : maintenanceChecksSnap.getChildren())
                 {
-
+                    try {
                     String date = oneDaySnap.getKey();
-                    SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yyyy");
+                    @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd_MM_yyyy");
                     Date d = null;
                     try { d = sdf.parse(date); } catch (ParseException e) { e.printStackTrace(); }
                     sdf.applyPattern("dd.MM.yyyy");
@@ -203,6 +195,8 @@ public class ChecksHistory extends AppCompatActivity {
 //                        linearLayout.addView(equipmentInfoTextView);
 //                        totalChecksCount++; //итерируй для уникализации айдишек textview и обращения к лист элементам
 //                    }
+                        } catch (Exception e) {ExceptionProcessing.processException(e);}
+
                 }
             }
             @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
@@ -210,7 +204,7 @@ public class ChecksHistory extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
         if(toggle.onOptionsItemSelected(item))
             return true;

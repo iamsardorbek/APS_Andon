@@ -1,31 +1,32 @@
 package com.akfa.apsproject;
 
-import android.app.NotificationManager;
-import android.content.Intent;
-import android.content.SharedPreferences;
+import android.annotation.SuppressLint;
 import android.os.Bundle;
-import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.view.MenuItem;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.Objects;
 
 //------ВЕБ БРАУЗЕР СОСТОЯНИЯ ПРОИЗВОДСТВА, ВЫВОДЯЩИЙ САЙТ В WebView------//
 //------Мастер и ремонтик имеет доступ к данному активити-------//
 public class FactoryCondition extends AppCompatActivity {
     WebView webview;
     ActionBarDrawerToggle toggle;
-    String employeeLogin, employeePosition; //кросс-активити переменные
 
+    @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.factory_condition);
         initInstances();
-        toggle = InitNavigationBar.setUpNavBar(FactoryCondition.this, getApplicationContext(),  getSupportActionBar(), R.id.web_monitoring, R.id.factory_condition);
+        try {
+            toggle = InitNavigationBar.setUpNavBar(FactoryCondition.this, getApplicationContext(), Objects.requireNonNull(getSupportActionBar()), R.id.web_monitoring, R.id.factory_condition);
+        } catch (NullPointerException npe) {ExceptionProcessing.processException(npe);}
         setTitle("Веб-мониторинг");
         //иниц WebView
         webview.setWebViewClient(new WebViewClient());
@@ -39,12 +40,10 @@ public class FactoryCondition extends AppCompatActivity {
     // find all variables
     protected void initInstances(){
         webview=findViewById(R.id.webview);
-        employeeLogin = getIntent().getExtras().getString("Логин пользователя");
-        employeePosition = getIntent().getExtras().getString("Должность");
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if(toggle.onOptionsItemSelected(item))
             return true;
         return super.onOptionsItemSelected(item);

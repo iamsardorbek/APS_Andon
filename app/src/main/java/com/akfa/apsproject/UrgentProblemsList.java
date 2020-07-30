@@ -58,11 +58,7 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
         //
         textviewClickListener = new View.OnClickListener() {
             @Override public void onClick(View v) {
-                Intent openQR = new Intent(getApplicationContext(), QRScanner.class);
-                openQR.putExtra("Действие", "срочная проблема"); //описание действия для QR сканера
-                openQR.putExtra("Должность", employeePosition);
-                openQR.putExtra("Логин пользователя", employeeLogin); //передавать логин пользователя взятый из Firebase
-                startActivity(openQR);
+                startQRActivity();
             }
         };
     }
@@ -77,14 +73,17 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
                 break;
             case MotionEvent.ACTION_UP: //когда уже отпустил, октрой qr
                 qrScan.setBackgroundResource(R.drawable.edit_red_accent);
-                Intent openQR = new Intent(getApplicationContext(), QRScanner.class);
-                openQR.putExtra("Действие", "срочная проблема");//описание действия для QR сканера
-                openQR.putExtra("Должность", employeePosition); //передать должность
-                openQR.putExtra("Логин пользователя", employeeLogin); //передавать логин пользователя взятый из Firebase
-                startActivity(openQR);
+                startQRActivity();
                 break;
         }
         return false;
+    }
+
+    private void startQRActivity()
+    {
+        Intent openQR = new Intent(getApplicationContext(), QRScanner.class);
+        openQR.putExtra("Действие", "срочная проблема");//описание действия для QR сканера
+        startActivity(openQR);
     }
 
     @Override public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -110,8 +109,8 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
                     { //цикл проходит по каждой срочной проблеме, чтобы получить о ней данные и занести их в виде отдельных textviews в linearLayout
                         try { //если ошибка в БД, эта проблема просто не будет высвечена в списке
                             UrgentProblem urgentProblem = urgentProblemSnap.getValue(UrgentProblem.class); //считываем данные прямо в объект UrgentProblem
-                            String whoIsNeededPosition = urgentProblem.getWho_is_needed_position(); //специалист какого профиля нужен (должность: master, quality, raw)
-                            if(UserData.position.equals(whoIsNeededPosition) && urgentProblemSnap.child("status").getValue().toString().equals("DETECTED")) {
+                            String whoIsNeededPosition = Objects.requireNonNull(urgentProblem).getWho_is_needed_position(); //специалист какого профиля нужен (должность: master, quality, raw)
+                            if(UserData.position.equals(whoIsNeededPosition) && Objects.requireNonNull(urgentProblemSnap.child("status").getValue()).toString().equals("DETECTED")) {
                                 //условия query: срочная проблема нуждается во вмешании специалиста с профилем, соответствующим профилю данного пользователя (который пользуется сейчас приложением)
                                 //а также проблемой еще никто из спецов не занимался, она все еще в состоянии DETECTED
                                 //----СОЗДАНИЕ TEXTVIEW, ВНЕСЕНИЕ ДАННЫХ В НЕГО И ИНИЦИАЛИЗАЦИЯ ПАРАМЕТРОВ----//

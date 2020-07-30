@@ -1,5 +1,6 @@
 package com.akfa.apsproject;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -19,6 +20,8 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.Objects;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 
@@ -67,13 +70,13 @@ public class InitNavigationBar {
         }
         //ниже действия, выполняемые при нажатиях на элементы нав бара
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @SuppressLint("ApplySharedPref")
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 int id = item.getItemId();
                 if (id == currentMenuID) {
                     //когда нажали на подменю текущего окна, нав бар просто закрывается
                     drawerLayout.closeDrawer(GravityCompat.START);
-                    return true;
                 }
                 else
                 {
@@ -85,71 +88,55 @@ public class InitNavigationBar {
                             break;
                         case R.id.problems_list: //открой лист ТО проблем
                             Intent openProblemsList = new Intent(context, RepairersProblemsList.class);
-                            openProblemsList.putExtra("Логин пользователя", employeeLogin);
-                            openProblemsList.putExtra("Должность", employeePosition);
                             activity.startActivity(openProblemsList);
                             activity.finish();
                             break;
                         case R.id.calls:
                             Intent openCallsList = new Intent(context, CallsList.class);
-                            openCallsList.putExtra("Логин пользователя", employeeLogin);
-                            openCallsList.putExtra("Должность", employeePosition);
                             activity.startActivity(openCallsList);
                             activity.finish();
                             break;
                         case R.id.make_a_call:
                             Intent openMakeACall = new Intent(context, MakeACall.class);
-                            openMakeACall.putExtra("Логин пользователя", employeeLogin);
-                            openMakeACall.putExtra("Должность", employeePosition);
                             activity.startActivity(openMakeACall);
                             activity.finish();
                             break;
                         case R.id.pult:
                             Intent openMainActivity = new Intent(context, PultActivity.class);
-                            openMainActivity.putExtra("Логин пользователя", employeeLogin);
-                            openMainActivity.putExtra("Должность", employeePosition);
                             activity.startActivity(openMainActivity);
                             activity.finish();
                             break;
                         case R.id.check_equipment: //переход в модуль проверки
                             Intent openQuest = new Intent(context, QuestListOfEquipment.class);
-                            openQuest.putExtra("Логин пользователя", employeeLogin);
-                            openQuest.putExtra("Должность", employeePosition);
                             activity.startActivity(openQuest);
                             activity.finish();
                             break;
                         case R.id.web_monitoring: //переход в модуль веб-мониторинга
                             Intent openFactoryCondition = new Intent(context, FactoryCondition.class);
-                            openFactoryCondition.putExtra("Логин пользователя", employeeLogin);
-                            openFactoryCondition.putExtra("Должность", employeePosition);
                             activity.startActivity(openFactoryCondition);
                             activity.finish();
                             break;
                         case R.id.today_checks:
                             Intent openTodayChecks = new Intent(context, TodayChecks.class);
-                            openTodayChecks.putExtra("Логин пользователя", employeeLogin);
-                            openTodayChecks.putExtra("Должность", employeePosition);
                             activity.startActivity(openTodayChecks);
                             activity.finish();
                             break;
                         case R.id.checks_history:
                             Intent openChecksHistory = new Intent(context, ChecksHistory.class);
-                            openChecksHistory.putExtra("Логин пользователя", employeeLogin);
-                            openChecksHistory.putExtra("Должность", employeePosition);
                             activity.startActivity(openChecksHistory);
                             activity.finish();
                             break;
                         case R.id.about: //инфа про приложение и компанию и иинструкции может
                             Intent openAboutApp = new Intent(activity.getApplicationContext(), AboutApp.class);
-                            openAboutApp.putExtra("Логин пользователя", employeeLogin);
-                            openAboutApp.putExtra("Должность", employeePosition);
                             activity.startActivity(openAboutApp);
                             break;
                         case R.id.log_out: //возвращение в логин page
                             activity.stopService(new Intent(context, BackgroundService.class)); //если до этого уже сервис был включен, выключи сервис
                             NotificationManager notificationManager = (NotificationManager)  context.getSystemService(NOTIFICATION_SERVICE);
-                            notificationManager.cancelAll();
-                            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+                            try {
+                                Objects.requireNonNull(notificationManager).cancelAll();
+                            } catch (NullPointerException npe) {ExceptionProcessing.processException(npe);}
+                            @SuppressWarnings("deprecation") SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
                             SharedPreferences.Editor editor = sharedPrefs.edit();
                             editor.clear();
                             editor.commit();
@@ -159,11 +146,9 @@ public class InitNavigationBar {
                             userRef.child("active_session_android_id").removeValue();
                             activity.startActivity(logOut);
                             activity.finish();
-                        default:
-                            return true;
                     }
-                    return true;
                 }
+                return true;
             }
         });
         return toggle;

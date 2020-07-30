@@ -72,8 +72,6 @@ public class BackgroundService extends Service {
                                     String pointNo = maintenanceProbSnap.child(getString(R.string.point_no)).getValue().toString();
                                     String maintenanceProblemInfo = shopName + "\n" + equipmentName + "\nПункт №" + pointNo;
                                     Intent intent = new Intent(getApplicationContext(), RepairerSeparateProblem.class);
-                                    intent.putExtra("Логин пользователя", UserData.login);
-                                    intent.putExtra("Должность", UserData.position);
                                     intent.putExtra("ID проблемы в таблице Maintenance_problems", thisMaintenanceProbKey);
                                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                     PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
@@ -97,8 +95,6 @@ public class BackgroundService extends Service {
 
                             //укороченная версия уведомлений
 //                        Intent intent = new Intent(getApplicationContext(), RepairerSeparateProblem.class);
-//                        intent.putExtra("Логин пользователя", UserData.login);
-//                        intent.putExtra("Должность", UserData.position);
 //                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 //                        String notificationText = "Существуют " + maintanceProblemsNotificationsCount + " проблем на заводе. Нажмите сюда, чтобы с ними ознакомиться.";
 //                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
@@ -177,8 +173,6 @@ public class BackgroundService extends Service {
                                                             String masterShopName = masterSnap.child("shop_name").getValue().toString();
                                                             if (masterShopName.equals(shopName)) {
                                                                 Intent intent = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                                                                intent.putExtra("Логин пользователя", UserData.login);
-                                                                intent.putExtra("Должность", UserData.position);
                                                                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                                                 PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
@@ -206,8 +200,6 @@ public class BackgroundService extends Service {
                                                     });
                                                 } else {
                                                     Intent intent = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                                                    intent.putExtra("Логин пользователя", UserData.login);
-                                                    intent.putExtra("Должность", UserData.position);
                                                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                                     PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
@@ -273,8 +265,6 @@ public class BackgroundService extends Service {
                                                                     String calledByLogin = callSnap.child("called_by").getValue().toString();
                                                                     String callInfo = calledByLogin + " вызывает вас в " + callShopName + "\n" + callEquipmentName + "\nПункт №" + pointNo;
                                                                     Intent intent = new Intent(getApplicationContext(), CallsList.class);
-                                                                    intent.putExtra("Логин пользователя", UserData.login);
-                                                                    intent.putExtra("Должность", UserData.position);
                                                                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                                                     PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
@@ -316,8 +306,6 @@ public class BackgroundService extends Service {
 
                                                                     String callInfo = calledByLogin + " вызывает вас в " + callShopName + "\n" + callEquipmentName + "\nПункт №" + pointNo;
                                                                     Intent intent = new Intent(getApplicationContext(), CallsList.class);
-                                                                    intent.putExtra("Логин пользователя", UserData.login);
-                                                                    intent.putExtra("Должность", UserData.position);
                                                                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                                                     PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
@@ -352,8 +340,6 @@ public class BackgroundService extends Service {
 
                                                         String callInfo = calledByLogin + " вызывает вас в " + callShopName + "\n" + callEquipmentName + "\nПункт №" + pointNo;
                                                         Intent intent = new Intent(getApplicationContext(), CallsList.class);
-                                                        intent.putExtra("Логин пользователя", UserData.login);
-                                                        intent.putExtra("Должность", UserData.position);
                                                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                                         PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
@@ -392,7 +378,7 @@ public class BackgroundService extends Service {
             };
             handler.postDelayed(runnableCode, RUNNABLE_REFRESH_TIME);
         }
-        catch (NullPointerException npe){ExceptionProcessing.processException(npe, "Несостыковка в базе данных.", getApplicationContext(), this);}
+        catch (NullPointerException npe){ExceptionProcessing.processException(npe, getResources().getString(R.string.database_npe_toast), getApplicationContext(), this);}
         catch (AssertionError ae) {ExceptionProcessing.processException(ae, "Телефон не поддерживает функцию уведомлений либо техническая проблема с телефоном.", getApplicationContext(), this);}
         return super.onStartCommand(intent, flags, startId);
     }
@@ -450,25 +436,17 @@ public class BackgroundService extends Service {
         {
             case "operator":
                 intent = new Intent(getApplicationContext(), PultActivity.class);
-                intent.putExtra("Логин пользователя", UserData.login);
-                intent.putExtra("Должность", UserData.position);
                 break;
             case "master":
                 intent = new Intent(getApplicationContext(), QuestListOfEquipment.class); //actually there should be the FactoryCondition.class, but it is incomplete yet
-                intent.putExtra("Логин пользователя", UserData.login);
-                intent.putExtra("Должность", UserData.position);
                 break;
             case "repair":
             case "raw":
             case "quality":
                 intent = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                intent.putExtra("Логин пользователя", UserData.login);
-                intent.putExtra("Должность", UserData.position);
                 break;
             case "head":
                 intent = new Intent(getApplicationContext(), TodayChecks.class);
-                intent.putExtra("Логин пользователя", UserData.login);
-                intent.putExtra("Должность", UserData.position);
                 break;
         }
 

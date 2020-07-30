@@ -1,13 +1,9 @@
 package com.akfa.apsproject;
 
 import android.annotation.SuppressLint;
-import android.app.NotificationManager;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -32,6 +28,7 @@ import com.google.firebase.storage.StorageReference;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 
 import static com.google.firebase.database.FirebaseDatabase.getInstance;
 
@@ -43,51 +40,61 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
 
     private String IDOfTheProblem;
     private int nomerPunkta, equipmentNo, shopNo;
-    private String equipmentName, shopName;
-    private String employeeLogin, employeePosition;
     private MaintenanceProblem problem;
     private boolean callForOperatorOpen = false;
 
-    DatabaseReference problemsRef, thisProblemRef, callRef;
+    DatabaseReference problemsRef, thisProblemRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.repairer_activity_separate_problem);
         setTitle(getString(R.string.separate_problem_title));
-        initInstances();
+        try {
+            initInstances();
+        }
+        catch (NullPointerException npe)
+        {
+            ExceptionProcessing.processException(npe, "Данная проблема была решена либо о ней недостаточно данных", getApplicationContext(), RepairerSeparateProblem.this);
+        }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void initInstances() {
         problemsRef = getInstance().getReference().child("Maintenance_problems"); //ссылка к ТО пробам
-        IDOfTheProblem = getIntent().getExtras().getString("ID проблемы в таблице Maintenance_problems"); //айди именно текущей проблемы
-        employeeLogin = getIntent().getExtras().getString("Логин пользователя"); //кросс-активити перем
-        employeePosition = getIntent().getExtras().getString("Должность");
+        IDOfTheProblem = Objects.requireNonNull(getIntent().getExtras()).getString("ID проблемы в таблице Maintenance_problems"); //айди именно текущей проблемы
 
-        thisProblemRef = problemsRef.child(IDOfTheProblem);
+
+        thisProblemRef = problemsRef.child(Objects.requireNonNull(IDOfTheProblem));
         thisProblemRef.addListenerForSingleValueEvent(new ValueEventListener() { //единожды загрузим данные про текущ пробу
+            @SuppressLint("SetTextI18n")
             @Override public void onDataChange(@NonNull DataSnapshot problemDataSnapshot) {
                 problem = problemDataSnapshot.getValue(MaintenanceProblem.class); //считай данные пробы в объект
                 //на месте иниц views и задай их текст
                 TextView shopNameTextView = findViewById(R.id.shop_name);
                 TextView equipmentNameTextView = findViewById(R.id.equipment_name);
-                TextView pointNo = findViewById(R.id.point_no);
-                TextView subpointNo = findViewById(R.id.subpoint_no);
+                TextView pointName = findViewById(R.id.point_no);
+                TextView subpointDescription = findViewById(R.id.subpoint_no);
                 TextView employeeLogin = findViewById(R.id.employee_login);
                 TextView date = findViewById(R.id.date);
                 shopNameTextView.setText(problem.getShop_name());
                 equipmentNameTextView.setText(problem.getEquipment_line_name());
-                pointNo.setText(Integer.toString(problem.getPoint_no()));
-                subpointNo.setText(Integer.toString(problem.getSubpoint_no()));
+                try {
+                    pointName.setText(problem.getPoint_name());
+                    subpointDescription.setText(problem.getSubpoint_description());
+                }
+                catch (NullPointerException npe)
+                {
+                    ExceptionProcessing.processException(npe);
+                    pointName.setText(problem.getPoint_no());
+                    subpointDescription.setText(Integer.toString(problem.getSubpoint_no()));
+                }
                 employeeLogin.setText(problem.getDetected_by_employee());
                 date.setText(problem.getDate() + " " + problem.getTime());
-
                 //переменные для передачи в QR Scanner
                 nomerPunkta = problem.getPoint_no();
-                equipmentName = problem.getEquipment_line_name();
                 equipmentNo = problem.getEquipment_line_no();
                 shopNo = problem.getShop_no();
-                shopName = problem.getShop_name();
             }
             @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
@@ -98,39 +105,46 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
             public void onDataChange(@NonNull DataSnapshot callsSnap) {
                 for(DataSnapshot singleCallSnap : callsSnap.getChildren()) {
                     if(singleCallSnap.child("problem_key").exists()) { //если это вызов прямо из RepairersSeparateProblem (без разницы какой ремонтник вызвал)
-                        String problemKey = singleCallSnap.child("problem_key").getValue().toString();
-                        boolean isCallComplete = (boolean) singleCallSnap.child("complete").getValue();
-                        if (problemKey.equals(IDOfTheProblem) && !isCallComplete) //если оператор еще не пришел, а если он уже пришел и потенциально ушел, можно его вызвать снова
-                        {
-                            String thisCallKey = singleCallSnap.getKey();
-                            DatabaseReference callRef = getInstance().getReference("Calls/" + thisCallKey);
-                            callRef.addValueEventListener(new ValueEventListener() {
-                                @Override public void onDataChange(@NonNull DataSnapshot callSnap) {
-                                    boolean callSnapComplete = callSnap.child("complete").getValue(Boolean.class);
-                                    if (callSnapComplete) { //когда оператор прибыл позже, после первоначальной инициализации этого листенера
-                                        callOperator.setBackgroundResource(R.drawable.call_closed_button);
-                                        callOperator.setText("Оператор прибыл");
-                                        Resources r = getApplicationContext().getResources();
-                                        int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, r.getDisplayMetrics());
-                                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                                        params.setMargins(px, 2 * px, px, 0);
-                                        callOperator.setLayoutParams(params);
-                                        callOperator.setClickable(true); //теперь если вдруг уйдет, можно вызывать снова
-                                        callForOperatorOpen = false; //вызов уже закрыт, можно вызывать снова
-                                    } else {
-                                        callForOperatorOpen = true;
-                                        callOperator.setClickable(false); //если есть уже активный вызов оператора, еще раз вызвать его нельзя, а то БД заполнится
-                                        callOperator.setBackgroundResource(R.drawable.call_opened_button);
-                                        callOperator.setText("Оператор вызван");
-                                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                                        params.setMargins(5, 40, 5, 40);
-                                        params.gravity = Gravity.CENTER;
-                                        callOperator.setLayoutParams(params);
+                        try {
+                            String problemKey = Objects.requireNonNull(singleCallSnap.child("problem_key").getValue()).toString();
+                            boolean isCallComplete = (boolean) singleCallSnap.child("complete").getValue();
+                            if (problemKey.equals(IDOfTheProblem) && !isCallComplete) //если оператор еще не пришел, а если он уже пришел и потенциально ушел, можно его вызвать снова
+                            {
+                                String thisCallKey = singleCallSnap.getKey();
+                                DatabaseReference callRef = getInstance().getReference("Calls/" + thisCallKey);
+                                callRef.addValueEventListener(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot callSnap) {
+                                        boolean callSnapComplete = (boolean) callSnap.child("complete").getValue();
+                                        if (callSnapComplete) { //когда оператор прибыл позже, после первоначальной инициализации этого листенера
+                                            callOperator.setBackgroundResource(R.drawable.call_closed_button);
+                                            callOperator.setText("Оператор прибыл");
+                                            Resources r = getApplicationContext().getResources();
+                                            int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, r.getDisplayMetrics());
+                                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                                            params.setMargins(px, 2 * px, px, 0);
+                                            callOperator.setLayoutParams(params);
+                                            callOperator.setClickable(true); //теперь если вдруг уйдет, можно вызывать снова
+                                            callForOperatorOpen = false; //вызов уже закрыт, можно вызывать снова
+                                        } else {
+                                            callForOperatorOpen = true;
+                                            callOperator.setClickable(false); //если есть уже активный вызов оператора, еще раз вызвать его нельзя, а то БД заполнится
+                                            callOperator.setBackgroundResource(R.drawable.call_opened_button);
+                                            callOperator.setText("Оператор вызван");
+                                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                                            params.setMargins(5, 40, 5, 40);
+                                            params.gravity = Gravity.CENTER;
+                                            callOperator.setLayoutParams(params);
+                                        }
                                     }
-                                }
 
-                                @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
-                            });
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                                    }
+                                });
+                            }
+                        }catch (NullPointerException npe){
+                            ExceptionProcessing.processException(npe);
                         }
                     }
                 }
@@ -150,7 +164,7 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
         problemSolved.setOnTouchListener(this);
         callOperator = findViewById(R.id.call_operator);
         callOperator.setOnTouchListener(this);
-        if(employeePosition.equals("head"))
+        if(UserData.position.equals("head"))
         {
             problemSolved.setVisibility(View.GONE);
             callOperator.setVisibility(View.GONE);
@@ -163,12 +177,12 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
         intent.putExtra("Номер линии", equipmentNo);
         intent.putExtra("Номер пункта", nomerPunkta);
         intent.putExtra("Действие", "ремонтник");
-        intent.putExtra("Логин пользователя", employeeLogin);
         intent.putExtra("ID проблемы в таблице Maintenance_problems", IDOfTheProblem);
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivity(intent);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouch(View v, MotionEvent event) { //обработка нажатия с эффектом
         if(v.isClickable()) {
@@ -191,28 +205,31 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
                                 @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
                                 timeCalled = sdf1.format(new Date());
                                 //----считал дату и время----//
-                                newCallRef.setValue(new Call(dateCalled, timeCalled, employeeLogin, "operator", problem.getPoint_no(),
+                                newCallRef.setValue(new Call(dateCalled, timeCalled, UserData.login, "operator", problem.getPoint_no(),
                                         problem.getEquipment_line_name(), problem.getShop_name(), false, IDOfTheProblem));
 
                                 newCallRef.addValueEventListener(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(@NonNull DataSnapshot callSnap) {
-                                        boolean callSnapComplete = callSnap.child("complete").getValue(Boolean.class);
-                                        if (callSnapComplete) {
-                                            callOperator.setBackgroundResource(R.drawable.call_closed_button);
-                                            callOperator.setText("Оператор прибыл");
-                                            callOperator.setClickable(true); //теперь если вдруг уйдет, можно вызывать снова
-                                            callForOperatorOpen = false;
-                                        } else {
-                                            callForOperatorOpen = true;
-                                            callOperator.setClickable(false); //если есть уже активный вызов оператора, еще раз вызвать его нельзя, а то БД заполнится
-                                            callOperator.setBackgroundResource(R.drawable.call_opened_button);
-                                            callOperator.setText("Оператор вызван");
-                                            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                                            params.setMargins(5, 40, 5, 40);
-                                            params.gravity = Gravity.CENTER;
-                                            callOperator.setLayoutParams(params);
+                                        try {
+                                            boolean callSnapComplete = (boolean) callSnap.child("complete").getValue();
+                                            if (callSnapComplete) {
+                                                callOperator.setBackgroundResource(R.drawable.call_closed_button);
+                                                callOperator.setText("Оператор прибыл");
+                                                callOperator.setClickable(true); //теперь если вдруг уйдет, можно вызывать снова
+                                                callForOperatorOpen = false;
+                                            } else {
+                                                callForOperatorOpen = true;
+                                                callOperator.setClickable(false); //если есть уже активный вызов оператора, еще раз вызвать его нельзя, а то БД заполнится
+                                                callOperator.setBackgroundResource(R.drawable.call_opened_button);
+                                                callOperator.setText("Оператор вызван");
+                                                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                                                params.setMargins(5, 40, 5, 40);
+                                                params.gravity = Gravity.CENTER;
+                                                callOperator.setLayoutParams(params);
+                                            }
                                         }
+                                        catch (NullPointerException npe) {ExceptionProcessing.processException(npe);}
                                     }
 
                                     @Override

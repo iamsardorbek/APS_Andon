@@ -28,6 +28,8 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
+import java.util.Objects;
+
 
 //------ПОКАЗЫВАЕТ QR КОД НА ПУЛЬТЕ ОПЕРАТОРА, ЧТОБЫ ПОДОШЕДШИЙ СПЕЦИАЛИСТ ОТСКАНИРОВАЛ (ДОКАЗАТЕЛЬСТВО ЧТО ОН ПРИШЕЛ НА САМОМ ДЕЛЕ / REALITY CHECK) ------//
 //------ТАКЖЕ ЧЕРЕЗ 15 СЕКУНД ПОСЛЕ СВОЕГО ЗАПУСКА, ЗАПУСКАЕТ RUNNABLE, ОБНОВЛЯЮЩИЙ КАЖДЫЕ 15 СЕК QR ТЕКУЩЕЙ СРОЧНОЙ ПРОБЛЕМЫ (ЧТОБЫ ИЗБЕЖАТЬ ТОГО, ЧТО ОПЕРАТОР ОТПРАВЛЯЕТ ЧЕРЕЗ ТГ СКРИН QR И МАСТЕР НЕ ПРИХОДИТ)------//
@@ -51,74 +53,82 @@ public class QRCodeDialog extends DialogFragment {
     @SuppressLint("ClickableViewAccessibility")
     public View onCreateView(@NonNull final LayoutInflater inflater, @Nullable final ViewGroup container, @Nullable Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.dialog_qr_code, container, false);
-
-        qrCode = view.findViewById(R.id.qr_code);
-        back = view.findViewById(R.id.back);
-        Bundle arguments = getArguments();
-        final String shopName, equipmentName, operatorLogin, nomerPulta, position;
-        shopName = arguments.getString("Название цеха");
-        equipmentName = arguments.getString("Название линии");
-        operatorLogin = arguments.getString("Логин пользователя");
-        position = arguments.getString("Должность");
-        nomerPulta = arguments.getString("Номер пульта");
+        try {
+            qrCode = view.findViewById(R.id.qr_code);
+            back = view.findViewById(R.id.back);
+            Bundle arguments = getArguments();
+            final String shopName, equipmentName, nomerPulta;
+            shopName = Objects.requireNonNull(arguments).getString("Название цеха");
+            equipmentName = arguments.getString("Название линии");
+            nomerPulta = arguments.getString("Номер пульта");
 //        String qrCodeString = arguments.getString("Код"); //encode in the QR code
-        whoIsNeededIndex = arguments.getInt("Вызвать специалиста");
+            whoIsNeededIndex = arguments.getInt("Вызвать специалиста");
 
-        final DatabaseReference urgentProblemsRef = FirebaseDatabase.getInstance().getReference("Urgent_problems");
-        //этот слушатель БД единожды находит рассматриваемую оператором срочную проблему, находить в ней пару "qr_random_code : value"
-        //и устанавливает многоразовый слушатель именно на эту пару (для каждого обновления QR кода)
-        urgentProblemsRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override public void onDataChange(@NonNull DataSnapshot urgentProblemsSnap) {
-                for(final DataSnapshot urgentProblemSnap : urgentProblemsSnap.getChildren()) //пройди по срочным проблемам, пока не найдешь нужную нам сейчас
-                {
-                    String shopNameDB = urgentProblemSnap.child("shop_name").getValue().toString();
-                    String equipmentNameDB = urgentProblemSnap.child("equipment_name").getValue().toString();
-                    String operatorLoginDB = urgentProblemSnap.child("operator_login").getValue().toString();
-                    String status = urgentProblemSnap.child("status").getValue().toString();
-                    String nomerPultaDB = urgentProblemSnap.child("pult_no").getValue().toString();
-                    String whoIsNeededPositionDB = urgentProblemSnap.child("who_is_needed_position").getValue().toString();
-                    if(shopName.equals(shopNameDB) && equipmentName.equals(equipmentNameDB) && operatorLogin.equals(operatorLoginDB) && status.equals("DETECTED") && nomerPulta.equals(nomerPultaDB) && position.equals(whoIsNeededPositionDB))
-                    { //проблема с теми же данными, и к которой еще специалист не пришел
-                        if(!runnableStarted)
-                        { //если runnable не запустил еще, запусти
-                            initializeRunnable(urgentProblemSnap.getKey());
-                            stopped = false;
-                            handler.postDelayed(runnableCode, QR_REFRESH_TIME); //runnable запустится через QR_REFRESH_TIME мс
+            final DatabaseReference urgentProblemsRef = FirebaseDatabase.getInstance().getReference("Urgent_problems");
+            //этот слушатель БД единожды находит рассматриваемую оператором срочную проблему, находить в ней пару "qr_random_code : value"
+            //и устанавливает многоразовый слушатель именно на эту пару (для каждого обновления QR кода)
+            urgentProblemsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot urgentProblemsSnap) {
+                    for (final DataSnapshot urgentProblemSnap : urgentProblemsSnap.getChildren()) //пройди по срочным проблемам, пока не найдешь нужную нам сейчас
+                    {
+                        try {
+                            String shopNameDB = Objects.requireNonNull(urgentProblemSnap.child("shop_name").getValue()).toString();
+                            String equipmentNameDB = Objects.requireNonNull(urgentProblemSnap.child("equipment_name").getValue()).toString();
+                            String operatorLoginDB = Objects.requireNonNull(urgentProblemSnap.child("operator_login").getValue()).toString();
+                            String status = Objects.requireNonNull(urgentProblemSnap.child("status").getValue()).toString();
+                            String nomerPultaDB = Objects.requireNonNull(urgentProblemSnap.child("pult_no").getValue()).toString();
+                            String whoIsNeededPositionDB = Objects.requireNonNull(urgentProblemSnap.child("who_is_needed_position").getValue()).toString();
+                            if (shopNameDB.equals(shopName) && equipmentNameDB.equals(equipmentName) && UserData.login.equals(operatorLoginDB) && status.equals("DETECTED") && nomerPultaDB.equals(nomerPulta) && UserData.position.equals(whoIsNeededPositionDB)) { //проблема с теми же данными, и к которой еще специалист не пришел
+                                if (!runnableStarted) { //если runnable не запустил еще, запусти
+                                    initializeRunnable(urgentProblemSnap.getKey());
+                                    stopped = false;
+                                    handler.postDelayed(runnableCode, QR_REFRESH_TIME); //runnable запустится через QR_REFRESH_TIME мс
+                                }
+                                final DatabaseReference urgentProblemRef = urgentProblemSnap.getRef();
+                                urgentProblemRef.addValueEventListener(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot urgentProblemInnerSnap) {
+                                        String status = Objects.requireNonNull(urgentProblemInnerSnap.child("status").getValue()).toString();
+                                        if (status.equals("SPECIALIST_CAME")) {
+                                            closeDialog(SPECIALIST_CAME);
+                                            urgentProblemRef.removeEventListener(this);
+                                        } else {
+                                            String qrCodeString = Objects.requireNonNull(urgentProblemSnap.child("qr_random_code").getValue()).toString();
+                                            generateQrBitmap(qrCodeString); //к сожалению, контент image view с QR не обновляется
+                                        }
+                                    }
+                                    @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+                                });
+                                DatabaseReference urgentProblemQrRandomCodeRef = urgentProblemsRef.child(Objects.requireNonNull(urgentProblemSnap.getKey())).child("qr_random_code");
+                                urgentProblemQrRandomCodeRef.addValueEventListener(new ValueEventListener() { //прислушивайся к изменениям в БД
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot qrRandomCodeSnap) {
+                                        String qrCodeString = Objects.requireNonNull(urgentProblemSnap.child("qr_random_code").getValue()).toString();
+                                        generateQrBitmap(qrCodeString); //к сожалению, контент image view с QR не обновляется
+                                    }
+
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                                    }
+                                });
+                                return;
+                            }
+                        } catch (NullPointerException npe) {
+                            ExceptionProcessing.processException(npe);
                         }
-                        final DatabaseReference urgentProblemRef = urgentProblemSnap.getRef();
-                        urgentProblemRef.addValueEventListener(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot urgentProblemInnerSnap) {
-                                String status = urgentProblemInnerSnap.child("status").getValue().toString();
-                                if(status.equals("SPECIALIST_CAME"))
-                                {
-                                    closeDialog(SPECIALIST_CAME);
-                                    urgentProblemRef.removeEventListener(this);
-                                    return;
-                                }
-                                else {
-                                    String qrCodeString = urgentProblemSnap.child("qr_random_code").getValue().toString();
-                                    generateQrBitmap(qrCodeString); //к сожалению, контент image view с QR не обновляется
-                                }
-                            }
-                            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
-                        });
-                        DatabaseReference urgentProblemQrRandomCodeRef = urgentProblemsRef.child(urgentProblemSnap.getKey()).child("qr_random_code");
-                        urgentProblemQrRandomCodeRef.addValueEventListener(new ValueEventListener() { //прислушивайся к изменениям в БД
-                            @Override public void onDataChange(@NonNull DataSnapshot qrRandomCodeSnap) {
-                                String qrCodeString = urgentProblemSnap.child("qr_random_code").getValue().toString();
-                                generateQrBitmap(qrCodeString); //к сожалению, контент image view с QR не обновляется
-                            }
-                            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
-                        });
-                        return;
                     }
                 }
-            }
-            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
-        });
 
-        back.setOnTouchListener(backButtonListener); //установи listener кликов кнопки
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                }
+            });
+
+            back.setOnTouchListener(backButtonListener); //установи listener кликов кнопки
+        } catch (NullPointerException npe) {
+            ExceptionProcessing.processException(npe, getResources().getString(R.string.program_issue_toast), getContext());
+        }
         return view;
     }
 
@@ -146,6 +156,7 @@ public class QRCodeDialog extends DialogFragment {
     }
 
     View.OnTouchListener backButtonListener = new View.OnTouchListener() {
+        @SuppressLint("ClickableViewAccessibility")
         @Override
         public boolean onTouch(View v, MotionEvent event) {
             //что делать, если юзер нажал кнопку назад
@@ -171,12 +182,16 @@ public class QRCodeDialog extends DialogFragment {
                 case BACK_PRESSED:
                     stopped = true; //чтобы runnable остановился
                     listener.onQRCodeDialogCanceled(whoIsNeededIndex, 1); //отправим через интерфейс диалога в PultActivity сообщение, что нажали "назад" или специалист пришел
-                    getDialog().dismiss(); //закрыть диалог
+                    try {// и закрой диалог
+                        Objects.requireNonNull(getDialog()).dismiss();
+                    } catch (NullPointerException npe) {ExceptionProcessing.processException(npe);}
                     break;
                 case SPECIALIST_CAME:
                     stopped = true; //чтобы runnable остановился
                     listener.onQRCodeDialogCanceled(whoIsNeededIndex, 2); //отправим через интерфейс диалога в PultActivity сообщение, что нажали "назад" или специалист пришел
-                    this.getDialog().dismiss(); //закрыть диалог
+                    try {// и закрой диалог
+                        Objects.requireNonNull(getDialog()).dismiss();
+                    } catch (NullPointerException npe) {ExceptionProcessing.processException(npe);}
                     break;
 
             }
@@ -196,19 +211,31 @@ public class QRCodeDialog extends DialogFragment {
         catch (WriterException e) { e.printStackTrace(); }
     }
 
+    @SuppressWarnings("ConstantConditions")
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        return new Dialog(getActivity(), getTheme()){
-            @Override public void onBackPressed() {
-                //при наж кнопки назад информируй PultActivity через интерфейс
-                listener.onQRCodeDialogCanceled(whoIsNeededIndex, 1);
-                getDialog().dismiss();
-            }
-        };
+        try {
+            return new Dialog(Objects.requireNonNull(getActivity()), getTheme()){
+                @Override public void onBackPressed() {
+                    listener.onQRCodeDialogCanceled(whoIsNeededIndex, 1); // при нажатии на кнопку назад дай об ээтом знать PultActivity
+                    try {// и закрой диалог
+                        Objects.requireNonNull(getDialog()).dismiss();
+                    } catch (NullPointerException npe) {ExceptionProcessing.processException(npe);}
+                }
+            };
+        }
+        catch (NullPointerException npe) {
+            ExceptionProcessing.processException(npe, getResources().getString(R.string.program_issue_toast), getContext());
+            try {// и закрой диалог
+                Objects.requireNonNull(getDialog()).dismiss();
+            } catch (NullPointerException npe1) {ExceptionProcessing.processException(npe1);}
+            return null; //просто чтобы NPE or warning не было, возвращаем пустой объект
+        }
     }
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         try { //прикрепи интерфейс к диалогу
             listener = (QRCodeDialog.QRCodeDialogListener) context;

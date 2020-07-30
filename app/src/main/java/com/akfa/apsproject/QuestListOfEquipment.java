@@ -78,8 +78,6 @@ public class QuestListOfEquipment extends AppCompatActivity implements View.OnTo
                 startWithQR.setBackgroundResource(R.drawable.edit_red_accent);
                 Intent openQR = new Intent(getApplicationContext(), QRScanner.class);
                 openQR.putExtra("Действие", "Любой код");
-                openQR.putExtra("Должность", UserData.position);
-                openQR.putExtra("Логин пользователя", UserData.login); //передавать логин пользователя взятый из Firebase
                 startActivity(openQR);
                 break;
         }
@@ -110,11 +108,9 @@ public class QuestListOfEquipment extends AppCompatActivity implements View.OnTo
                     shopNoGlobal = groupPosition;
                     equipmentNoGlobal = childPosition;
                 }
-                Intent intent = new Intent(getApplicationContext(), MachineLayoutActivity.class);
+                Intent intent = new Intent(getApplicationContext(), QuestMachineLayoutActivity.class);
                 intent.putExtra("Номер цеха", QuestListOfEquipment.shopNoGlobal);
                 intent.putExtra("Номер линии", QuestListOfEquipment.equipmentNoGlobal);
-                intent.putExtra("Логин пользователя", UserData.login); //передавать логин пользователя взятый из Firebase
-                intent.putExtra("Должность", UserData.position);
                 startActivity(intent);
                 return false;
             }
