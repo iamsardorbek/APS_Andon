@@ -25,6 +25,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 //-------- ФОНОВЫЙ СЕРВИС ПРОВЕРКИ НАЛИЧИЯ НОВООБНАРУЖЕННЫХ ПРОБЛЕМ И НЕПОЛАДОК. ПРИ НОВЫХ ПРОБЛЕМАХ В ЗАВИС ОТ ДОЛЖНОСТИ ВЫВОДИТ УВЕДОМЛЕНИЯ--------//
 //--------РАБ ДАЖЕ ПРИ ЗАКРЫТОМ ПРИЛОЖЕНИИ--------//
@@ -78,7 +79,7 @@ public class BackgroundService extends Service {
 
                                     NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), MAINTENANCE_PROBS_CHANNEL_ID)
                                             .setSmallIcon(R.drawable.aps_icon)
-                                            .setContentTitle("Проблема ТО")
+                                            .setContentTitle(getResources().getString(R.string.maintenance_problem))
                                             .setContentText(maintenanceProblemInfo)
                                             .setStyle(new NotificationCompat.BigTextStyle()
                                                     .bigText(maintenanceProblemInfo))
@@ -87,7 +88,7 @@ public class BackgroundService extends Service {
 
                                     NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                                     // notificationId is a unique int for each notification that you must define
-                                    notificationManager.notify((int) maintanceProblemsNotificationsCount, builder.build());
+                                    Objects.requireNonNull(notificationManager).notify((int) maintanceProblemsNotificationsCount, builder.build());
                                     maintenanceProblems.add(thisMaintenanceProbKey);
                                     maintanceProblemsNotificationsCount++;
                                 }
@@ -126,7 +127,7 @@ public class BackgroundService extends Service {
                 public void run() {
                     if (!UserData.position.equals("head")) {
                         AudioManager mobilemode = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-                        mobilemode.setStreamVolume(AudioManager.STREAM_RING, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
+                        Objects.requireNonNull(mobilemode).setStreamVolume(AudioManager.STREAM_RING, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
                         mobilemode.setStreamVolume(AudioManager.STREAM_NOTIFICATION, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
                         mobilemode.setStreamVolume(AudioManager.STREAM_SYSTEM, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
                         mobilemode.setStreamVolume(AudioManager.STREAM_ALARM, mobilemode.getStreamMaxVolume(AudioManager.STREAM_RING), 0);
@@ -147,7 +148,7 @@ public class BackgroundService extends Service {
                                     if (urgentProbsSnap.exists()) {
                                         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                                         for (int urgentProblemID : urgentProblemsIDs) {
-                                            mNotificationManager.cancel(urgentProblemID);
+                                            Objects.requireNonNull(mNotificationManager).cancel(urgentProblemID);
                                         }
                                         urgentProblemsIDs = new ArrayList<>();
                                         for (DataSnapshot urgentProbSnap : urgentProbsSnap.getChildren()) { //пройдись по проблемам и если есть DETECTED проблемы, о которых ты еще не вывел уведомления, сообщи о них в новом уведомлении
@@ -178,7 +179,7 @@ public class BackgroundService extends Service {
 
                                                                 NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
                                                                         .setSmallIcon(R.drawable.aps_icon)
-                                                                        .setContentTitle("Срочная проблема")
+                                                                        .setContentTitle(getResources().getString(R.string.urgent_problem))
                                                                         .setContentText(urgentProblemShortInfo)
                                                                         .setStyle(new NotificationCompat.BigTextStyle()
                                                                                 .bigText(urgentProblemShortInfo))
@@ -205,7 +206,7 @@ public class BackgroundService extends Service {
 
                                                     NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
                                                             .setSmallIcon(R.drawable.aps_icon)
-                                                            .setContentTitle("Срочная проблема")
+                                                            .setContentTitle(getResources().getString(R.string.urgent_problem))
                                                             .setContentText(urgentProblemShortInfo)
                                                             .setStyle(new NotificationCompat.BigTextStyle()
                                                                     .bigText(urgentProblemShortInfo))
@@ -263,14 +264,14 @@ public class BackgroundService extends Service {
                                                                 if (operatorEquipmentName.equals(callEquipmentName) && operatorShopName.equals(callShopName)) {
                                                                     String pointNo = callSnap.child(getString(R.string.point_no)).getValue().toString();
                                                                     String calledByLogin = callSnap.child("called_by").getValue().toString();
-                                                                    String callInfo = calledByLogin + " вызывает вас в " + callShopName + "\n" + callEquipmentName + "\nПункт №" + pointNo;
+                                                                    String callInfo = calledByLogin + getResources().getString(R.string.calling_you_to) + callShopName + "\n" + callEquipmentName + "\n"+ getResources().getString(R.string.nomer_point_textview) + pointNo;
                                                                     Intent intent = new Intent(getApplicationContext(), CallsList.class);
                                                                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                                                     PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
                                                                     NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
                                                                             .setSmallIcon(R.drawable.aps_icon)
-                                                                            .setContentTitle("Вас вызывают!")
+                                                                            .setContentTitle(getResources().getString(R.string.you_are_being_called))
                                                                             .setContentText(callInfo)
                                                                             .setStyle(new NotificationCompat.BigTextStyle()
                                                                                     .bigText(callInfo))
@@ -279,7 +280,7 @@ public class BackgroundService extends Service {
 
                                                                     NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                                                                     // notificationId is a unique int for each notification that you must define
-                                                                    notificationManager.notify((int) notificationCount, builder.build());
+                                                                    Objects.requireNonNull(notificationManager).notify((int) notificationCount, builder.build());
                                                                     Vibration.vibration(getApplicationContext());
                                                                     callsIDs.add((int) notificationCount);
                                                                     notificationCount++;
@@ -304,14 +305,14 @@ public class BackgroundService extends Service {
                                                                     String pointNo = callSnap.child(getString(R.string.point_no)).getValue().toString();
                                                                     String calledByLogin = callSnap.child("called_by").getValue().toString();
 
-                                                                    String callInfo = calledByLogin + " вызывает вас в " + callShopName + "\n" + callEquipmentName + "\nПункт №" + pointNo;
+                                                                    String callInfo = calledByLogin + getResources().getString(R.string.calling_you_to) + callShopName + "\n" + callEquipmentName + "\n" + getResources().getString(R.string.nomer_point_textview) + pointNo;
                                                                     Intent intent = new Intent(getApplicationContext(), CallsList.class);
                                                                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                                                     PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
                                                                     NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
                                                                             .setSmallIcon(R.drawable.aps_icon)
-                                                                            .setContentTitle("Вас вызывают!")
+                                                                            .setContentTitle(getResources().getString(R.string.you_are_being_called))
                                                                             .setContentText(callInfo)
                                                                             .setStyle(new NotificationCompat.BigTextStyle()
                                                                                     .bigText(callInfo))
@@ -338,14 +339,14 @@ public class BackgroundService extends Service {
                                                         String pointNo = callSnap.child(getString(R.string.point_no)).getValue().toString();
                                                         String calledByLogin = callSnap.child("called_by").getValue().toString();
 
-                                                        String callInfo = calledByLogin + " вызывает вас в " + callShopName + "\n" + callEquipmentName + "\nПункт №" + pointNo;
+                                                        String callInfo = calledByLogin + getResources().getString(R.string.calling_you_to) + callShopName + "\n" + callEquipmentName + "\n" + getResources().getString(R.string.nomer_point_textview) + pointNo;
                                                         Intent intent = new Intent(getApplicationContext(), CallsList.class);
                                                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                                         PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
                                                         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
                                                                 .setSmallIcon(R.drawable.aps_icon)
-                                                                .setContentTitle("Вас вызывают!")
+                                                                .setContentTitle(getResources().getString(R.string.you_are_being_called))
                                                                 .setContentText(callInfo)
                                                                 .setStyle(new NotificationCompat.BigTextStyle()
                                                                         .bigText(callInfo))
@@ -379,7 +380,7 @@ public class BackgroundService extends Service {
             handler.postDelayed(runnableCode, RUNNABLE_REFRESH_TIME);
         }
         catch (NullPointerException npe){ExceptionProcessing.processException(npe, getResources().getString(R.string.database_npe_toast), getApplicationContext(), this);}
-        catch (AssertionError ae) {ExceptionProcessing.processException(ae, "Телефон не поддерживает функцию уведомлений либо техническая проблема с телефоном.", getApplicationContext(), this);}
+        catch (AssertionError ae) {ExceptionProcessing.processException(ae, getResources().getString(R.string.no_notifications_func_or_tech_problem), getApplicationContext(), this);}
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -398,8 +399,8 @@ public class BackgroundService extends Service {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "Уведомления APS"; //название канала уведомлений (показывается в настройках
-            String description = "Уведомления о проблемах и неполадках обородувания на заводе";
+            CharSequence name = getString(R.string.aps_notifications); //название канала уведомлений (показывается в настройках
+            String description = getString(R.string.notifications_description);
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
@@ -415,8 +416,8 @@ public class BackgroundService extends Service {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "ТО Проблемы"; //название канала уведомлений (показывается в настройках
-            String description = "Уведомления о ТО проблемах, выходят единожды";
+            CharSequence name = getString(R.string.problems_list_submenu); //название канала уведомлений (показывается в настройках
+            String description = getString(R.string.maintenance_probs_notif_channel);
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
             NotificationChannel channel = new NotificationChannel(MAINTENANCE_PROBS_CHANNEL_ID, name, importance);
             channel.setDescription(description);
@@ -453,10 +454,10 @@ public class BackgroundService extends Service {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
         Notification notification = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                .setContentTitle("Приложение APS запущено")
-                .setContentText("Уведомления о проблемах на линиях и вызовах будут показываться в режиме реального времени")
+                .setContentTitle(getString(R.string.app_launched))
+                .setContentText(getString(R.string.notifs_will_be_made_online))
                 .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText("Уведомления о проблемах на линиях и вызовах будут показываться в режиме реального времени"))
+                        .bigText(getString(R.string.notifs_will_be_made_online)))
                 .setSmallIcon(R.drawable.aps_icon)
                 .setContentIntent(pendingIntent)
                 .build();

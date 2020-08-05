@@ -93,7 +93,7 @@ public class ConfirmCallDialog extends DialogFragment implements View.OnTouchLis
                         {
                             confirm.setVisibility(View.INVISIBLE);
                             TextView title = view.findViewById(R.id.title);
-                            title.setText("У вас уже есть активный вызов с данными параметрами");
+                            title.setText(getString(R.string.you_already_active_call_with_these_params));
                         }
                     } catch (NullPointerException npe) {
                         ExceptionProcessing.processException(npe);

@@ -67,7 +67,7 @@
                     android:drawableRight="@drawable/deactivated"
                     android:paddingEnd="10dp"
                     android:paddingRight="10dp"
-                    android:text="Пункт не задействован"
+                    android:text="@string/point_not_active"
                     android:textColor="@color/text"
                     tools:ignore="RtlSymmetry" />
 

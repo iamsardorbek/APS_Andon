@@ -27,7 +27,7 @@ public class FactoryCondition extends AppCompatActivity {
         try {
             toggle = InitNavigationBar.setUpNavBar(FactoryCondition.this, getApplicationContext(), Objects.requireNonNull(getSupportActionBar()), R.id.web_monitoring, R.id.factory_condition);
         } catch (NullPointerException npe) {ExceptionProcessing.processException(npe);}
-        setTitle("Веб-мониторинг");
+        setTitle(getString(R.string.open_factory_cond_button));
         //иниц WebView
         webview.setWebViewClient(new WebViewClient());
         webview.getSettings().setJavaScriptEnabled(true);

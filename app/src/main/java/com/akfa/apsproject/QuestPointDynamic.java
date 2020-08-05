@@ -119,10 +119,6 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
         }
         else //если это >1 участка, получи интер-активити данные о процессе проверки
         {
-            if(pointNo == numOfPoints)
-            {
-                nextPoint.setText("Закончить проверку");
-            }
             Bundle arguments = getIntent().getExtras();
             startTimeMillis = arguments.getLong("startTimeMillis");
             problemsCount = arguments.getInt("Количество обнаруженных проблем");
@@ -152,7 +148,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                     saveCheckingData(numOfSubpoints);
                     //checks points' count and refreshes the activity
                 }
-                else { Toast.makeText(getApplicationContext(), "Заполните состояние каждого пункта", Toast.LENGTH_LONG).show(); }
+                else { Toast.makeText(getApplicationContext(), R.string.select_the_state_of_each_subpoint, Toast.LENGTH_LONG).show(); }
                 break;
         }
         return false;
@@ -163,7 +159,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
         //настрой actionBar
         ActionBar actionBar = getSupportActionBar();
         Objects.requireNonNull(actionBar).show();
-        setTitle("Проверка линий");
+        setTitle(getString(R.string.maintenance_check));
         //настрой сам навигейшн бар
         final DrawerLayout drawerLayout;
         ActionBarDrawerToggle toggle;
@@ -198,7 +194,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                 if (id == R.id.check_equipment)
                 {
                     drawerLayout.closeDrawer(GravityCompat.START); //когда нажали на саму проверку, нав бар просто закрывается
-                    Toast.makeText(getApplicationContext(), "Проверка линии уже в процессе", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), R.string.check_in_progress, Toast.LENGTH_SHORT).show();
                 }
                 else
                 {
@@ -220,9 +216,9 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
 
     private AlertDialog askOptionOnNavigationBarClicked(final int menuItemId)
     {//тут если юзер захочет выйти из проверки, данные должны стереться, поэтому выводится диалог для этого
-        return new AlertDialog.Builder(this).setTitle("Закончить проверку").setMessage("Вы уверены, что хотите закончить проверку? Данные не будут сохранены.")
-                .setIcon(R.drawable.close)
-                .setPositiveButton("Да", new DialogInterface.OnClickListener() {
+        return new AlertDialog.Builder(this).setTitle(getString(R.string.finish_check)).setMessage(getString(R.string.r_u_sure_u_wanna_finish_check))
+            .setIcon(R.drawable.close)
+                .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
                     @SuppressLint("ApplySharedPref")
                     @SuppressWarnings("deprecation")
                     public void onClick(DialogInterface dialog, int whichButton) {
@@ -255,9 +251,8 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                                 startActivity(openFactoryCondition);
                                 break;
                             case R.id.about: //инфа про приложение и компанию и иинструкции может
-//                        Intent openAbout = new Intent(getApplicationContext(), About.class);
-//                        startActivity(openAbout);
-                                Toast.makeText(getApplicationContext(), "Приложение создано Akfa R&D в 2020 году в Ташкенте.",Toast.LENGTH_SHORT).show();
+                                Intent openAbout = new Intent(getApplicationContext(), SettingsActivity.class);
+                                startActivity(openAbout);
                                 break;
                             case R.id.log_out: //возвращение в логин page
                                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -265,14 +260,14 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                                 editor.clear();
                                 editor.commit();
                                 Intent logOut = new Intent(getApplicationContext(), Login.class);
-                                logOut.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                                logOut.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                 startActivity(logOut);
                                 break;
                         }
                         finish();
                     }
                 })
-                .setNegativeButton("Нет", new DialogInterface.OnClickListener() {
+                .setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
                     }
@@ -314,7 +309,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                     }
                     catch (NullPointerException npe) { //на случай если неправильно заполнили или удалили определенный подпункт
                         ExceptionProcessing.processException(npe);
-                        subpointDescription = "Подпункт №" + subpointNo;
+                        subpointDescription = getString(R.string.subpoint_no) + subpointNo;
                     }
                     subpointDescriptions.add(subpointDescription);
                     addRadioGroup(subpointNo, subpointDescription);
@@ -335,6 +330,10 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                     pointDeactivated.setVisibility(View.VISIBLE);
                 }
                 numOfPoints = Integer.parseInt(Objects.requireNonNull(equipmentSnap.child(getString(R.string.number_of_points)).getValue()).toString());
+                if(pointNo == numOfPoints)
+                {
+                    nextPoint.setText(R.string.finish_check);
+                }
                 nextPoint.setVisibility(View.VISIBLE);
 //                addRadioGroups(); //количество пунктов было установлено, добавь радиокнопки
                 initClickListeners(); //радиокнопки были добавлены, поэтому можно разрешать кликать на "Следующий пункт"
@@ -392,12 +391,12 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
             rb[0] = new RadioButton(context);
             rb[1] = new RadioButton(context);
         }
-        rb[0].setText("ПРОБЛЕМА");
+        rb[0].setText(R.string.problem);
         rb[0].setId(RADIO_GROUP_ELEMENT_ID + (pointNo * 10) + 1);
         rb[0].setLayoutParams(buttonParams);
         rb[0].setTextSize(15);
         //-------Radiobutton для Порядка--------//
-        rb[1].setText("ПОРЯДОК");
+        rb[1].setText(R.string.ok_order);
         rb[1].setTextSize(15);
         rb[1].setId(RADIO_GROUP_ELEMENT_ID + (pointNo * 10) + 2);
         rb[1].setLayoutParams(buttonParams);
@@ -449,9 +448,9 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
 
     private AlertDialog AskOption()
     { //конструирует диалог выходящий при желании пользователя остнаовить проверку
-        return new AlertDialog.Builder(this).setTitle("Закончить проверку").setMessage("Вы уверены, что хотите закончить проверку? Данные не будут сохранены.")
+        return new AlertDialog.Builder(this).setTitle(getString(R.string.finish_check)).setMessage(getString(R.string.r_u_sure_u_wanna_finish_check))
                 .setIcon(R.drawable.close)
-                .setPositiveButton("Да", new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton)
                     {
                         DatabaseReference problemsRef = FirebaseDatabase.getInstance().getReference("Maintenance_problems");
@@ -470,7 +469,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                         finish();
                     }
                 })
-                .setNegativeButton("Нет", new DialogInterface.OnClickListener() {
+                .setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
                     }
@@ -499,7 +498,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
         long endTimeMillis = System.currentTimeMillis();
         //считают продолжительность проверки
         long durationMillis = endTimeMillis - startTimeMillis;
-        checkDuration = String.format("%02d мин, %02d сек", TimeUnit.MILLISECONDS.toMinutes(durationMillis),
+        checkDuration = String.format("%02d" + getString(R.string.minutes) + ", " + "%02d" + getString(R.string.seconds), TimeUnit.MILLISECONDS.toMinutes(durationMillis),
                 TimeUnit.MILLISECONDS.toSeconds(durationMillis) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(durationMillis)));
         Intent intent = new Intent(getApplicationContext(), QuestEndOfChecking.class);
         intent.putExtra("Количество обнаруженных проблем", problemsCount);
@@ -580,7 +579,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                 problemPushKeysOfTheWholeCheck.add(problemPushKey); //добавь этот айди в лист проблем во время всей проверки этой линии
                 //сфоткайте первую проблему, следующие проблемы фоткаются через запуск камеры через onActivityResult
                 if(problemsOnThisStation == 1) {
-                    Toast.makeText(getApplicationContext(), "Сфотографируйте проблему пункта " + i, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.take_pic_of_point) + i, Toast.LENGTH_LONG).show();
                     if(noSubpointMustTakePic == 1)
                     {
                         mustTakePic = false;
@@ -605,7 +604,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
             //конец время-дата
             String photoName = equipmentName + ", " + pointName + " | " + date + "_" + time;
             //noPointMustTakePic
-            Toast.makeText(getApplicationContext(), "Сфотографируйте ЗНАЧЕНИЯ МОНИТОРА на данном участке", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), R.string.take_pic_of_monitor_here, Toast.LENGTH_LONG).show();
             dispatchTakePictureIntent(photoName, REQUEST_REQUIRED_IMAGE_CAPTURE);
         }
         else if (pointNo >= numOfPoints && numOfUnphotographedProblem() == -1) { //если это последний пункт и проблем обнаружено не было
@@ -656,8 +655,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
             }
             catch (Exception e)
             {
-                Log.getStackTraceString(e);
-                Toast.makeText(getApplicationContext(), "Ошибка камеры, обратитесь в службу поддержки", Toast.LENGTH_SHORT).show();
+                ExceptionProcessing.processException(e, getString(R.string.camera_error), getApplicationContext());
                 qrStart(pointNo, equipmentNo, shopNo);
             }
         }
@@ -692,7 +690,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
             probPicRef.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @SuppressWarnings("ResultOfMethodCallIgnored")
                         @Override public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            Toast.makeText(getApplicationContext(), "Фотография загружена успешно", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), R.string.picture_uploaded_successfully, Toast.LENGTH_LONG).show();
                             File picToDelete = new File(currentPhotoPath);
                             picToDelete.delete(); //удали фотку из памяти телефона (чтобы память не засорялась)
                         }
@@ -701,7 +699,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                         @Override public void onFailure(@NonNull Exception exception) {
                             // Handle unsuccessful uploads
                             exception.printStackTrace();
-                            Toast.makeText(getApplicationContext(), "Ошибка загрузки файла", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), R.string.pic_upload_error, Toast.LENGTH_LONG).show();
                         }
                     })
                     .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
@@ -716,7 +714,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
             if(numOfUnphotographedProblem() != -1)
             { //если еще не сфоткали все проблемы, снова запусти камеру
                 String problemPushKey = problemPushKeys.get(photoIterator);
-                Toast.makeText(getApplicationContext(), "Сфотографируйте проблему пункта " + (numOfUnphotographedProblem()+1), Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), getString(R.string.take_pic_of_point) + (numOfUnphotographedProblem()+1), Toast.LENGTH_LONG).show();
                 dispatchTakePictureIntent(problemPushKey, REQUEST_IMAGE_CAPTURE);
             }
             else
@@ -732,7 +730,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                     time = sdf.format(new Date());
                     //конец время-дата
                     String photoName = equipmentName + ", " + pointName + " | " + date + "_" + time;
-                    Toast.makeText(getApplicationContext(), "Сфотографируйте ЗНАЧЕНИЯ МОНИТОРА на данном пункте", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), R.string.take_pic_of_monitor_here, Toast.LENGTH_LONG).show();
                     dispatchTakePictureIntent(photoName, REQUEST_REQUIRED_IMAGE_CAPTURE);
                 }
                 else
@@ -760,7 +758,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @SuppressWarnings("ResultOfMethodCallIgnored")
                     @Override public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        Toast.makeText(getApplicationContext(), "Фотография загружена успешно", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), R.string.picture_uploaded_successfully, Toast.LENGTH_LONG).show();
                         File picToDelete = new File(currentPhotoPath);
                         picToDelete.delete(); //удали фотку из памяти телефона (чтобы память не засорялась)
                     }
@@ -769,7 +767,7 @@ public class QuestPointDynamic extends AppCompatActivity implements View.OnTouch
                         @Override public void onFailure(@NonNull Exception exception) {
                             // Handle unsuccessful uploads
                             exception.printStackTrace();
-                            Toast.makeText(getApplicationContext(), "Ошибка загрузки файла", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getApplicationContext(), R.string.pic_upload_error, Toast.LENGTH_LONG).show();
                         }
                     })
                     .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {

@@ -42,7 +42,7 @@ public class ChecksHistory extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_checks_history);
-        setTitle("Загрузка данных..."); //если нет проблем, надо сделать: нету проблем
+        setTitle(getString(R.string.loading_data)); //если нет проблем, надо сделать: нету проблем
         initInstances();
         toggle = InitNavigationBar.setUpNavBar(ChecksHistory.this, getApplicationContext(), Objects.requireNonNull(getSupportActionBar()), R.id.checks_history, R.id.activity_checks_history);
     }
@@ -72,7 +72,7 @@ public class ChecksHistory extends AppCompatActivity {
                 linearLayout.removeAllViews();
                 maintenanceChecks.clear();
                 totalChecksCount = 0;
-                setTitle("История проверок ТО");
+                setTitle(getString(R.string.checks_history_submenu));
 
 
                 for(final DataSnapshot oneDaySnap : maintenanceChecksSnap.getChildren())
@@ -113,12 +113,12 @@ public class ChecksHistory extends AppCompatActivity {
                                     for(DataSnapshot singleMaintenanceCheckSnap : oneDaySnap.getChildren())
                                     {
                                         MaintenanceCheck maintenanceCheck = singleMaintenanceCheckSnap.getValue(MaintenanceCheck.class);
-                                        if(maintenanceCheck.getEquipment_name().equals(equipmentName) && maintenanceCheck.getShop_name().equals(shopName))
+                                        if(Objects.requireNonNull(maintenanceCheck).getEquipment_name().equals(equipmentName) && maintenanceCheck.getShop_name().equals(shopName))
                                         {
                                             thisEquipmentChecked = true;
                                             //инициализация TEXTVIEW
-                                            String equipmentInfo = shopName + "\n" + equipmentName + "\nПроверено: " + maintenanceCheck.getChecked_by() + "\nКоличество проблем: " +
-                                                    maintenanceCheck.getNum_of_detected_problems() + "\nПроверка закончена: " + maintenanceCheck.getTime_finished() + "\nПотраченное время: " + maintenanceCheck.getDuration();
+                                            String equipmentInfo = shopName + "\n" + equipmentName + getString(R.string.checked_by) + maintenanceCheck.getChecked_by() + getString(R.string.num_of_problems) +
+                                                    maintenanceCheck.getNum_of_detected_problems() + getString(R.string.end_time) + maintenanceCheck.getTime_finished() + "\n" + getString(R.string.checkingDuration) + maintenanceCheck.getDuration();
                                             TextView equipmentInfoTextView = new TextView(getApplicationContext());
                                             equipmentInfoTextView.setText(equipmentInfo);
                                             equipmentInfoTextView.setPadding(25, 25, 25, 25);

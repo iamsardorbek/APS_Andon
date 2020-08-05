@@ -20,12 +20,12 @@
             android:layout_weight="5"
             android:background="@drawable/remont_button"
             android:paddingLeft="50dp"
-            android:text="@string/remoteButtonRed"
+            android:text="@string/repair_button"
             android:textAlignment="center"
             android:textColor="@color/remoteButtonTextColor"
             android:textSize="40sp"
             android:textStyle="bold"
-            tools:ignore="RtlCompat" />
+            tools:ignore="RtlCompat,RtlHardcoded,RtlSymmetry" />
 
         <Button
             android:id="@+id/quality_btn"
@@ -33,12 +33,12 @@
             android:layout_marginRight="5dp"
             android:layout_marginTop="20dp"
             android:background="@drawable/otk_button"
-            android:text="@string/remoteButtonYellow"
+            android:text="@string/quality_button"
             android:textAlignment="center"
             android:textColor="@color/remoteButtonTextColor"
             android:textSize="40sp"
             android:textStyle="bold"
-            tools:ignore="RtlCompat"
+            tools:ignore="RtlCompat,RtlHardcoded,RtlSymmetry"
             android:paddingRight="50dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -53,12 +53,12 @@
             android:layout_gravity="top"
             android:layout_marginLeft="5dp"
             android:background="@drawable/materials_button"
-            android:text="@string/remoteButtonGreen"
+            android:text="@string/raw_button"
             android:textAlignment="center"
             android:textColor="@color/remoteButtonTextColor"
             android:textSize="40sp"
             android:textStyle="bold"
-            tools:ignore="RtlCompat"
+            tools:ignore="RtlCompat,RtlHardcoded,RtlSymmetry"
             android:layout_width="match_parent"
             android:layout_marginStart="5dp" />
 
@@ -71,12 +71,12 @@
             android:layout_marginRight="5dp"
             android:layout_marginTop="20dp"
             android:background="@drawable/master_button"
-            android:text="@string/remoteButtonBlue"
+            android:text="@string/master_button"
             android:textAlignment="center"
             android:textColor="@color/remoteButtonTextColor"
             android:textSize="40sp"
             android:textStyle="bold"
-            tools:ignore="RtlCompat"
+            tools:ignore="RtlCompat,RtlHardcoded,RtlSymmetry"
             android:layout_width="match_parent"
             android:layout_marginEnd="5dp" />
     </LinearLayout>

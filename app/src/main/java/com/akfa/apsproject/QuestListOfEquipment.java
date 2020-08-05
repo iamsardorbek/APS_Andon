@@ -52,7 +52,7 @@ public class QuestListOfEquipment extends AppCompatActivity implements View.OnTo
         initInstances(); //инициализация переменных и кнопки
         initExpandableListView(); //иницилизация выпадающего списка
         toggle = InitNavigationBar.setUpNavBar(QuestListOfEquipment.this, getApplicationContext(),  getSupportActionBar(), R.id.check_equipment, R.id.quest_activity_main);
-        setTitle("Проверка линий");
+        setTitle(getString(R.string.maintenance_check));
     }
 
     @SuppressLint("ClickableViewAccessibility")

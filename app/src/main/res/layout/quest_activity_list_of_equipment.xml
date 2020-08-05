@@ -11,7 +11,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Не удалось загрузить данные о линиях или несостыковка базы данных.\nМы уже работаем над этой проблемой"
+        android:text="@string/could_load_equipment_data"
         android:textColor="@color/text"
         android:id="@+id/exception_text"
         android:textSize="20sp"

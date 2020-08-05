@@ -13,7 +13,7 @@
         android:layout_gravity="center"
         android:id="@+id/exception_text"
         android:visibility="gone"
-        android:text="Не удалось загрузить картинку линии"
+        android:text="@string/couldnt_download_layout_pic"
         android:textColor="@color/text"
         android:textSize="25sp"
         android:gravity="center"

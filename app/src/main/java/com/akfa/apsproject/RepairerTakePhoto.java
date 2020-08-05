@@ -77,7 +77,7 @@ public class RepairerTakePhoto extends AppCompatActivity implements View.OnTouch
                     case R.id.dont_take_pic:
                         //проблема решена! аутпут
                         finish();
-                        Toast.makeText(getApplicationContext(), "Проблема успешно решена", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), R.string.problem_solved_successfully, Toast.LENGTH_SHORT).show();
                         break;
                 }
                 break;
@@ -124,7 +124,7 @@ public class RepairerTakePhoto extends AppCompatActivity implements View.OnTouch
             probPicRef.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @SuppressWarnings("ResultOfMethodCallIgnored")
                 @Override public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    Toast.makeText(getApplicationContext(), "Фотография загружена успешно", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), R.string.picture_uploaded_successfully, Toast.LENGTH_LONG).show();
                     File picToDelete = new File(currentPhotoPath);
                     picToDelete.delete();
                 }
@@ -133,7 +133,7 @@ public class RepairerTakePhoto extends AppCompatActivity implements View.OnTouch
                     @Override public void onFailure(@NonNull Exception exception) {
                         // Handle unsuccessful uploads
                         exception.printStackTrace();
-                        Toast.makeText(getApplicationContext(), "Ошибка загрузки файла", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), R.string.pic_upload_error, Toast.LENGTH_LONG).show();
                     }
                 })
                 .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {

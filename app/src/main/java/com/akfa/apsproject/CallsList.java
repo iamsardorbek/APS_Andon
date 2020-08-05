@@ -35,7 +35,7 @@ public class CallsList extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_operator_or_master_calls_list);
-        setTitle("Нет вызовов");
+        setTitle(getString(R.string.no_calls));
         linearLayout = findViewById(R.id.linearLayout);
         DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users/" + UserData.login);
         userRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -47,14 +47,14 @@ public class CallsList extends AppCompatActivity {
                         linearLayout.removeAllViews(); //для обновления данных удали все результаты предыдущего поиска
                         problemCount = 0;
                         if(callsSnap.getValue() == null) //если ветка Urgent_problems пуста/не сущ -> дай знать, что все проблемы уже решены
-                            setTitle("Нет вызовов");
+                            setTitle(getString(R.string.no_calls));
                         else {
-                            setTitle("Нет вызовов");
+                            setTitle(getString(R.string.no_calls));
                             for (final DataSnapshot singleCallSnap : callsSnap.getChildren()) {
                                 try{
                                     final Call thisCall = singleCallSnap.getValue(Call.class);
 
-                                    String whoIsNeededPosition = thisCall.getWho_is_needed_position();
+                                    String whoIsNeededPosition = Objects.requireNonNull(thisCall).getWho_is_needed_position();
                                     String callEquipmentName = thisCall.getEquipment_name();
                                     String callShopName = thisCall.getShop_name();
                                     boolean callIsComplete = thisCall.getComplete();
@@ -86,12 +86,12 @@ public class CallsList extends AppCompatActivity {
                                         if ((operatorIsResponsibleForThisEquipment && UserData.position.equals("operator")) || (UserData.position.equals("master") && masterIsResponsibleForThisShop)
                                                 || UserData.position.equals("repair")) { //если оператор ответсвенен за эту лини. или это цех мастера или это просто ремонтник
                                             //----СОЗДАНИЕ TEXTVIEW, ВНЕСЕНИЕ ДАННЫХ В НЕГО И ИНИЦИАЛИЗАЦИЯ ПАРАМЕТРОВ----//
-                                            setTitle("Вас ждут в данных местах");
+                                            setTitle(getString(R.string.waiting_for_you_in_the_following_places));
                                             TextView callInfo;
                                             callInfo = new TextView(getApplicationContext());
                                             //данные об этой проблеме запишем в строку callInfoFromDB
-                                            String callInfoFromDB = "Цех: " + thisCall.getShop_name() + "\nОборудование: " + thisCall.getEquipment_name() + "\nПункт №" + thisCall.getPoint_no()
-                                                    + "\nДата и время вызова: " + thisCall.getDate_called() + " " + thisCall.getTime_called() + "\nВызвал: " + thisCall.getCalled_by();
+                                            String callInfoFromDB = getString(R.string.shop) + thisCall.getShop_name() + "\n" + getString(R.string.equipmentLine) + thisCall.getEquipment_name() + "\n" + getString(R.string.nomer_point_textview) + thisCall.getPoint_no()
+                                                    + getString(R.string.date_time_of_call) + thisCall.getDate_called() + " " + thisCall.getTime_called() + getString(R.string.called_by) + thisCall.getCalled_by();
                                             callInfo.setText(callInfoFromDB);
                                             callInfo.setPadding(25, 25, 25, 25);
                                             callInfo.setId(ID_TEXTVIEWS + problemCount);

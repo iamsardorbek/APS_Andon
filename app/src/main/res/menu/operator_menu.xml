@@ -11,7 +11,7 @@
         android:title="@string/check_equipment_submenu"/>
     <item android:id="@+id/about"
         android:icon="@drawable/about"
-        android:title="@string/about_app_submenu"/>
+        android:title="@string/settings_submenu"/>
     <item android:id="@+id/log_out"
         android:icon="@drawable/log_out"
         android:title="@string/log_out_submenu"/>

@@ -101,10 +101,10 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
             @Override public void onDataChange(@NonNull DataSnapshot urgentProblemsSnap) {
                 linearLayout.removeAllViews(); //для обновления данных удали все результаты предыдущего поиска
                 if(urgentProblemsSnap.getValue() == null) //если ветка Urgent_problems пуста/не сущ -> дай знать, что все проблемы уже решены
-                    setTitle("Все проблемы решены");
+                    setTitle(getString(R.string.all_probs_solved));
                 else
                 {//но если есть проблемы, получи о каждой проблеме данные и занеси в linearLayout (ОСНОВНОЙ ЭКШН ЗДЕСЬ)
-                    setTitle("Срочные проблемы на линиях"); //AppBar надпись задать
+                    setTitle(getString(R.string.urgent_problems_submenu)); //AppBar надпись задать
                     for(DataSnapshot urgentProblemSnap : urgentProblemsSnap.getChildren())
                     { //цикл проходит по каждой срочной проблеме, чтобы получить о ней данные и занести их в виде отдельных textviews в linearLayout
                         try { //если ошибка в БД, эта проблема просто не будет высвечена в списке
@@ -117,8 +117,8 @@ public class UrgentProblemsList extends AppCompatActivity implements View.OnTouc
                                 TextView problemsInfo;
                                 problemsInfo = new TextView(getApplicationContext());
                                 //данные об этой проблеме запишем в строку problemInfoFromDB
-                                String problemInfoFromDB = "Цех: " + urgentProblem.getShop_name() + "\nОборудование: " + urgentProblem.getEquipment_name() + "\nПункт №" + urgentProblem.getPoint_no()
-                                        + "\nДата и время обнаружения: " + urgentProblem.getDate_detected() + " " + urgentProblem.getTime_detected();
+                                String problemInfoFromDB = getString(R.string.shop) + urgentProblem.getShop_name() + getString(R.string.equipment_name_textview) + urgentProblem.getEquipment_name() + "\n" + getString(R.string.repairerProblemPointNumber) + urgentProblem.getPoint_no()
+                                        + getString(R.string.date_time_detection) + urgentProblem.getDate_detected() + " " + urgentProblem.getTime_detected();
                                 problemsInfo.setText(problemInfoFromDB);
                                 problemsInfo.setPadding(25, 25, 25, 25);
                                 problemsInfo.setId(ID_TEXTVIEWS + problemCount);

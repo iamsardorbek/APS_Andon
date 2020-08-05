@@ -38,7 +38,7 @@ public class RepairersProblemsList extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.repairers_activity_problems_list);
-        setTitle("Загрузка данных..."); //если нет проблем, надо сделать: нету проблем
+        setTitle(getString(R.string.loading_data)); //если нет проблем, надо сделать: нету проблем
         initInstances();
         toggle = InitNavigationBar.setUpNavBar(RepairersProblemsList.this, getApplicationContext(), Objects.requireNonNull(getSupportActionBar()), R.id.problems_list, R.id.repairers_activity);
         addProblemsFromDatabase();
@@ -70,7 +70,7 @@ public class RepairersProblemsList extends AppCompatActivity {
                 linearLayout.removeAllViews(); //для обновления данных удали все результаты предыдущего поиска
                 if(problemsSnap.getValue() == null)
                 {
-                    setTitle("Все проблемы решены");
+                    setTitle(getString(R.string.all_probs_solved));
                 }
                 else
                 {
@@ -81,7 +81,7 @@ public class RepairersProblemsList extends AppCompatActivity {
                             MaintenanceProblem problem = problemDataSnapshot.getValue(MaintenanceProblem.class); //считай в объект
                             if(!Objects.requireNonNull(problem).solved)
                             {
-                                setTitle("Проблемы на линиях");
+                                setTitle(getString(R.string.problems_on_equipment_lines));
                                 problemIDs.add(problemDataSnapshot.getKey()); //добавь айди данной проблемы в лист
                                 addAMaintenanceProblem(problem);
                             }
@@ -100,7 +100,8 @@ public class RepairersProblemsList extends AppCompatActivity {
     private void addAMaintenanceProblem(MaintenanceProblem problem)
     {
         //инициализация TEXTVIEW
-        String problemInfoFromDB = "Цех: " + problem.getShop_name() + "\nОборудование: " + problem.getEquipment_line_name() + "\nПункт №" + problem.getPoint_no() + "\nПункт №" + problem.getSubpoint_no();
+        String problemInfoFromDB = getString(R.string.shop) + problem.getShop_name() + "\n" + getString(R.string.equipment_name_textview) + problem.getEquipment_line_name() + "\n"
+                + getString(R.string.nomer_point_textview) + problem.getPoint_no() + "\n" + getString(R.string.subpoint_no) + problem.getSubpoint_no();
         TextView problemsInfo;
         problemsInfo = new TextView(getApplicationContext());
         problemsInfo.setText(problemInfoFromDB);

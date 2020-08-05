@@ -55,7 +55,7 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
         }
         catch (NullPointerException npe)
         {
-            ExceptionProcessing.processException(npe, "Данная проблема была решена либо о ней недостаточно данных", getApplicationContext(), RepairerSeparateProblem.this);
+            ExceptionProcessing.processException(npe, getString(R.string.the_prob_was_solved_or_incomplete_data), getApplicationContext(), RepairerSeparateProblem.this);
         }
     }
 
@@ -118,7 +118,7 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
                                         boolean callSnapComplete = (boolean) callSnap.child("complete").getValue();
                                         if (callSnapComplete) { //когда оператор прибыл позже, после первоначальной инициализации этого листенера
                                             callOperator.setBackgroundResource(R.drawable.call_closed_button);
-                                            callOperator.setText("Оператор прибыл");
+                                            callOperator.setText(R.string.operator_arrived);
                                             Resources r = getApplicationContext().getResources();
                                             int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 5, r.getDisplayMetrics());
                                             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -130,7 +130,7 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
                                             callForOperatorOpen = true;
                                             callOperator.setClickable(false); //если есть уже активный вызов оператора, еще раз вызвать его нельзя, а то БД заполнится
                                             callOperator.setBackgroundResource(R.drawable.call_opened_button);
-                                            callOperator.setText("Оператор вызван");
+                                            callOperator.setText(R.string.operator_is_called);
                                             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                                             params.setMargins(5, 40, 5, 40);
                                             params.gravity = Gravity.CENTER;
@@ -215,14 +215,14 @@ public class RepairerSeparateProblem extends AppCompatActivity implements View.O
                                             boolean callSnapComplete = (boolean) callSnap.child("complete").getValue();
                                             if (callSnapComplete) {
                                                 callOperator.setBackgroundResource(R.drawable.call_closed_button);
-                                                callOperator.setText("Оператор прибыл");
+                                                callOperator.setText(R.string.operator_arrived);
                                                 callOperator.setClickable(true); //теперь если вдруг уйдет, можно вызывать снова
                                                 callForOperatorOpen = false;
                                             } else {
                                                 callForOperatorOpen = true;
                                                 callOperator.setClickable(false); //если есть уже активный вызов оператора, еще раз вызвать его нельзя, а то БД заполнится
                                                 callOperator.setBackgroundResource(R.drawable.call_opened_button);
-                                                callOperator.setText("Оператор вызван");
+                                                callOperator.setText(R.string.operator_is_called);
                                                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                                                 params.setMargins(5, 40, 5, 40);
                                                 params.gravity = Gravity.CENTER;

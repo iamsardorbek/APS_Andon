@@ -14,10 +14,10 @@
         android:title="@string/problems_list_submenu"/>
     <item android:id="@+id/web_monitoring"
     android:icon="@drawable/web_monitoring"
-    android:title="@string/web_monitoring_submenu"/>
+    android:title="@string/open_factory_cond_button"/>
     <item android:id="@+id/about"
         android:icon="@drawable/about"
-        android:title="@string/about_app_submenu"/>
+        android:title="@string/settings_submenu"/>
     <item android:id="@+id/log_out"
         android:icon="@drawable/log_out"
         android:title="@string/log_out_submenu"/>

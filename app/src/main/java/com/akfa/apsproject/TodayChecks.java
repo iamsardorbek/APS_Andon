@@ -37,7 +37,7 @@ public class TodayChecks extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_today_checks);
-        setTitle("Загрузка данных..."); //если нет проблем, надо сделать: нету проблем
+        setTitle(getString(R.string.loading_data)); //если нет проблем, надо сделать: нету проблем
         initInstances();
         toggle = InitNavigationBar.setUpNavBar(TodayChecks.this, getApplicationContext(), Objects.requireNonNull(getSupportActionBar()),  R.id.today_checks, R.id.activity_today_checks);
 
@@ -72,7 +72,7 @@ public class TodayChecks extends AppCompatActivity {
                 maintenanceChecks.clear();
                 todayChecksCount = 0;
                 todayNotCheckedEquipmentCount = 0;
-                setTitle("Проверки ТО за сегодня");
+                setTitle(getString(R.string.today_checks_submenu));
 
                 DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference("Shops");
                 shopsRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -93,8 +93,8 @@ public class TodayChecks extends AppCompatActivity {
                                         {
                                             thisEquipmentChecked = true;
                                             //инициализация TEXTVIEW
-                                            String equipmentInfo = shopName + "\n" + equipmentName + "\nПроверено: " + maintenanceCheck.getChecked_by() + "\nКоличество проблем: " +
-                                                    maintenanceCheck.getNum_of_detected_problems() + "\nПроверка закончена: " + maintenanceCheck.getTime_finished() + "\nПотраченное время: " + maintenanceCheck.getDuration();
+                                            String equipmentInfo = shopName + "\n" + equipmentName + getString(R.string.checked_by) + maintenanceCheck.getChecked_by() + getString(R.string.num_of_problems) +
+                                                    maintenanceCheck.getNum_of_detected_problems() + getString(R.string.end_time) + maintenanceCheck.getTime_finished() + getString(R.string.time_spent) + maintenanceCheck.getDuration();
                                             TextView equipmentInfoTextView = new TextView(getApplicationContext());
                                             equipmentInfoTextView.setText(equipmentInfo);
                                             equipmentInfoTextView.setPadding(25, 25, 25, 25);

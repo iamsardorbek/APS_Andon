@@ -27,7 +27,7 @@
         <activity android:name=".SeparateCheckDetails" />
         <activity android:name=".ChecksHistory" />
         <activity android:name=".TodayChecks" />
-        <activity android:name=".AboutApp" />
+        <activity android:name=".SettingsActivity" />
         <activity android:name=".ConfirmCallDialog"
             tools:ignore="Instantiatable" />
         <activity android:name=".MakeACall" />

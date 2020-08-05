@@ -20,10 +20,10 @@ public class SplashActivity extends AppCompatActivity {
     Handler handler;
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_splash_new);
+        setContentView(R.layout.activity_splash);
         Objects.requireNonNull(getSupportActionBar()).hide();
 
-        if(android.os.Build.VERSION.SDK_INT == 27)
+        if(android.os.Build.VERSION.SDK_INT != 27)
         {
             grantNotificationPolicyAccess(); //дать доступ контролировать звук уведомлений
         }

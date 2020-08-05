@@ -45,7 +45,7 @@ public class ChooseProblematicPointDialog extends DialogFragment implements View
         try {
 
             initInstances(view);
-            spinnerArray.add("Нажмите сюда для выбора участка");
+            spinnerArray.add(getString(R.string.click_here_to_select_point));
 
             DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users/" + com.akfa.apsproject.UserData.login);
             userRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -73,7 +73,7 @@ public class ChooseProblematicPointDialog extends DialogFragment implements View
                                                         numOfStations = Integer.parseInt(equipmentSnap.child(getString(R.string.number_of_points)).getValue().toString()); //искомое кол-во участков
                                                         //ниже: заполни спиннер
                                                         for (int i = 1; i <= numOfStations; i++) {
-                                                            spinnerArray.add("Пункт №" + i);
+                                                            spinnerArray.add(getString(R.string.nomer_point_textview) + i);
                                                         }
                                                         ArrayAdapter<String> adapter = new ArrayAdapter<>(view.getContext(), android.R.layout.simple_spinner_item, spinnerArray);
                                                         adapter.setDropDownViewResource(R.layout.spinner_item);
@@ -96,7 +96,7 @@ public class ChooseProblematicPointDialog extends DialogFragment implements View
                             }
                         });
                     } catch (NullPointerException npe) {
-                        ExceptionProcessing.processException(npe, "Данные о вас в системе не полные. Обратитесь в службу поддержки.", getContext());
+                        ExceptionProcessing.processException(npe, getString(R.string.user_data_incomplete), getContext());
                         try {// и закрой диалог
                             Objects.requireNonNull(getDialog()).dismiss();
                         } catch (NullPointerException npe1) {ExceptionProcessing.processException(npe1);}
@@ -161,8 +161,8 @@ public class ChooseProblematicPointDialog extends DialogFragment implements View
                         break;
                     case R.id.confirm: //
                         button.setBackgroundResource(R.drawable.green_rectangle);
-                        if(spinnerStations.getSelectedItem().toString().equals("Нажмите сюда для выбора пункта")) //если юзер не открыл spinner и не выбрал пункт
-                            Toast.makeText(getContext(), "Выберите пункт", Toast.LENGTH_SHORT).show();
+                        if(spinnerStations.getSelectedItem().toString().equals(getString(R.string.click_here_to_select_point))) //если юзер не открыл spinner и не выбрал пункт
+                            Toast.makeText(getContext(), getString(R.string.choose_point), Toast.LENGTH_SHORT).show();
                         else
                         {
                             int pointNo = spinnerStations.getSelectedItemPosition(); //какой пункт выбрали (индекс выбранного элемента спиннера)

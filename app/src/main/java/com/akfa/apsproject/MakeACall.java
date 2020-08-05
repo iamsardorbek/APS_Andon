@@ -88,17 +88,17 @@ public class MakeACall extends AppCompatActivity implements View.OnTouchListener
                                 case "operator":
                                     callOperator.setBackgroundResource(R.drawable.call_opened_button);
                                     callOperator.setClickable(false);
-                                    callOperator.setText("Оператор вызван");
+                                    callOperator.setText(R.string.operator_is_called);
                                     break;
                                 case "repair":
                                     callRepairer.setBackgroundResource(R.drawable.call_opened_button);
                                     callRepairer.setClickable(false);
-                                    callRepairer.setText("Ремонтник вызван");
+                                    callRepairer.setText(R.string.repairer_is_called);
                                     break;
                                 case "master":
                                     callMaster.setBackgroundResource(R.drawable.call_opened_button);
                                     callMaster.setClickable(false);
-                                    callMaster.setText("Мастер вызван");
+                                    callMaster.setText(R.string.master_is_called);
                                     break;
                             }
                             DatabaseReference activeCallRef = FirebaseDatabase.getInstance().getReference("Calls/" + callSnap.getKey());
@@ -113,17 +113,17 @@ public class MakeACall extends AppCompatActivity implements View.OnTouchListener
                                             case "operator":
                                                 callOperator.setBackgroundResource(R.drawable.call_closed_button);
                                                 callOperator.setClickable(true);
-                                                callOperator.setText("Оператор прибыл");
+                                                callOperator.setText(R.string.operator_arrived);
                                                 break;
                                             case "repair":
                                                 callRepairer.setBackgroundResource(R.drawable.call_closed_button);
                                                 callRepairer.setClickable(true);
-                                                callRepairer.setText("Ремонтник прибыл");
+                                                callRepairer.setText(R.string.repairer_arrived);
                                                 break;
                                             case "master":
                                                 callMaster.setBackgroundResource(R.drawable.call_closed_button);
                                                 callMaster.setClickable(true);
-                                                callMaster.setText("Мастер прибыл");
+                                                callMaster.setText(R.string.master_arrived);
                                                 break;
                                         }
                                     }

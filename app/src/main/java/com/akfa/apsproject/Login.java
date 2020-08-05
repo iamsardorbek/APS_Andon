@@ -55,7 +55,7 @@ public class Login extends AppCompatActivity {
                 password = passwordView.getText().toString();
                 if(login.isEmpty() || password.isEmpty() || password.charAt(0) == ' ' || login.charAt(0) == ' ') //если пустые поля или начинаются с пробела - ошибка
                 {
-                    Toast.makeText(getApplicationContext(), "Заполните оба поля корректно", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.fill_both_fields_correctly), Toast.LENGTH_SHORT).show();
                 }
                 else {
                     loading.setVisibility(View.VISIBLE); //кликнул, пока БД не считали, стоит надпись ЗАГРУЗКА ДАННЫХ
@@ -122,16 +122,16 @@ public class Login extends AppCompatActivity {
                             }
                         }
                         else
-                        { Toast.makeText(getApplicationContext(), "Выйдите из аккаунта на другом устройстве", Toast.LENGTH_LONG).show(); }
+                        { Toast.makeText(getApplicationContext(), R.string.session_active_on_another_phone, Toast.LENGTH_LONG).show(); }
                     }
-                    else { Toast.makeText(getApplicationContext(), "Неверный пароль", Toast.LENGTH_LONG).show(); }
+                    else { Toast.makeText(getApplicationContext(), R.string.wrong_password, Toast.LENGTH_LONG).show(); }
                 }
                 catch (NullPointerException npe)
                 {
                     ExceptionProcessing.processException(npe, getResources().getString(R.string.database_npe_toast), getApplicationContext(), Login.this);
                 }
             }
-            else { Toast.makeText(getApplicationContext(), "Такого пользователя не существует\nВнимательно заполните поля", Toast.LENGTH_LONG).show(); }
+            else { Toast.makeText(getApplicationContext(), R.string.user_doesnt_exist, Toast.LENGTH_LONG).show(); }
         }
 
         @Override public void onCancelled(@NonNull DatabaseError databaseError) { }

@@ -127,7 +127,7 @@ public class InitNavigationBar {
                             activity.finish();
                             break;
                         case R.id.about: //инфа про приложение и компанию и иинструкции может
-                            Intent openAboutApp = new Intent(activity.getApplicationContext(), AboutApp.class);
+                            Intent openAboutApp = new Intent(activity.getApplicationContext(), SettingsActivity.class);
                             activity.startActivity(openAboutApp);
                             break;
                         case R.id.log_out: //возвращение в логин page
@@ -141,7 +141,7 @@ public class InitNavigationBar {
                             editor.clear();
                             editor.commit();
                             Intent logOut = new Intent(context, Login.class);
-                            logOut.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                            logOut.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                             DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users/" + UserData.login);
                             userRef.child("active_session_android_id").removeValue();
                             activity.startActivity(logOut);

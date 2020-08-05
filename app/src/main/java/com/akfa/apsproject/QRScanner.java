@@ -116,7 +116,7 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
                         String equipmentName = Objects.requireNonNull(shop.child("Equipment_lines/" + equipmentNumber + "/equipment_name").getValue()).toString();
                         Log.e("qrscanner", "equipmentNum = " + equipmentNumber + "\tnomerPunkta = " + nomerPunkta);
                         String pointName = Objects.requireNonNull(shop.child("Equipment_lines/" + equipmentNumber + "/Points/" + nomerPunkta + "/point_name").getValue()).toString();
-                        String directionsText = "Подойдите к\n" + shopName + "\n" + equipmentName + "\nПункт №" + nomerPunkta + "\n" + pointName;
+                        String directionsText = getString(R.string.go_to) + shopName + "\n" + equipmentName + "\n" + getString(R.string.nomer_point_textview) + nomerPunkta + "\n" + pointName;
                         directionsTextView.setText(directionsText);
                         codeToDetect = Objects.requireNonNull(shop.child("Equipment_lines/" + equipmentNumber + "/QR_codes/qr_" + nomerPunkta).getValue()).toString();
                         directionsTextView.setVisibility(View.VISIBLE); //данные получены и directions составлены, сделаем текствью видимым
@@ -158,7 +158,7 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
                                     String equipmentNameDB = Objects.requireNonNull(singleEquipmentSnap.child("equipment_name").getValue()).toString();
                                     if (equipmentNameDB.equals(equipmentName)) {
                                         String pointName = Objects.requireNonNull(singleEquipmentSnap.child("Points/" + nomerPunkta + "/point_name").getValue()).toString();
-                                        String directionsText = "Подойдите к\n" + shopName + "\n" + equipmentName + "\nПункт №" + nomerPunkta + "\n" + pointName;
+                                        String directionsText = getString(R.string.go_to) + shopName + "\n" + equipmentName + "\n" + getString(R.string.nomer_point_textview) + nomerPunkta + "\n" + pointName;
                                         directionsTextView.setText(directionsText);
                                         directionsTextView.setVisibility(View.VISIBLE);
                                         codeToDetect = Objects.requireNonNull(singleEquipmentSnap.child("QR_codes/qr_" + nomerPunkta).getValue()).toString();
@@ -272,7 +272,7 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
                                                 }
                                                 finish();
                                             } else {//если отсканировал несоответствующий код
-                                                textView.setText("Вы не в том месте");
+                                                textView.setText(R.string.u_r_in_the_wrong_place);
                                             }
                                         }
                                         break;
@@ -292,7 +292,7 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
                                                 startActivity(intent);
                                                 finish();
                                             } else {
-                                                textView.setText("Подойдите к 1-участку линии, которую вы хотите проверить"); //если попутали что-то
+                                                textView.setText(R.string.go_to_1st_point_of_line_u_wanna_check); //если попутали что-то
                                             }
                                         }
                                         break;
@@ -327,7 +327,7 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
                                                                 urgentProbsRef.child(urgentProblemKey).child("time_specialist_came").setValue(timeSpecialistCame);
                                                                 urgentProbsRef.child(urgentProblemKey + "/status").setValue("SPECIALIST_CAME");
                                                                 detectedOnce = true; //чтобы повторно не реагировало на коды
-                                                                Toast.makeText(getApplicationContext(), "Специалист на месте", Toast.LENGTH_SHORT).show();
+                                                                Toast.makeText(getApplicationContext(), R.string.specialist_on_the_spot, Toast.LENGTH_SHORT).show();
                                                                 finish(); //вернись в предыдущ активити (UrgentProbList)
                                                                 return;
                                                             }
@@ -448,7 +448,7 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
 
     private AlertDialog AskOption() //конструирует диалог
     {
-        return new AlertDialog.Builder(this).setTitle("Закончить проверку").setMessage("Вы уверены, что хотите закончить проверку? Данные не будут сохранены.")
+        return new AlertDialog.Builder(this).setTitle(getString(R.string.finish_check)).setMessage(getString(R.string.r_u_sure_u_wanna_finish_check))
                 .setIcon(R.drawable.close)
                 .setPositiveButton("Да", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
@@ -468,7 +468,7 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
                         finish();
                     }
                 })
-                .setNegativeButton("Нет", new DialogInterface.OnClickListener() {
+                .setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss(); //просто закр диалог
                     }
@@ -508,7 +508,7 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
     @Override public void surfaceCreated(SurfaceHolder holder) {
         if(ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
         {//если юзер не дал разрешение на использование камеры, дай ему знать об этом и закрой QR Scanner
-            Toast.makeText(getApplicationContext(), "У приложения нет разрешения на использование камеры. Вы можете его предоставить в настройках или перезапустив приложение. ", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), R.string.no_camera_permission, Toast.LENGTH_LONG).show();
             finish();
             return;
         }

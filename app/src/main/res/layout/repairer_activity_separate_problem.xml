@@ -24,7 +24,7 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center"
-                    android:text="@string/repairerProblemShopName"
+                    android:text="@string/shop"
                     android:textColor="@color/text"
                     android:textSize="18sp"
                     tools:ignore="NestedWeights" />
@@ -54,7 +54,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center"
-                android:text="@string/repairerProblemMachineName"
+                android:text="@string/equipmentLine"
                 android:textColor="@color/text"
                 android:textSize="18sp"
                 tools:ignore="NestedWeights" />
@@ -215,7 +215,8 @@
                 android:background="@drawable/edit_red_accent"
                 android:paddingEnd="10dp"
                 android:textStyle="bold"
-                android:drawableEnd="@drawable/call_operator"/>
+                android:drawableEnd="@drawable/call_operator"
+                tools:ignore="RtlSymmetry" />
 
             <Button
                 android:layout_marginTop="10dp"

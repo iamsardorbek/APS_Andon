@@ -19,7 +19,7 @@
             android:layout_marginVertical="30dp"
             android:textStyle="bold"
             android:id="@+id/call_operator"
-            android:text="Вызвать оператора"
+            android:text="@string/call_operator"
             android:textSize="24sp"
             android:padding="10dp"/>
         <Button
@@ -29,7 +29,7 @@
             android:layout_marginHorizontal="40dp"
             android:padding="10dp"
             android:textStyle="bold"
-            android:text="Вызвать ремонтника"
+            android:text="@string/call_repairer"
             android:textSize="24sp"
             android:layout_height="wrap_content"/>
         <Button
@@ -39,7 +39,7 @@
             android:layout_marginVertical="30dp"
             android:padding="10dp"
             android:textStyle="bold"
-            android:text="Вызвать мастера"
+            android:text="@string/call_master"
             android:textSize="24sp"
             android:layout_height="wrap_content"/>
 

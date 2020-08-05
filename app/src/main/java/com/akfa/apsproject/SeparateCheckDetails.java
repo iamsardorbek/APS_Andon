@@ -31,7 +31,7 @@ public class SeparateCheckDetails extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_separate_check_details);
-        setTitle("Детали проверки ТО"); //если нет проблем, надо сделать: нету проблем
+        setTitle(getString(R.string.maintenance_check_details)); //если нет проблем, надо сделать: нету проблем
         try {
             initInstances();
         } catch (AssertionError ae) {
@@ -88,6 +88,7 @@ public class SeparateCheckDetails extends AppCompatActivity {
             .addOnFailureListener(new OnFailureListener() {
                 @Override public void onFailure(@NonNull Exception e) {
                     Log.i("TAQ", "Failure Storage");
+                    ExceptionProcessing.processException(e);
                 }
             });
 

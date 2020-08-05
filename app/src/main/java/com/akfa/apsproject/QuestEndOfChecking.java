@@ -37,13 +37,13 @@ public class QuestEndOfChecking extends AppCompatActivity implements View.OnTouc
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.quest_activity_end_of_checking);
-        setTitle(R.string.endOfChecking); //задать текст app bar как "Проверка линии закончена"
+        setTitle(R.string.checkCompleted); //задать текст app bar как "Проверка линии закончена"
         try {
             initInstances(); //инициализировать переменные и объекты views
 
             //currentMenuID is set to -1 because when you click on Проверка линий u should be taken to QuestMainActivity
             toggle = InitNavigationBar.setUpNavBar(QuestEndOfChecking.this, getApplicationContext(), Objects.requireNonNull(getSupportActionBar()), -1, R.id.quest_activity_end_of_checking); //настроить нав бар
-            setTitle("Проверка линий");
+            setTitle(getString(R.string.maintenance_check));
 
             DatabaseReference equipmentRef = FirebaseDatabase.getInstance().getReference("Shops/" + QuestListOfEquipment.shopNoGlobal);
             equipmentRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -94,9 +94,6 @@ public class QuestEndOfChecking extends AppCompatActivity implements View.OnTouc
 
                 newChecking.setBackgroundResource(R.drawable.edit_red_accent);
                 Intent intent = new Intent(getApplicationContext(), QuestListOfEquipment.class);
-                intent.putExtra("Логин пользователя", employeeLogin);
-                intent.putExtra("Должность", employeePosition);
-
                 startActivity(intent);
                 break;
         }

@@ -7,7 +7,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -22,6 +21,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 
 //----------------PULT----------------//
 public class PultActivity extends AppCompatActivity implements View.OnTouchListener, ChooseProblematicPointDialog.ChooseProblematicStationDialogListener, QRCodeDialog.QRCodeDialogListener { //здесь пульты
@@ -61,7 +61,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_pult);
         initInstances(); //инициализация всех layout элементов
         setAndonsVisibility(false); //спрятать все кнопки-андоны, пока не установлена связь с веткой пульта в БД
 
@@ -71,10 +71,10 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
             findPathToRelevantPult(); //инициализировать pathToRelevantPultQuery для пульта этого юзера
             userRef.addListenerForSingleValueEvent(pathToRelevantPultQuery); //привязать pathToRelevantPultQuery к ветке пользователей (там далее берутся данные о линии, цехе и номере пульта, что запускает потом асинхронный listener для пульта
             //напр: забыли приписать putExtras к интенту, открывшему этот активити PultActivity
-            toggle = InitNavigationBar.setUpNavBar(PultActivity.this, getApplicationContext(), getSupportActionBar(), R.id.pult, R.id.activity_main); //setUpNavBar выполняет все действия и возвращает toggle, которые используется в функции onOptionsItemSelected()
+            toggle = InitNavigationBar.setUpNavBar(PultActivity.this, getApplicationContext(), Objects.requireNonNull(getSupportActionBar()), R.id.pult, R.id.activity_main); //setUpNavBar выполняет все действия и возвращает toggle, которые используется в функции onOptionsItemSelected()
         }
         catch (NullPointerException npe) {ExceptionProcessing.processException(npe, getResources().getString(R.string.database_npe_toast), getApplicationContext(), this);}
-        setTitle("Загрузка данных...");
+        setTitle(getString(R.string.loading_data));
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -97,9 +97,9 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
         pathToRelevantPultQuery = new ValueEventListener() {
             @Override public void onDataChange(@NonNull DataSnapshot userSnap) {
                 //считывает названия цеха, линии и номер пульта текущего пользователя
-                nomerPulta = userSnap.child("pult_no").getValue().toString();
-                shopName = userSnap.child("shop_name").getValue().toString();
-                equipmentName = userSnap.child("equipment_name").getValue().toString();
+                nomerPulta = Objects.requireNonNull(userSnap.child("pult_no").getValue()).toString();
+                shopName = Objects.requireNonNull(userSnap.child("shop_name").getValue()).toString();
+                equipmentName = Objects.requireNonNull(userSnap.child("equipment_name").getValue()).toString();
                 //основываясь на этих строковых данных, найдем путем прохождения, в худшем случае, по всей ветке Shops, ища цех с названием shopName
                 DatabaseReference shopsRef = database.getReference("Shops");
                 shopsRef.addListenerForSingleValueEvent(new ValueEventListener() //проходимся лишь один раз, поэтому addListenerForSingleValueEvent
@@ -108,14 +108,14 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
                     { //найдем цех, в котором работает оператор
                         for (DataSnapshot shop : shops.getChildren()) //пройдись по каждой подветке Shops, тобиш по ветке каждого цеха
                         {
-                            shopNo = Integer.parseInt(shop.getKey()); //сохрани номер цеха (key каждого цеха - его номер)
+                            shopNo = Integer.parseInt(Objects.requireNonNull(shop.getKey())); //сохрани номер цеха (key каждого цеха - его номер)
                             String shopNameDB = (String) shop.child("shop_name").getValue(); //название текущего цеха, по которому мы проходимся в БД
-                            if (shopNameDB.equals(shopName)) //если искомое название цеха такое же как и у названия текущего цеха из БД (shopNameDB), войди глубже в эту ветку и найди искомую линии оборудования
+                            if (Objects.requireNonNull(shopNameDB).equals(shopName)) //если искомое название цеха такое же как и у названия текущего цеха из БД (shopNameDB), войди глубже в эту ветку и найди искомую линии оборудования
                             { //тот самый цех
                                 DataSnapshot equipmentLines = shop.child("Equipment_lines");
                                 for (DataSnapshot equipmentLine : equipmentLines.getChildren()) //пройдись по каждой подветке Equipment_lines текущего цеха, тобиш по ветке каждой линии оборудования
                                 { //теперь найдем линию, за которой смотрит оператор
-                                    equipmentNo = Integer.parseInt(equipmentLine.getKey()); //сохрани номер линии (key каждой линии - ее номер)
+                                    equipmentNo = Integer.parseInt(Objects.requireNonNull(equipmentLine.getKey())); //сохрани номер линии (key каждой линии - ее номер)
                                     String equipmentNameDB = (String) equipmentLine.child("equipment_name").getValue();//название текущей линии, по которой мы проходимся в БД
                                     if (equipmentNameDB.equals(equipmentName)) //если искомое название линии такое же как и у названия текущей линии из БД (equipmentNameDB), войди глубже в эту ветку и найди искомый пульт (Pults/1 или Pults/2)
                                     {
@@ -149,7 +149,7 @@ public class PultActivity extends AppCompatActivity implements View.OnTouchListe
         { //listener будет многоразовым ~ постоянным. Нужно, чтобы он следил за всеми изменениями состояний пульта динамично
             @Override public void onDataChange(@NonNull DataSnapshot pultButtonStates)
             {
-                setTitle(equipmentName + ". Пульт " + nomerPultaLocal); //app bar текст задаем. ("Пульт 1", "Пульт 2" и тд)
+                setTitle(equipmentName + ". " + getString(R.string.pult_submenu) + " " + nomerPultaLocal); //app bar текст задаем. ("Пульт 1", "Пульт 2" и тд)
                 //цикл ниже пройдется по каждой кнопке этого пульта: считает состояния кнопок, задаст их background с помощью функции setAndonBackground(int, int)
                 for (DataSnapshot buttonStateSnap : pultButtonStates.getChildren())
                 {
