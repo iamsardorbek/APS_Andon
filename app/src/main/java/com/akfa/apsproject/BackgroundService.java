@@ -17,6 +17,18 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import com.akfa.apsproject.calls.Call;
+import com.akfa.apsproject.calls.CallsList;
+import com.akfa.apsproject.checking_equipment_maintenance.QuestListOfEquipment;
+import com.akfa.apsproject.checking_equipment_maintenance.RepairerSeparateProblem;
+import com.akfa.apsproject.checking_equipment_maintenance.RepairersMaintenanceProblemsList;
+import com.akfa.apsproject.classes_serving_other_classes.ExceptionProcessing;
+import com.akfa.apsproject.classes_serving_other_classes.PointDataRetriever;
+import com.akfa.apsproject.classes_serving_other_classes.Vibration;
+import com.akfa.apsproject.general_data_classes.UserData;
+import com.akfa.apsproject.monitoring_activities.TodayChecks;
+import com.akfa.apsproject.pult_and_urgent_problems.PultActivity;
+import com.akfa.apsproject.pult_and_urgent_problems.UrgentProblemsList;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -56,62 +68,64 @@ public class BackgroundService extends Service {
                 DatabaseReference maintenanceProblemsRef = FirebaseDatabase.getInstance().getReference("Maintenance_problems");
                 maintenanceProblemsRef.addValueEventListener(new ValueEventListener() {
                     @Override public void onDataChange(@NonNull DataSnapshot maintenanceProbsSnap) {
-                        if (maintenanceProbsSnap.exists()) {
-
-                            for (DataSnapshot maintenanceProbSnap : maintenanceProbsSnap.getChildren()) {
-                                boolean thisMaintenanceProbIsSolved = (boolean) maintenanceProbSnap.child("solved").getValue();
-                                String thisMaintenanceProbKey = maintenanceProbSnap.getKey();
-                                String detectedByEmployee = maintenanceProbSnap.child("detected_by_employee").getValue().toString();
-                                String whoIsNeededPosition = "repair"; //проблемами ТО занимаются только ремонтники (repairers)
-                                if (!UserData.login.equals(detectedByEmployee) && !thisMaintenanceProbIsSolved && !maintenanceProblems.contains(thisMaintenanceProbKey) && whoIsNeededPosition.equals(UserData.position))
-                                {
-                                    //получить UID проблемы
-                                    //если эта об этой проблеме ТО еще уведомление не выводилось
-                                    //create and show a notification here
-                                    String shopName = maintenanceProbSnap.child("shop_name").getValue().toString();
-                                    String equipmentName = maintenanceProbSnap.child("equipment_line_name").getValue().toString();
-                                    String pointNo = maintenanceProbSnap.child(getString(R.string.point_no)).getValue().toString();
-                                    String maintenanceProblemInfo = shopName + "\n" + equipmentName + "\nПункт №" + pointNo;
-                                    Intent intent = new Intent(getApplicationContext(), RepairerSeparateProblem.class);
-                                    intent.putExtra("ID проблемы в таблице Maintenance_problems", thisMaintenanceProbKey);
+                        try {
+                            if (maintenanceProbsSnap.exists()) {
+                                maintanceProblemsNotificationsCount = 0;
+                                for (DataSnapshot maintenanceProbSnap : maintenanceProbsSnap.getChildren()) {
+                                    boolean thisMaintenanceProbIsSolved = (boolean) maintenanceProbSnap.child("solved").getValue();
+                                    String thisMaintenanceProbKey = maintenanceProbSnap.getKey();
+                                    String detectedByEmployee = Objects.requireNonNull(maintenanceProbSnap.child("detected_by_employee").getValue()).toString();
+                                    String whoIsNeededPosition = "repair"; //проблемами ТО занимаются только ремонтники (repairers)
+                                    if (!UserData.login.equals(detectedByEmployee) && !thisMaintenanceProbIsSolved && !maintenanceProblems.contains(thisMaintenanceProbKey) && whoIsNeededPosition.equals(UserData.position)) {
+                                        //получить UID проблемы
+                                        //если эта об этой проблеме ТО еще уведомление не выводилось
+                                        //create and show a notification here
+//                                        String shopNo = Objects.requireNonNull(maintenanceProbSnap.child("shop_no").getValue()).toString();
+//                                        String equipmentLineNo = Objects.requireNonNull(maintenanceProbSnap.child("equipment_line_no").getValue()).toString();
+//                                        String pointNo = Objects.requireNonNull(maintenanceProbSnap.child(getString(R.string.point_no)).getValue()).toString();
+//                                        String maintenanceProblemInfo = shopNo + "\n" + equipmentLineNo + "\nПункт №" + pointNo;
+//                                        Intent intent = new Intent(getApplicationContext(), RepairerSeparateProblem.class);
+//                                        intent.putExtra("ID проблемы в таблице Maintenance_problems", thisMaintenanceProbKey);
+//                                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//                                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+//
+//                                        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), MAINTENANCE_PROBS_CHANNEL_ID)
+//                                                .setSmallIcon(R.drawable.aps_icon)
+//                                                .setContentTitle(getResources().getString(R.string.maintenance_problem))
+//                                                .setContentText(maintenanceProblemInfo)
+//                                                .setStyle(new NotificationCompat.BigTextStyle()
+//                                                        .bigText(maintenanceProblemInfo))
+//                                                .setContentIntent(pendingIntent)
+//                                                .setPriority(NotificationCompat.PRIORITY_HIGH);
+//                                        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+//                                        // notificationId is a unique int for each notification that you must define
+//                                        PointDataRetriever.setNotificationText(getBaseContext(), builder, notificationManager, maintanceProblemsNotificationsCount, Integer.parseInt(shopNo), Integer.parseInt(equipmentLineNo), Integer.parseInt(pointNo));
+//                                        maintenanceProblems.add(thisMaintenanceProbKey);
+                                        maintanceProblemsNotificationsCount++;
+                                    }
+                                }
+                                if(maintanceProblemsNotificationsCount != 0) {
+                                    //укороченная версия уведомлений
+                                    Intent intent = new Intent(getApplicationContext(), RepairersMaintenanceProblemsList.class);
                                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                    String notificationText = maintanceProblemsNotificationsCount + getString(R.string.maintenance_problems_the_factory) + getString(R.string.click_notif_to_get_info);
                                     PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
-
                                     NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), MAINTENANCE_PROBS_CHANNEL_ID)
                                             .setSmallIcon(R.drawable.aps_icon)
-                                            .setContentTitle(getResources().getString(R.string.maintenance_problem))
-                                            .setContentText(maintenanceProblemInfo)
+                                            .setContentTitle(getString(R.string.problems_list_submenu))
+                                            .setContentText(maintanceProblemsNotificationsCount + getString(R.string.maintenance_problems_the_factory))
                                             .setStyle(new NotificationCompat.BigTextStyle()
-                                                    .bigText(maintenanceProblemInfo))
+                                                    .bigText(notificationText))
                                             .setContentIntent(pendingIntent)
                                             .setPriority(NotificationCompat.PRIORITY_HIGH);
 
                                     NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                                     // notificationId is a unique int for each notification that you must define
                                     Objects.requireNonNull(notificationManager).notify((int) maintanceProblemsNotificationsCount, builder.build());
-                                    maintenanceProblems.add(thisMaintenanceProbKey);
-                                    maintanceProblemsNotificationsCount++;
                                 }
                             }
-
-                            //укороченная версия уведомлений
-//                        Intent intent = new Intent(getApplicationContext(), RepairerSeparateProblem.class);
-//                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-//                        String notificationText = "Существуют " + maintanceProblemsNotificationsCount + " проблем на заводе. Нажмите сюда, чтобы с ними ознакомиться.";
-//                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
-//                        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), MAINTENANCE_PROBS_CHANNEL_ID)
-//                        .setSmallIcon(R.drawable.aps_icon)
-//                        .setContentTitle("Проблемы ТО")
-//                        .setContentText(notificationText)
-//                        .setStyle(new NotificationCompat.BigTextStyle()
-//                                .bigText(maintanceProblemsNotificationsCount + " проблем на заводе"))
-//                        .setContentIntent(pendingIntent)
-//                        .setPriority(NotificationCompat.PRIORITY_HIGH);
-//
-//                        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-//                        // notificationId is a unique int for each notification that you must define
-//                        notificationManager.notify((int) maintanceProblemsNotificationsCount, builder.build());
                         }
+                        catch (NullPointerException npe){ ExceptionProcessing.processException(npe);}
                     }
 
                     @Override
@@ -145,96 +159,90 @@ public class BackgroundService extends Service {
                             urgentProblemsRef.addListenerForSingleValueEvent(new ValueEventListener() { //привязываем слушатель к срочным проблемаам
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot urgentProbsSnap) {
-                                    if (urgentProbsSnap.exists()) {
-                                        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                                        for (int urgentProblemID : urgentProblemsIDs) {
-                                            Objects.requireNonNull(mNotificationManager).cancel(urgentProblemID);
-                                        }
-                                        urgentProblemsIDs = new ArrayList<>();
-                                        for (DataSnapshot urgentProbSnap : urgentProbsSnap.getChildren()) { //пройдись по проблемам и если есть DETECTED проблемы, о которых ты еще не вывел уведомления, сообщи о них в новом уведомлении
-                                            String thisUrgentProbStatus = urgentProbSnap.child("status").getValue().toString();
-                                            final String thisUrgentProbKey = urgentProbSnap.getKey();
-                                            String whoIsNeededPosition = urgentProbSnap.child("who_is_needed_position").getValue().toString();
+                                    try {
+                                        if (urgentProbsSnap.exists()) {
+                                            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                            for (int urgentProblemID : urgentProblemsIDs) {
+                                                Objects.requireNonNull(mNotificationManager).cancel(urgentProblemID);
+                                            }
+                                            urgentProblemsIDs = new ArrayList<>();
+                                            for (DataSnapshot urgentProbSnap : urgentProbsSnap.getChildren()) { //пройдись по проблемам и если есть DETECTED проблемы, о которых ты еще не вывел уведомления, сообщи о них в новом уведомлении
+                                                String thisUrgentProbStatus = Objects.requireNonNull(urgentProbSnap.child("status").getValue()).toString();
+                                                final String thisUrgentProbKey = urgentProbSnap.getKey();
+                                                String whoIsNeededPosition = Objects.requireNonNull(urgentProbSnap.child("who_is_needed_position").getValue()).toString();
 
-                                            if (thisUrgentProbStatus.equals("DETECTED") && whoIsNeededPosition.equals(UserData.position)) {
+                                                if (thisUrgentProbStatus.equals("DETECTED") && whoIsNeededPosition.equals(UserData.position)) {
 
-                                                //получить UID проблемы
-                                                //если эта об этой срочной проблеме еще уведомление не выводилось
-                                                //create and show a notification here
-                                                final String shopName = urgentProbSnap.child("shop_name").getValue().toString();
-                                                String equipmentName = urgentProbSnap.child("equipment_name").getValue().toString();
-                                                String pointNo = urgentProbSnap.child(getString(R.string.point_no)).getValue().toString();
-                                                final String urgentProblemShortInfo = shopName + "\n" + equipmentName + "\nПункт №" + pointNo;
+                                                    //получить UID проблемы
+                                                    //если эта об этой срочной проблеме еще уведомление не выводилось
+                                                    //create and show a notification here
+                                                    final String shopNo = Objects.requireNonNull(urgentProbSnap.child("shop_no").getValue()).toString();
+                                                    final String equipmentNo = Objects.requireNonNull(urgentProbSnap.child("equipment_no").getValue()).toString();
+                                                    final String pointNo = Objects.requireNonNull(urgentProbSnap.child(getString(R.string.point_no)).getValue()).toString();
 
-                                                if (UserData.position.equals("master")) {
-                                                    final DatabaseReference masterRef = FirebaseDatabase.getInstance().getReference("Users/" + UserData.login);
-                                                    masterRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                                                        @Override
-                                                        public void onDataChange(@NonNull DataSnapshot masterSnap) {
-                                                            String masterShopName = masterSnap.child("shop_name").getValue().toString();
-                                                            if (masterShopName.equals(shopName)) {
-                                                                Intent intent = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                                                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                                                PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+                                                    if (UserData.position.equals("master")) {
+                                                        final DatabaseReference masterRef = FirebaseDatabase.getInstance().getReference("Users/" + UserData.login);
+                                                        masterRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                                            @Override
+                                                            public void onDataChange(@NonNull DataSnapshot masterSnap) {
+                                                                String masterShopName = Objects.requireNonNull(masterSnap.child("shop_name").getValue()).toString();
+                                                                if (masterShopName.equals(shopNo)) {
+                                                                    Intent intent = new Intent(getApplicationContext(), UrgentProblemsList.class);
+                                                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                                                    PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
-                                                                NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                                                                        .setSmallIcon(R.drawable.aps_icon)
-                                                                        .setContentTitle(getResources().getString(R.string.urgent_problem))
-                                                                        .setContentText(urgentProblemShortInfo)
-                                                                        .setStyle(new NotificationCompat.BigTextStyle()
-                                                                                .bigText(urgentProblemShortInfo))
-                                                                        .setContentIntent(pendingIntent)
-                                                                        .setPriority(NotificationCompat.PRIORITY_MAX);
-                                                                NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                                                                // notificationId is a unique int for each notification that you must define
-                                                                notificationManager.notify((int) notificationCount, builder.build());
-                                                                urgentProblems.add(thisUrgentProbKey); //добавь эту проблему в список уже сообщенных
-                                                                Vibration.vibration(getApplicationContext());
-                                                                urgentProblemsIDs.add((int) notificationCount);
-                                                                notificationCount++;
+                                                                    NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                                                                            .setSmallIcon(R.drawable.aps_icon)
+                                                                            .setContentTitle(getResources().getString(R.string.urgent_problem))
+                                                                            .setContentIntent(pendingIntent)
+                                                                            .setPriority(NotificationCompat.PRIORITY_MAX);
+                                                                    NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                                                                    assert notificationManager != null;
+                                                                    // notificationId is a unique int for each notification that you must define
+                                                                    PointDataRetriever.setNotificationText(getBaseContext(), builder, notificationManager, notificationCount, Integer.parseInt(shopNo), Integer.parseInt(equipmentNo), Integer.parseInt(pointNo), "");
+                                                                    urgentProblems.add(thisUrgentProbKey); //добавь эту проблему в список уже сообщенных
+                                                                    urgentProblemsIDs.add((int) notificationCount);
+                                                                    notificationCount++;
+                                                                }
+
                                                             }
-                                                        }
 
-                                                        @Override
-                                                        public void onCancelled(@NonNull DatabaseError databaseError) {
-                                                        }
-                                                    });
-                                                } else {
-                                                    Intent intent = new Intent(getApplicationContext(), UrgentProblemsList.class);
-                                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                                    PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+                                                            @Override
+                                                            public void onCancelled(@NonNull DatabaseError databaseError) {
+                                                            }
+                                                        });
+                                                    } else {
+                                                        Intent intent = new Intent(getApplicationContext(), UrgentProblemsList.class);
+                                                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
-                                                    NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                                                            .setSmallIcon(R.drawable.aps_icon)
-                                                            .setContentTitle(getResources().getString(R.string.urgent_problem))
-                                                            .setContentText(urgentProblemShortInfo)
-                                                            .setStyle(new NotificationCompat.BigTextStyle()
-                                                                    .bigText(urgentProblemShortInfo))
-                                                            .setContentIntent(pendingIntent)
-                                                            .setPriority(NotificationCompat.PRIORITY_MAX);
-                                                    NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                                                    // notificationId is a unique int for each notification that you must define
-                                                    notificationManager.notify((int) notificationCount, builder.build());
-                                                    urgentProblems.add(thisUrgentProbKey); //добавь эту проблему в список уже сообщенных
-                                                    Vibration.vibration(getApplicationContext());
-                                                    urgentProblemsIDs.add((int) notificationCount);
-                                                    notificationCount++;
+                                                        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                                                                .setSmallIcon(R.drawable.aps_icon)
+                                                                .setContentTitle(getResources().getString(R.string.urgent_problem))
+                                                                .setContentIntent(pendingIntent)
+                                                                .setPriority(NotificationCompat.PRIORITY_MAX);
+                                                        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                                                        // notificationId is a unique int for each notification that you must define
+                                                        assert notificationManager != null;
+                                                        PointDataRetriever.setNotificationText(getBaseContext(), builder, notificationManager, notificationCount, Integer.parseInt(shopNo), Integer.parseInt(equipmentNo), Integer.parseInt(pointNo), "");
+                                                        urgentProblems.add(thisUrgentProbKey); //добавь эту проблему в список уже сообщенных
+                                                        urgentProblemsIDs.add((int) notificationCount);
+                                                        notificationCount++;
+                                                    }
                                                 }
                                             }
                                         }
                                     }
+                                    catch (NullPointerException | AssertionError e){ ExceptionProcessing.processException(e);}
                                 }
 
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError databaseError) {
-                                }
+                                @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
                             });
                         }
 
                         //запустим листенеры для Вызовов Calls
                         if (UserData.position.equals("operator") || UserData.position.equals("master") || UserData.position.equals("repair")) {
                             DatabaseReference callsRef = FirebaseDatabase.getInstance().getReference("Calls");
-
                             callsRef.addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(@NonNull DataSnapshot callsSnap) {
@@ -248,127 +256,129 @@ public class BackgroundService extends Service {
                                         callsIDs = new ArrayList<>();
 
                                         for (final DataSnapshot callSnap : callsSnap.getChildren()) {
-                                            boolean callComplete = (boolean) callSnap.child("complete").getValue();
-                                            String whoIsNeededPosition = callSnap.child("who_is_needed_position").getValue().toString();
-                                            if (!callComplete && whoIsNeededPosition.equals(UserData.position)) {
-                                                final String callShopName = callSnap.child("shop_name").getValue().toString();
-                                                switch (UserData.position) {
-                                                    case "operator":
-                                                        DatabaseReference operatorRef = FirebaseDatabase.getInstance().getReference("Users/" + UserData.login);
-                                                        operatorRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                                                            @Override
-                                                            public void onDataChange(@NonNull DataSnapshot userSnap) {
-                                                                String operatorEquipmentName = userSnap.child("equipment_name").getValue().toString();
-                                                                String operatorShopName = userSnap.child("shop_name").getValue().toString();
-                                                                String callEquipmentName = callSnap.child("equipment_name").getValue().toString();
-                                                                if (operatorEquipmentName.equals(callEquipmentName) && operatorShopName.equals(callShopName)) {
-                                                                    String pointNo = callSnap.child(getString(R.string.point_no)).getValue().toString();
-                                                                    String calledByLogin = callSnap.child("called_by").getValue().toString();
-                                                                    String callInfo = calledByLogin + getResources().getString(R.string.calling_you_to) + callShopName + "\n" + callEquipmentName + "\n"+ getResources().getString(R.string.nomer_point_textview) + pointNo;
-                                                                    Intent intent = new Intent(getApplicationContext(), CallsList.class);
-                                                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                                                    PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+                                            try {
+                                                final Call call = callSnap.getValue(Call.class);
+                                                assert call != null;
+                                                boolean callComplete = call.getComplete();
+                                                String whoIsNeededPosition = call.getWho_is_needed_position();
+                                                if (!callComplete && whoIsNeededPosition.equals(UserData.position)) {
+                                                    final String callShopName = call.getShop_name();
+                                                    switch (UserData.position) {
+                                                        case "operator":
+                                                            DatabaseReference operatorRef = FirebaseDatabase.getInstance().getReference("Users/" + UserData.login);
+                                                            operatorRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                                                @Override
+                                                                public void onDataChange(@NonNull DataSnapshot userSnap) {
+                                                                    try {
+                                                                        String operatorEquipmentName = Objects.requireNonNull(userSnap.child("equipment_name").getValue()).toString();
+                                                                        String operatorShopName = Objects.requireNonNull(userSnap.child("shop_name").getValue()).toString();
+                                                                        String callEquipmentName = call.getEquipment_name();
+                                                                        if (operatorEquipmentName.equals(callEquipmentName) && operatorShopName.equals(callShopName)) {
+                                                                            int callPointNo = call.getPoint_no();
+                                                                            String calledByLogin = call.getCalled_by();
+                                                                            int callShopNo = call.getShop_no();;
+                                                                            int callEquipmentNo = call.getEquipment_no();
+                                                                            Intent intent = new Intent(getApplicationContext(), CallsList.class);
+                                                                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                                                            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+                                                                            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                                                                                    .setSmallIcon(R.drawable.aps_icon)
+                                                                                    .setContentTitle(getResources().getString(R.string.you_are_being_called))
+                                                                                    .setContentIntent(pendingIntent)
+                                                                                    .setPriority(NotificationCompat.PRIORITY_HIGH);
 
-                                                                    NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                                                                            .setSmallIcon(R.drawable.aps_icon)
-                                                                            .setContentTitle(getResources().getString(R.string.you_are_being_called))
-                                                                            .setContentText(callInfo)
-                                                                            .setStyle(new NotificationCompat.BigTextStyle()
-                                                                                    .bigText(callInfo))
-                                                                            .setContentIntent(pendingIntent)
-                                                                            .setPriority(NotificationCompat.PRIORITY_HIGH);
-
-                                                                    NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                                                                    // notificationId is a unique int for each notification that you must define
-                                                                    Objects.requireNonNull(notificationManager).notify((int) notificationCount, builder.build());
-                                                                    Vibration.vibration(getApplicationContext());
-                                                                    callsIDs.add((int) notificationCount);
-                                                                    notificationCount++;
+                                                                            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                                                                            // notificationId is a unique int for each notification that you must define
+                                                                            PointDataRetriever.setNotificationText(getBaseContext(), builder, notificationManager, notificationCount, callShopNo, callEquipmentNo, callPointNo, calledByLogin + getString(R.string.calling_you_to));
+                                                                            callsIDs.add((int) notificationCount);
+                                                                            notificationCount++;
+                                                                        }
+                                                                    } catch (NullPointerException npe) {
+                                                                        ExceptionProcessing.processException(npe);
+                                                                    }
                                                                 }
 
-                                                            }
 
-                                                            @Override
-                                                            public void onCancelled(@NonNull DatabaseError databaseError) {
-                                                            }
-                                                        });
-                                                        break;
-                                                    case "master":
-                                                        DatabaseReference masterRef = FirebaseDatabase.getInstance().getReference("Users/" + UserData.login);
-                                                        masterRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                                                            @Override
-                                                            public void onDataChange(@NonNull DataSnapshot userSnap) {
-                                                                String operatorShopName = userSnap.child("shop_name").getValue().toString();
+                                                                @Override
+                                                                public void onCancelled(@NonNull DatabaseError databaseError) {
+                                                                }
+                                                            });
+                                                            break;
+                                                        case "master":
+                                                            DatabaseReference masterRef = FirebaseDatabase.getInstance().getReference("Users/" + UserData.login);
+                                                            masterRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                                                @Override
+                                                                public void onDataChange(@NonNull DataSnapshot userSnap) {
+                                                                    try {
+                                                                        String masterShopName = Objects.requireNonNull(userSnap.child("shop_name").getValue()).toString();
 
-                                                                if (operatorShopName.equals(callShopName)) {
-                                                                    String callEquipmentName = callSnap.child("equipment_name").getValue().toString();
-                                                                    String pointNo = callSnap.child(getString(R.string.point_no)).getValue().toString();
-                                                                    String calledByLogin = callSnap.child("called_by").getValue().toString();
+                                                                        if (masterShopName.equals(callShopName)) {
+                                                                            int callPointNo = call.getPoint_no();
+                                                                            String calledByLogin = call.getCalled_by();
+                                                                            int callShopNo = call.getShop_no();;
+                                                                            int callEquipmentNo = call.getEquipment_no();
+                                                                            Intent intent = new Intent(getApplicationContext(), CallsList.class);
+                                                                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                                                            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
-                                                                    String callInfo = calledByLogin + getResources().getString(R.string.calling_you_to) + callShopName + "\n" + callEquipmentName + "\n" + getResources().getString(R.string.nomer_point_textview) + pointNo;
-                                                                    Intent intent = new Intent(getApplicationContext(), CallsList.class);
-                                                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                                                    PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+                                                                            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                                                                                    .setSmallIcon(R.drawable.aps_icon)
+                                                                                    .setContentTitle(getResources().getString(R.string.you_are_being_called))
+                                                                                    .setContentIntent(pendingIntent)
+                                                                                    .setPriority(NotificationCompat.PRIORITY_HIGH);
 
-                                                                    NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                                                                            .setSmallIcon(R.drawable.aps_icon)
-                                                                            .setContentTitle(getResources().getString(R.string.you_are_being_called))
-                                                                            .setContentText(callInfo)
-                                                                            .setStyle(new NotificationCompat.BigTextStyle()
-                                                                                    .bigText(callInfo))
-                                                                            .setContentIntent(pendingIntent)
-                                                                            .setPriority(NotificationCompat.PRIORITY_HIGH);
+                                                                            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                                                                            // notificationId is a unique int for each notification that you must define
 
-                                                                    NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                                                                    // notificationId is a unique int for each notification that you must define
-                                                                    notificationManager.notify((int) notificationCount, builder.build());
-                                                                    Vibration.vibration(getApplicationContext());
-                                                                    callsIDs.add((int) notificationCount);
-                                                                    notificationCount++;
+                                                                            PointDataRetriever.setNotificationText(getBaseContext(), builder, notificationManager, notificationCount, callShopNo, callEquipmentNo, callPointNo, calledByLogin + getString(R.string.calling_you_to));
+                                                                            callsIDs.add((int) notificationCount);
+                                                                            notificationCount++;
+                                                                        }
+                                                                    } catch (NullPointerException | AssertionError thr) {
+                                                                        ExceptionProcessing.processException(thr);
+                                                                    }
+
                                                                 }
 
+                                                                @Override
+                                                                public void onCancelled(@NonNull DatabaseError databaseError) {
+                                                                }
+                                                            });
+                                                            break;
+                                                        case "repair":
+                                                            try {
+                                                                int callPointNo = call.getPoint_no();
+                                                                String calledByLogin = call.getCalled_by();
+                                                                int callShopNo = call.getShop_no();;
+                                                                int callEquipmentNo = call.getEquipment_no();
+                                                                Intent intent = new Intent(getApplicationContext(), CallsList.class);
+                                                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                                                PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+
+                                                                NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                                                                        .setSmallIcon(R.drawable.aps_icon)
+                                                                        .setContentTitle(getResources().getString(R.string.you_are_being_called))
+                                                                        .setContentIntent(pendingIntent)
+                                                                        .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+                                                                NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                                                                // notificationId is a unique int for each notification that you must define
+                                                                PointDataRetriever.setNotificationText(getBaseContext(), builder, notificationManager, notificationCount, callShopNo, callEquipmentNo, callPointNo, calledByLogin + getString(R.string.calling_you_to));
+                                                                callsIDs.add((int) notificationCount);
+                                                                notificationCount++;
+                                                            } catch (NullPointerException npe) {
+                                                                ExceptionProcessing.processException(npe);
                                                             }
-
-                                                            @Override
-                                                            public void onCancelled(@NonNull DatabaseError databaseError) {
-                                                            }
-                                                        });
-                                                        break;
-                                                    case "repair":
-                                                        String callEquipmentName = callSnap.child("equipment_name").getValue().toString();
-                                                        String pointNo = callSnap.child(getString(R.string.point_no)).getValue().toString();
-                                                        String calledByLogin = callSnap.child("called_by").getValue().toString();
-
-                                                        String callInfo = calledByLogin + getResources().getString(R.string.calling_you_to) + callShopName + "\n" + callEquipmentName + "\n" + getResources().getString(R.string.nomer_point_textview) + pointNo;
-                                                        Intent intent = new Intent(getApplicationContext(), CallsList.class);
-                                                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                                        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
-
-                                                        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                                                                .setSmallIcon(R.drawable.aps_icon)
-                                                                .setContentTitle(getResources().getString(R.string.you_are_being_called))
-                                                                .setContentText(callInfo)
-                                                                .setStyle(new NotificationCompat.BigTextStyle()
-                                                                        .bigText(callInfo))
-                                                                .setContentIntent(pendingIntent)
-                                                                .setPriority(NotificationCompat.PRIORITY_HIGH);
-
-                                                        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                                                        // notificationId is a unique int for each notification that you must define
-                                                        notificationManager.notify((int) notificationCount, builder.build());
-                                                        Vibration.vibration(getApplicationContext());
-                                                        callsIDs.add((int) notificationCount);
-                                                        notificationCount++;
-                                                        break;
+                                                            break;
+                                                    }
                                                 }
                                             }
+                                            catch (NullPointerException | AssertionError e) {ExceptionProcessing.processException(e);}
                                         }
                                     }
-                                }
 
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError databaseError) {
                                 }
+                                @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
                             });
                         }
                         if (!stopped) {
@@ -379,7 +389,8 @@ public class BackgroundService extends Service {
             };
             handler.postDelayed(runnableCode, RUNNABLE_REFRESH_TIME);
         }
-        catch (NullPointerException npe){ExceptionProcessing.processException(npe, getResources().getString(R.string.database_npe_toast), getApplicationContext(), this);}
+        catch (NullPointerException npe){
+            ExceptionProcessing.processException(npe, getResources().getString(R.string.database_npe_toast), getApplicationContext(), this);}
         catch (AssertionError ae) {ExceptionProcessing.processException(ae, getResources().getString(R.string.no_notifications_func_or_tech_problem), getApplicationContext(), this);}
         return super.onStartCommand(intent, flags, startId);
     }

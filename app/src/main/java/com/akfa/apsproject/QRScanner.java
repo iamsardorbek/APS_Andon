@@ -24,6 +24,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.akfa.apsproject.calls.CallsList;
+import com.akfa.apsproject.calls.MakeACall;
+import com.akfa.apsproject.checking_equipment_maintenance.QuestPointDynamic;
+import com.akfa.apsproject.checking_equipment_maintenance.RepairerTakePhoto;
+import com.akfa.apsproject.classes_serving_other_classes.ExceptionProcessing;
+import com.akfa.apsproject.classes_serving_other_classes.PointDataRetriever;
+import com.akfa.apsproject.classes_serving_other_classes.Vibration;
+import com.akfa.apsproject.general_data_classes.EquipmentLine;
+import com.akfa.apsproject.general_data_classes.PointData;
+import com.akfa.apsproject.general_data_classes.UserData;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
@@ -55,7 +65,7 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
     private int equipmentNumber, shopNumber, nomerPunkta, numOfPoints, problemsCount; //кросс-активити переменные QuestPointDynamic
     private long startTimeMillis; //кросс-активити переменная, передаваемая из QuestPointDynamic
     private boolean detectedOnce = false, flashlightOn = false; //для того, чтобы на уже обнаруженный (расшифрованный) код не реагировал повторно
-    private String mCameraId, codeToDetect, intendedAction, shopName, equipmentName, callFirebaseKey, whoIsCalled;
+    private String mCameraId, codeToDetect, intendedAction, callFirebaseKey, whoIsCalled;
     List<EquipmentLine> equipmentLineList = new ArrayList<>();
     List<String> problemPushKeysOfTheWholeCheck;
     List<PointData> pointsData;
@@ -87,9 +97,7 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
         assert arguments != null;
         intendedAction = arguments.getString("Действие");
         equipmentNumber = arguments.getInt("Номер линии");
-        equipmentName = arguments.getString("Название линии");
         shopNumber = arguments.getInt("Номер цеха");
-        shopName = arguments.getString("Название цеха");
         nomerPunkta = arguments.getInt(getString(R.string.nomer_punkta_textview_text));
         numOfPoints = arguments.getInt("Количество пунктов");
         startTimeMillis = arguments.getLong("startTimeMillis");
@@ -109,19 +117,12 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
             case "Открой PointDynamic":
             case "ремонтник":
 //это оператор заходит в QRScanner в течении ТО проверки или ремонтник хочет решить проблему
-                DatabaseReference shopRef = FirebaseDatabase.getInstance().getReference().child("Shops/" + shopNumber); //ссылка к цеху
-                shopRef.addListenerForSingleValueEvent(new ValueEventListener() {//единожды считать данные про линию текущего юзера
-                    @Override public void onDataChange(@NonNull DataSnapshot shop) {
-                        String shopName = Objects.requireNonNull(shop.child("shop_name").getValue()).toString();
-                        String equipmentName = Objects.requireNonNull(shop.child("Equipment_lines/" + equipmentNumber + "/equipment_name").getValue()).toString();
-                        Log.e("qrscanner", "equipmentNum = " + equipmentNumber + "\tnomerPunkta = " + nomerPunkta);
-                        String pointName = Objects.requireNonNull(shop.child("Equipment_lines/" + equipmentNumber + "/Points/" + nomerPunkta + "/point_name").getValue()).toString();
-                        String directionsText = getString(R.string.go_to) + shopName + "\n" + equipmentName + "\n" + getString(R.string.nomer_point_textview) + nomerPunkta + "\n" + pointName;
-                        directionsTextView.setText(directionsText);
-                        codeToDetect = Objects.requireNonNull(shop.child("Equipment_lines/" + equipmentNumber + "/QR_codes/qr_" + nomerPunkta).getValue()).toString();
-                        directionsTextView.setVisibility(View.VISIBLE); //данные получены и directions составлены, сделаем текствью видимым
+                PointDataRetriever.setQRDirections(getBaseContext(), directionsTextView, shopNumber, equipmentNumber, nomerPunkta);
+                DatabaseReference codeToDetectRef = FirebaseDatabase.getInstance().getReference().child("Shops/" + shopNumber + "/Equipment_lines/" + equipmentNumber + "/QR_codes/qr_" + nomerPunkta); //ссылка к цеху
+                codeToDetectRef.addListenerForSingleValueEvent(new ValueEventListener() {//единожды считать данные про линию текущего юзера
+                    @Override public void onDataChange(@NonNull DataSnapshot codeSnap) {
+                        codeToDetect = Objects.requireNonNull(codeSnap.getValue()).toString();
                     }
-
                     @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
                 });
                 break;
@@ -146,29 +147,12 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
                 break;
             }
             case "реагирование на вызов": {
-
-                DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference("Shops");
-                shopsRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot shopsSnap) {
-                        for (DataSnapshot singleShopSnap : shopsSnap.getChildren()) {
-                            String shopNameDB = Objects.requireNonNull(singleShopSnap.child("shop_name").getValue()).toString();
-                            if (shopNameDB.equals(shopName)) {
-                                for (DataSnapshot singleEquipmentSnap : singleShopSnap.child("Equipment_lines").getChildren()) {
-                                    String equipmentNameDB = Objects.requireNonNull(singleEquipmentSnap.child("equipment_name").getValue()).toString();
-                                    if (equipmentNameDB.equals(equipmentName)) {
-                                        String pointName = Objects.requireNonNull(singleEquipmentSnap.child("Points/" + nomerPunkta + "/point_name").getValue()).toString();
-                                        String directionsText = getString(R.string.go_to) + shopName + "\n" + equipmentName + "\n" + getString(R.string.nomer_point_textview) + nomerPunkta + "\n" + pointName;
-                                        directionsTextView.setText(directionsText);
-                                        directionsTextView.setVisibility(View.VISIBLE);
-                                        codeToDetect = Objects.requireNonNull(singleEquipmentSnap.child("QR_codes/qr_" + nomerPunkta).getValue()).toString();
-                                        return;
-                                    }
-                                }
-                            }
-                        }
+                PointDataRetriever.setQRDirections(getBaseContext(), directionsTextView, shopNumber, equipmentNumber, nomerPunkta);
+                codeToDetectRef = FirebaseDatabase.getInstance().getReference().child("Shops/" + shopNumber + "/Equipment_lines/" + equipmentNumber + "/QR_codes/qr_" + nomerPunkta); //ссылка к цеху
+                codeToDetectRef.addListenerForSingleValueEvent(new ValueEventListener() {//единожды считать данные про линию текущего юзера
+                    @Override public void onDataChange(@NonNull DataSnapshot codeSnap) {
+                        codeToDetect = Objects.requireNonNull(codeSnap.getValue()).toString();
                     }
-
                     @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
                 });
                 break;
@@ -177,7 +161,7 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
                 directionsTextView.setText(R.string.qr_scanner_msg_on_detect_address);
                 directionsTextView.setVisibility(View.VISIBLE);
                 pointsData = new ArrayList<>();
-                DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference("Shops");
+                DatabaseReference shopsRef = FirebaseDatabase.getInstance().getReference(getString(R.string.shops_ref));
                 shopsRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot shopsSnap) {
@@ -189,7 +173,8 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
                                 int numOfStations = Integer.parseInt(Objects.requireNonNull(singleEquipmentSnap.child(getString(R.string.number_of_points)).getValue()).toString());
                                 for (int i = 1; i <= numOfStations; i++) {
                                     String thisStationQRCode = Objects.requireNonNull(singleEquipmentSnap.child("QR_codes/qr_" + i).getValue()).toString();
-                                    pointsData.add(new PointData(i, equipmentNameDB, shopNameDB, thisStationQRCode));
+                                    pointsData.add(new PointData(Integer.parseInt(Objects.requireNonNull(singleShopSnap.getKey())), Integer.parseInt(Objects.requireNonNull(singleEquipmentSnap.getKey())),
+                                            i, equipmentNameDB, shopNameDB, thisStationQRCode));
                                 }
                             }
                         }
@@ -318,13 +303,14 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
                                                                 @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
                                                                 dateSpecialistCame = sdf.format(new Date());
                                                                 final String timeSpecialistCame;
-                                                                @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf1 = new SimpleDateFormat("HH:mm");
-                                                                timeSpecialistCame = sdf1.format(new Date());
+                                                                sdf = new SimpleDateFormat("HH:mm");
+                                                                timeSpecialistCame = sdf.format(new Date());
                                                                 //конец дата-время
                                                                 //занеси данные в БД, измени статус проблемы, что повлечет изм-е статуса кнопки
                                                                 assert urgentProblemKey != null;
                                                                 urgentProbsRef.child(urgentProblemKey).child("date_specialist_came").setValue(dateSpecialistCame);
                                                                 urgentProbsRef.child(urgentProblemKey).child("time_specialist_came").setValue(timeSpecialistCame);
+                                                                urgentProbsRef.child(urgentProblemKey).child("specialist_login").setValue(UserData.login);
                                                                 urgentProbsRef.child(urgentProblemKey + "/status").setValue("SPECIALIST_CAME");
                                                                 detectedOnce = true; //чтобы повторно не реагировало на коды
                                                                 Toast.makeText(getApplicationContext(), R.string.specialist_on_the_spot, Toast.LENGTH_SHORT).show();
@@ -379,6 +365,8 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
                                                     Intent openMakeACall = new Intent(getApplicationContext(), MakeACall.class);
                                                     openMakeACall.putExtra("Название цеха", singlePointData.getShopName());
                                                     openMakeACall.putExtra("Название линии", singlePointData.getEquipmentName());
+                                                    openMakeACall.putExtra("Номер цеха", singlePointData.getShopNo());
+                                                    openMakeACall.putExtra("Номер линии", singlePointData.getEquipmentNo());
                                                     openMakeACall.putExtra(getString(R.string.nomer_punkta_textview_text), singlePointData.getPointNo());
                                                     openMakeACall.putExtra("Кого вызываем", whoIsCalled);
                                                     startActivity(openMakeACall);
@@ -436,7 +424,8 @@ public class QRScanner extends AppCompatActivity implements SurfaceHolder.Callba
                             NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
                             try {
                                 Objects.requireNonNull(notificationManager).cancelAll();
-                            } catch (NullPointerException npe) {ExceptionProcessing.processException(npe);}
+                            } catch (NullPointerException npe) {
+                                ExceptionProcessing.processException(npe);}
                         }
                     };
                     handler.postDelayed(runnableCode, 12000);

@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/activity_operator_or_master_calls_list"
-    tools:context=".CallsList">
+    tools:context=".calls.CallsList">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".RepairerTakePhoto"
+    tools:context=".checking_equipment_maintenance.RepairerTakePhoto"
     android:gravity="center"
     android:background="@drawable/login_background">
     <TextView

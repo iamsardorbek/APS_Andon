@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/login_background"
     android:id="@+id/activity_today_checks"
-    tools:context=".TodayChecks">
+    tools:context=".monitoring_activities.TodayChecks">
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">

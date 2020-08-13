@@ -19,6 +19,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.akfa.apsproject.classes_serving_other_classes.AppLifecycleTrackerService;
+import com.akfa.apsproject.classes_serving_other_classes.ExceptionProcessing;
+import com.akfa.apsproject.general_data_classes.UserData;
+import com.akfa.apsproject.monitoring_activities.TodayChecks;
+import com.akfa.apsproject.pult_and_urgent_problems.PultActivity;
+import com.akfa.apsproject.pult_and_urgent_problems.UrgentProblemsList;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -83,8 +89,15 @@ public class Login extends AppCompatActivity {
             {//3 ifs with boolean checker functions in condition: isOperator, isMaster, isRepairer
                 try {
                     if (password.equals(Objects.requireNonNull(user.child("password").getValue()).toString())) { //если и пароль введен правильно (проверка с подветкой user->password
-                        if(!user.child("active_session_android_id").exists()) {
-                            @SuppressLint("HardwareIds") String androidID = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+                        @SuppressLint("HardwareIds") String androidID = Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
+                        boolean loggedInOnThisDevice = false;
+                        if(user.child("active_session_android_id").exists())
+                        {
+                            if(androidID.equals(Objects.requireNonNull(user.child("active_session_android_id").getValue()).toString()))
+                                loggedInOnThisDevice = true;
+                        }
+
+                        if(!user.child("active_session_android_id").exists() || loggedInOnThisDevice) {
                             DatabaseReference userRef = user.getRef();
                             userRef.child("active_session_android_id").setValue(androidID);
 

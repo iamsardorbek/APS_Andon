@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/login_background"
     android:orientation="vertical"
-    tools:context=".QuestMachineLayoutActivity">
+    tools:context=".checking_equipment_maintenance.QuestMachineLayoutActivity">
 
     <TextView
         android:layout_width="wrap_content"

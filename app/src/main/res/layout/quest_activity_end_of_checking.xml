@@ -7,7 +7,7 @@
     android:id="@+id/quest_activity_end_of_checking"
     android:layout_height="match_parent"
     android:gravity="center"
-    tools:context=".QuestEndOfChecking">
+    tools:context=".checking_equipment_maintenance.QuestEndOfChecking">
 
     <LinearLayout
         android:layout_width="match_parent"

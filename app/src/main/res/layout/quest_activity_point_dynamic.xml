@@ -6,7 +6,7 @@
     android:background="@drawable/login_background"
     android:layout_height="match_parent"
     android:id="@+id/quest_activity_point_dynamic"
-    tools:context=".QuestPointDynamic">
+    tools:context=".checking_equipment_maintenance.QuestPointDynamic">
 
     <ScrollView
         android:layout_width="match_parent"

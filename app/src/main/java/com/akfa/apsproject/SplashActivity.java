@@ -11,6 +11,12 @@ import android.preference.PreferenceManager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import com.akfa.apsproject.checking_equipment_maintenance.QuestListOfEquipment;
+import com.akfa.apsproject.general_data_classes.UserData;
+import com.akfa.apsproject.monitoring_activities.TodayChecks;
+import com.akfa.apsproject.pult_and_urgent_problems.PultActivity;
+import com.akfa.apsproject.pult_and_urgent_problems.UrgentProblemsList;
+
 import java.util.Objects;
 
 //-------SPLASH ЭКРАН, КОТОРЫЙ ПОКАЗЫВАЕТСЯ ПРИ ЗАПУСКЕ ПРИЛОЖЕНИЯ--------//

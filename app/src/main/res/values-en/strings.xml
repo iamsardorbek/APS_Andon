@@ -10,13 +10,13 @@
     <string name="raw_button">Raw</string>
     <string name="master_button">Master</string>
     <string name="open_factory_cond_button">Factory monitoring</string>
-    <string name="choose_pult_login">Select the control console</string>
-    <string name="shop">Shop: </string>
-    <string name="equipmentLine">Equipment line: </string>
-    <string name="numberOfProblems">Detected problems: </string>
-    <string name="checkingDuration">Time spent: </string>
-    <string name="equipment_name_textview">Equipment line name: </string>
-    <string name="nomer_point_textview">Point </string>
+    <string name="choose_pult_login">Select the console</string>
+    <string name="shop">"Shop: "</string>
+    <string name="equipmentLine">"Equipment line: "</string>
+    <string name="numberOfProblems">"Detected problems: "</string>
+    <string name="checkingDuration">"Time spent: "</string>
+    <string name="equipment_name_textview">"Equipment line name: "</string>
+    <string name="nomer_point_textview">"Point "</string>
     <string name="next_point_button_text">Next point</string>
     <string name="qr_text_below_scanner">Take the camera to QR code</string>
     <string name="capture_image">Take a picture of the problem</string>
@@ -33,8 +33,8 @@
     <string name="qr_scanner_text_top">Go to the starting point of the selected equipment line</string>
     <string name="settings_submenu">Settings</string>
     <string name="log_out_submenu">Log out</string>
-    <string name="check_equipment_submenu">Check the maintenance of equipment</string>
-    <string name="pult_submenu">Control console</string>
+    <string name="check_equipment_submenu">Check the maintenance</string>
+    <string name="pult_submenu">Console</string>
     <string name="calls_submenu">Calls</string>
     <string name="problems_list_submenu">Maintenance problems</string>
     <string name="remember_me">Remember me</string>
@@ -72,7 +72,7 @@
     <string name="point_not_active">Point is not active</string>
     <string name="maintenance_problem">Maintenance problem</string>
     <string name="urgent_problem">Urgent problem</string>
-    <string name="calling_you_to"> calling you to </string>
+    <string name="calling_you_to">" calling you to \n"</string>
     <string name="you_are_being_called">You are being called!</string>
     <string name="no_notifications_func_or_tech_problem">The phone does not support the notification function or there is a technical problem with the phone.</string>
     <string name="aps_notifications">APS notifications</string>
@@ -117,10 +117,10 @@
     <string name="camera_error">Camera error, please contact support</string>
     <string name="picture_uploaded_successfully">Picture uploaded successfully</string>
     <string name="pic_upload_error">Photo upload error due to unstable internet connection.</string>
-    <string name="take_pic_of_point">Take a picture of the problem on the subpoint </string>
+    <string name="take_pic_of_point">"Take a picture of the problem on the subpoint "</string>
     <string name="select_the_state_of_each_subpoint">Check the status of each subpoint</string>
     <string name="check_in_progress">Maintenance check already in progress</string>
-    <string name="subpoint_no">Subpoint </string>
+    <string name="subpoint_no">"Subpoint "</string>
     <string name="the_prob_was_solved_or_incomplete_data">This problem has been solved or there is insufficient data on it.</string>
     <string name="all_probs_solved">No problems</string>
     <string name="problems_on_equipment_lines">Problems on equipment lines</string>
@@ -129,4 +129,12 @@
     <string name="time_spent">\nTime spent: </string>
     <string name="date_time_detection">\nDate and time of detection: </string>
     <string name="app_lang">App language</string>
+    <string name="shops_ref">Shops</string>
+    <string name="shop_name">en_shop_name</string>
+    <string name="equipment_name">en_equipment_name</string>
+    <string name="description">en_description</string>
+    <string name="point_name">en_point_name</string>
+    <string name="subpoint_description">en_description</string>
+    <string name="maintenance_problems_the_factory">" maintenance problems"</string>
+    <string name="click_notif_to_get_info">. Click here to know more</string>
 </resources>

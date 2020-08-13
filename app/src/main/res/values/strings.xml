@@ -86,7 +86,7 @@
     <string name="point_not_active">Пункт не задействован</string>
     <string name="maintenance_problem">Проблема ТО</string>
     <string name="urgent_problem">Срочная проблема</string>
-    <string name="calling_you_to">\" вызывает вас в \"</string>
+    <string name="calling_you_to">" вызывает вас в \n"</string>
     <string name="you_are_being_called">Вас вызывают!</string>
     <string name="no_notifications_func_or_tech_problem">Телефон не поддерживает функцию уведомлений либо техническая проблема с телефоном.</string>
     <string name="aps_notifications">Уведомления APS</string>
@@ -132,10 +132,10 @@
     <string name="camera_error">Ошибка камеры, обратитесь в службу поддержки</string>
     <string name="picture_uploaded_successfully">Фотография загружена успешно</string>
     <string name="pic_upload_error">Ошибка загрузки фотографии из-за нестабильного подключения к интернету.</string>
-    <string name="take_pic_of_point">Сфотографируйте проблему подпункта</string>
+    <string name="take_pic_of_point">"Сфотографируйте проблему подпункта "</string>
     <string name="select_the_state_of_each_subpoint">Отметьте состояние каждого подпункта</string>
     <string name="check_in_progress">Проверка линии уже в процессе</string>
-    <string name="subpoint_no">Подпункт №</string>
+    <string name="subpoint_no">"Подпункт "</string>
     <string name="the_prob_was_solved_or_incomplete_data">Данная проблема была решена либо о ней недостаточно данных</string>
     <string name="all_probs_solved">Нет проблем</string>
     <string name="problems_on_equipment_lines">Проблемы на линиях</string>
@@ -144,4 +144,13 @@
     <string name="time_spent">\nПотраченное время: </string>
     <string name="date_time_detection">" Дата и время обнаружения: "</string>
     <string name="app_lang">Язык приложения</string>
+    <string name="shops_ref">Shops</string>
+    <string name="default_shops_ref" translatable="false">Shops</string>
+    <string name="shop_name">shop_name</string>
+    <string name="equipment_name">equipment_name</string>
+    <string name="description">description</string>
+    <string name="point_name">point_name</string>
+    <string name="subpoint_description">description</string>
+    <string name="maintenance_problems_the_factory">" ТО проблема(ы)"</string>
+    <string name="click_notif_to_get_info">. Нажмите сюда, чтобы с ними ознакомиться.</string>
 </resources>

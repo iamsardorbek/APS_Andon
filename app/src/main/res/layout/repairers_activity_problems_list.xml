@@ -6,7 +6,7 @@
     android:id="@+id/repairers_activity"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@drawable/login_background"
-    tools:context=".RepairersProblemsList">
+    tools:context=".checking_equipment_maintenance.RepairersMaintenanceProblemsList">
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"

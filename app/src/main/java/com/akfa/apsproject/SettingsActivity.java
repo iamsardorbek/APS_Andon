@@ -2,10 +2,8 @@ package com.akfa.apsproject;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -15,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.akfa.apsproject.classes_serving_other_classes.InitNavigationBar;
 
 import java.util.Locale;
 import java.util.Objects;
@@ -59,29 +59,23 @@ public class SettingsActivity extends AppCompatActivity implements View.OnTouchL
         return false;
     }
 
-    @SuppressWarnings("deprecation")
     private void openChangeLanguageDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(SettingsActivity.this);
         builder.setTitle(getString(R.string.app_lang));
         String[] langArray = {"Русский", "Ўзбек тили", "O`zbek tili", "English"};
         int checkedLang = 0;
-        Locale current = getResources().getConfiguration().locale;
-        String language = current.getLanguage();
+        String language = Locale.getDefault().getDisplayLanguage();
         switch (language)
         {
-            case "default":
+            case "ab": //кириллский узбекский переведен на locale абхазского, тк в андроид не получилось два узбекских языка сделать (кир и лат)
                 checkedLang = 1;
                 break;
-            case "uz_rUZ":
+            case "uz":
                 checkedLang = 2;
                 break;
             case "en":
                 checkedLang = 3;
                 break;
-            default:
-                checkedLang = 0;
-                break;
-
         }
         builder.setSingleChoiceItems(langArray, checkedLang, new DialogInterface.OnClickListener() {
             @Override
@@ -91,10 +85,10 @@ public class SettingsActivity extends AppCompatActivity implements View.OnTouchL
                         setLocale("default", getBaseContext());
                         break;
                     case 1: //uz_cyrillic
-                        setLocale("uz", getBaseContext());
+                        setLocale("ab", getBaseContext());
                         break;
                     case 2: //uz_latin
-                        setLocale("uz_rUZ", getBaseContext());
+                        setLocale("uz", getBaseContext());
                         break;
                     case 3: //eng
                         setLocale("en", getBaseContext());
@@ -115,6 +109,7 @@ public class SettingsActivity extends AppCompatActivity implements View.OnTouchL
         Configuration configuration = new Configuration();
         configuration.setLocale(locale);
         context.getResources().updateConfiguration(configuration, context.getResources().getDisplayMetrics());
-
+        Locale current = context.getResources().getConfiguration().locale;
+        String language = current.getLanguage();
     }
 }

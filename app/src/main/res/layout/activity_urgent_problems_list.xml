@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/activity_urgent_problems_list"
-    tools:context=".UrgentProblemsList">
+    tools:context=".pult_and_urgent_problems.UrgentProblemsList">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/login_background"
     android:id="@+id/quest_activity_main"
-    tools:context=".QuestListOfEquipment">
+    tools:context=".checking_equipment_maintenance.QuestListOfEquipment">
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -14,7 +14,7 @@
     <string name="shop">Tsex:</string>
     <string name="equipmentLine">Liniya:</string>
     <string name="numberOfProblems">Aniqlangan muammolar soni:</string>
-    <string name="checkingDuration">Tekshiruv vaqti:</string>
+    <string name="checkingDuration">"Tekshiruv vaqti: "</string>
     <string name="equipment_name_textview">Liniya nomi:</string>
     <string name="nomer_point_textview">"Punkt "</string>
     <string name="next_point_button_text">Keyingi punkt</string>
@@ -72,7 +72,7 @@
     <string name="nextSteps">"Keyingi qadamlar "</string>
     <string name="maintenance_problem">TO muammo</string>
     <string name="urgent_problem">Shoshilinch muammo</string>
-    <string name="calling_you_to">sizni quidagi joyga chaqiryapti</string>
+    <string name="calling_you_to">" sizni quidagi joyga chaqiryapti \n"</string>
     <string name="you_are_being_called">Sizni chaqirishyapti</string>
     <string name="no_notifications_func_or_tech_problem">Telefon bildirishnomalar berish funktsiyasini qo\'llab-quvvatlamaydi yoki telefonda texnik nosozlik mavjud.</string>
     <string name="notifications_description">Uskunalar bilan bog\'liq muammolar to\'g\'risida bildirishnomalar</string>
@@ -86,8 +86,8 @@
     <string name="called_by">\nChaqiruvchi: </string>
     <string name="loading_data">Ma\'lumotlar yuklanmoqda ...</string>
     <string name="checked_by">"Kim tomonidan tekshirildi: "</string>
-    <string name="num_of_problems">\nMuammolar soni</string>
-    <string name="end_time">\nTekshiruv tugatilgan vaqt: </string>
+    <string name="num_of_problems">"\nMuammolar soni: "</string>
+    <string name="end_time">"\nTekshiruv tugatilgan vaqt: "</string>
     <string name="user_data_incomplete">Siz haqingizda tizimdagi ma\'lumotlar to\'liq emas. Qo\'llab-quvvatlash xizmatiga murojaat qiling.</string>
     <string name="click_here_to_select_point">Punktni tanlash uchun bu yerni bosing</string>
     <string name="choose_point">Punktni tanlang</string>
@@ -102,7 +102,7 @@
     <string name="operator_arrived">Operator keldi</string>
     <string name="repairer_arrived">Ta\'mirlovchi keldi</string>
     <string name="master_arrived">Master keldi</string>
-    <string name="go_to">Quyidagi joyga boring\\n</string>
+    <string name="go_to">Quyidagi joyga boring\n</string>
     <string name="u_r_in_the_wrong_place">Kerakli joyda emassiz</string>
     <string name="go_to_1st_point_of_line_u_wanna_check">Tekshirmoqchi bo\'lgan liniyangizning 1-punktiga boring</string>
     <string name="specialist_on_the_spot">Mutaxassis yetib keldi</string>
@@ -117,16 +117,24 @@
     <string name="camera_error">Kamera bilan bog\'liq xato, iltimos, qo\'llab-quvvatlash xizmatiga murojaat qiling</string>
     <string name="picture_uploaded_successfully">Rasm bazaga yuklandi</string>
     <string name="pic_upload_error">Internet aloqasi tufayli rasmni yuklashda xatolik yuz berdi</string>
-    <string name="take_pic_of_point">"Қуидаги рақамли подпунктнинг муаммосини расмга олинг "</string>
+    <string name="take_pic_of_point">"Quidagi raqamli podpunktning muammosini rasmga oling "</string>
     <string name="select_the_state_of_each_subpoint">Har bir podpunktning xolatini qayd eting</string>
     <string name="check_in_progress">Tekshiruv boshlangan</string>
-    <string name="subpoint_no">Podpunkt </string>
+    <string name="subpoint_no">"Podpunkt "</string>
     <string name="the_prob_was_solved_or_incomplete_data">Ushbu muammo hal qilingan yoki bu haqda etarli ma\'lumot yo\'q</string>
     <string name="all_probs_solved">Muammolar yo\'q</string>
     <string name="problems_on_equipment_lines">Liniyalardagi muammolar</string>
     <string name="problem_solved_successfully">Muammo yechildi</string>
     <string name="maintenance_check_details">TO tekshiruv haqida ma\'lumotlar</string>
     <string name="time_spent">\nSarflangan vaqt:</string>
-    <string name="date_time_detection">\nAniqlangan sanasi va vaqti: </string>
+    <string name="date_time_detection">" Aniqlangan sanasi va vaqti: "</string>
     <string name="app_lang">Ilova tili</string>
+    <string name="shops_ref">Shops</string>
+    <string name="shop_name">uz_shop_name</string>
+    <string name="equipment_name">uz_equipment_name</string>
+    <string name="description">uz_description</string>
+    <string name="point_name">uz_point_name</string>
+    <string name="subpoint_description">uz_description</string>
+    <string name="maintenance_problems_the_factory">"ta TO muammo"</string>
+    <string name="click_notif_to_get_info">. Ko\'proq bilish uchun bu yerni bosing</string>
 </resources>
