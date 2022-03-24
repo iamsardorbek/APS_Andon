@@ -1,0 +1,156 @@
+<resources>
+    <string name="app_name">APS Шаблонная Версия</string>
+    <string name="login_button">Войти в систему</string>
+    <string name="tip">Введите данные</string>
+    <string name="loading">Подождите пока загрузятся данные с базы данных</string>
+    <string name="access_code">Пароль</string>
+    <string name="repair_button">Ремонт</string>
+    <string name="quality_button">ОТК</string>
+    <string name="raw_button">сырье</string>
+    <string name="master_button">Мастер</string>
+    <string name="open_factory_cond_button">Мониторинг завода</string>
+    <string name="choose_pult_login">Выбрать пульт</string>
+
+    <string name="shop">Цех: </string>
+    <string name="equipmentLine">Линия: </string>
+    <string name="numberOfProblems">Обнаружено проблем: </string>
+    <string name="checkingDuration">Время проверки: </string>
+    <string name="equipment_name_textview">Название линии:</string>
+    <string name="nomer_point_textview">"Пункт "</string>
+    <string name="next_point_button_text">Следующий пункт</string>
+    <string name="qr_text_below_scanner">Поднесите камеру к QR коду</string>
+    <string name="capture_image">Сфотографировать проблему</string>
+    <string name="access_login">Логин</string>
+    <string name="separate_problem_title">Решение проблемы</string>
+    <string name="problem_description_text_filler" translatable="false">Здесь инфа про проблему\n\nНомер пункта, \n\nНазвание оборудования\n\nНазвание цеха</string>
+    <string name="take_pic">Сфотографировать решенную проблему</string>
+    <string name="problem_solved">Проблема решена</string>
+    <string name="call_operator">Вызвать оператора</string>
+    <string name="cameraViewDescription" translatable="false">cameraView</string>
+    <string name="checkCompleted">Проверка окончена</string>
+    <string name="nextSteps">Дальнейшие действия</string>
+    <string name="newCheck">Новая проверка</string>
+    <string name="apsTitle" translatable="false">AKFA PRODUCTION SYSTEM</string>
+    <string name="r_and_dTitle" translatable="false"><![CDATA[R&D Department]]></string>
+    <string name="logo" translatable="false">Logo</string>
+    <string name="open">Открыть</string>
+    <string name="close">Закрыть</string>
+    <string name="qr_scanner_text_top">Подойдите к начальному пункту выбранной линии</string>
+    <string name="settings_submenu">Настройки</string>
+    <string name="log_out_submenu">Выйти из аккаунта</string>
+    <string name="check_equipment_submenu">Проверка линии</string>
+    <string name="pult_submenu">Пульт</string>
+    <string name="calls_submenu">Вызовы</string>
+    <string name="problems_list_submenu">Проблемы ТО</string>
+    <string name="remember_me">Запомнить меня</string>
+    <string name="start_check">Начать проверку линии</string>
+    <string name="description_layout" translatable="false">layout</string>
+    <string name="package_name" translatable="false">com.akfa.apsproject</string>
+    <string name="scan_qr">Сканировать QR Код</string>
+    <string name="repairerProblemPointNumber">Пункт: </string>
+    <string name="repairerProblemSubpointNumber">Подпункт:</string>
+    <string name="repairerProblemEmployeeName">Обнаружено сотрудником:</string>
+    <string name="repairerProblemTime">Время обнаружения:</string>
+    <string name="problematicStationDialog">Выберите пункт на котором появилась проблема</string>
+    <string name="cancelButton">Отмена</string>
+    <string name="acceptButton" translatable="false">ОК</string>
+    <string name="dialog_qr_code_instruction">Дождитесь прихода специалиста. Вы сможете изменить состояние кнопки после того, как специалист отсканирует ваш QR код.</string>
+    <string name="back_button">Назад</string>
+    <string name="urgent_problems_submenu">Срочные проблемы</string>
+    <string name="website_address_factory_condition" translatable="false">https://radiator-factory-aps.web.app/</string>
+    <string name="make_a_call_submenu">Вызвать сотрудника</string>
+    <string name="confirm">Подтвердить</string>
+    <string name="who_is_called_position">Вызываемый специалист:</string>
+    <string name="about_app">Приложение разработано в 2020 году в Akfa Research and Development Department</string>
+    <string name="today_checks_submenu">Сегодняшние проверки ТО</string>
+    <string name="checks_history_submenu">История проверок ТО</string>
+    <string name="title_activity_separate_check" translatable="false">SeparateCheck</string>
+
+    <string name="point_no" translatable="false">point_no</string>
+    <string name="number_of_points" translatable="false">number_of_points</string>
+    <string name="nomer_punkta_textview_text" translatable="false">Номер пункта</string>
+    <string name="program_issue_toast">Техническая проблема. Простите за неудобство. Мы уже над этим работаем</string>
+    <string name="database_npe_toast">Несостыковка в базе данных.</string>
+    <string name="qr_scanner_msg_on_detect_address">Отсканируйте QR метку ближайшего пункта, место определится автоматически</string>
+    <string name="qr_scanner_solve_urgent_problem_msg">Отсканируйте код, сгенерированный на устройстве оператора, который сообщил о данной проблеме. Возможно, QR Код на экране оператора устарел. Оператору нужно закрыть диалог и заново нажать на мигающую кнопку.</string>
+    <string name="such_qr_doesnt_exist">Пункт с такой QR-меткой не существует в базе</string>
+    <string name="activity_called_outside_or_wrong_intent_call">Запрещено показывать окна приложения при вызове извне.</string>
+    <string name="couldnt_download_layout_pic">Не удалось загрузить картинку линии</string>
+    <string name="call_repairer">Вызвать ремонтника</string>
+    <string name="call_master">Вызвать мастера</string>
+    <string name="attach_solved_prob_pic">Прикрепить фотографию решенной проблемы?</string>
+    <string name="no">НЕТ</string>
+    <string name="yes">ДА</string>
+    <string name="call_details_title">Детали вызова</string>
+    <string name="could_load_equipment_data">Не удалось загрузить данные о линиях или несостыковка базы данных. Мы уже работаем над этой проблемой</string>
+    <string name="point_not_active">Пункт не задействован</string>
+    <string name="maintenance_problem">Проблема ТО</string>
+    <string name="urgent_problem">Срочная проблема</string>
+    <string name="calling_you_to">" вызывает вас в \n"</string>
+    <string name="you_are_being_called">Вас вызывают!</string>
+    <string name="no_notifications_func_or_tech_problem">Телефон не поддерживает функцию уведомлений либо техническая проблема с телефоном.</string>
+    <string name="aps_notifications">Уведомления APS</string>
+    <string name="notifications_description">Уведомления о проблемах и неполадках оборудования на заводе</string>
+    <string name="maintenance_probs_notif_channel">Уведомления о ТО проблемах, выходят единожды</string>
+    <string name="app_launched">Приложение APS запущено</string>
+    <string name="notifs_will_be_made_online">Уведомления о проблемах на линиях и вызовах будут показываться в режиме реального времени</string>
+    <string name="no_calls">Нет вызовов</string>
+    <string name="waiting_for_you_in_the_following_places">Вас ждут в данных местах</string>
+    <string name="date_time_of_call">" Дата и время вызова: "</string>
+    <string name="called_by">\nВызвал: </string>
+    <string name="loading_data">Загрузка данных...</string>
+    <string name="checked_by">" Проверено: "</string>
+    <string name="num_of_problems">\nКоличество проблем: </string>
+    <string name="end_time">\nПроверка закончена: </string>
+    <string name="user_data_incomplete">Данные о вас в системе не полные. Обратитесь в службу поддержки.</string>
+    <string name="click_here_to_select_point">Нажмите сюда для выбора пункта</string>
+    <string name="choose_point">Выберите пункт</string>
+    <string name="you_already_active_call_with_these_params">У вас уже есть активный вызов с данными параметрами</string>
+    <string name="fill_both_fields_correctly">Заполните оба поля корректно</string>
+    <string name="session_active_on_another_phone">Выйдите из аккаунта на другом устройстве</string>
+    <string name="wrong_password">Неверный пароль</string>
+    <string name="user_doesnt_exist">Такого пользователя не существует Внимательно заполните поля</string>
+    <string name="operator_is_called">Оператор вызван</string>
+    <string name="repairer_is_called">Ремонтник вызван</string>
+    <string name="master_is_called">Мастер вызван</string>
+    <string name="operator_arrived">Оператор прибыл</string>
+    <string name="repairer_arrived">Ремонтник прибыл</string>
+    <string name="master_arrived">Мастер прибыл</string>
+    <string name="go_to">Подойдите к\n</string>
+    <string name="u_r_in_the_wrong_place">Вы не в том месте</string>
+    <string name="go_to_1st_point_of_line_u_wanna_check">Подойдите к 1-пункту линии, которую вы хотите проверить</string>
+    <string name="specialist_on_the_spot">Специалист на месте</string>
+    <string name="finish_check">Закончить проверку</string>
+    <string name="r_u_sure_u_wanna_finish_check">Вы уверены, что хотите закончить проверку? Данные не будут сохранены.</string>
+    <string name="no_camera_permission">У приложения нет разрешения на использование камеры. Вы можете его предоставить в настройках или перезапустив приложение. </string>
+    <string name="maintenance_check">ТО проверка</string>
+    <string name="problem">ПРОБЛЕМА</string>
+    <string name="ok_order" translatable="false">OK</string>
+    <string name="minutes">" мин"</string>
+    <string name="seconds">" сек"</string>
+    <string name="take_pic_of_monitor_here">Сфотографируйте МОНИТОР на данном пункте</string>
+    <string name="camera_error">Ошибка камеры, обратитесь в службу поддержки</string>
+    <string name="picture_uploaded_successfully">Фотография загружена успешно</string>
+    <string name="pic_upload_error">Ошибка загрузки фотографии из-за нестабильного подключения к интернету.</string>
+    <string name="take_pic_of_point">"Сфотографируйте проблему подпункта "</string>
+    <string name="select_the_state_of_each_subpoint">Отметьте состояние каждого подпункта</string>
+    <string name="check_in_progress">Проверка линии уже в процессе</string>
+    <string name="subpoint_no">"Подпункт "</string>
+    <string name="the_prob_was_solved_or_incomplete_data">Данная проблема была решена либо о ней недостаточно данных</string>
+    <string name="all_probs_solved">Нет проблем</string>
+    <string name="problems_on_equipment_lines">Проблемы на линиях</string>
+    <string name="problem_solved_successfully">Проблема успешно решена</string>
+    <string name="maintenance_check_details">Детали проверки ТО</string>
+    <string name="time_spent">\nПотраченное время: </string>
+    <string name="date_time_detection">" Дата и время обнаружения: "</string>
+    <string name="app_lang">Язык приложения</string>
+    <string name="shops_ref">Shops</string>
+    <string name="default_shops_ref" translatable="false">Shops</string>
+    <string name="shop_name">shop_name</string>
+    <string name="equipment_name">equipment_name</string>
+    <string name="description">description</string>
+    <string name="point_name">point_name</string>
+    <string name="subpoint_description">description</string>
+    <string name="maintenance_problems_the_factory">" ТО проблема(ы)"</string>
+    <string name="click_notif_to_get_info">. Нажмите сюда, чтобы с ними ознакомиться.</string>
+</resources>

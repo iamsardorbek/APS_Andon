@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.akfa.apsproject">
+
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="18"
+        />
+    <uses-feature android:name="android.hardware.camera.flash" />
+    <uses-feature android:name="android.hardware.camera" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/aps_new_icon"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/aps_new_icon"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        tools:ignore="AllowBackup">
+        <activity android:name=".monitoring_activities.SeparateCheckDetails" />
+        <activity android:name=".monitoring_activities.ChecksHistory" />
+        <activity android:name=".monitoring_activities.TodayChecks" />
+        <activity android:name=".SettingsActivity" />
+        <activity android:name=".calls.ConfirmCallDialog"
+            tools:ignore="Instantiatable" />
+        <activity android:name=".calls.MakeACall" />
+        <activity android:name=".calls.CallsList" />
+        <activity android:name=".pult_and_urgent_problems.UrgentProblemsList" />
+        <activity android:name=".checking_equipment_maintenance.RepairerTakePhoto" />
+        <activity android:name=".checking_equipment_maintenance.QuestMachineLayoutActivity" />
+        <activity
+            android:name=".SplashActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".pult_and_urgent_problems.PultActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name=".Login"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
+        <activity android:name=".monitoring_activities.FactoryCondition" /> <!-- QuestAPS activities below -->
+        <activity
+            android:name=".checking_equipment_maintenance.QuestListOfEquipment"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name=".checking_equipment_maintenance.QuestPointDynamic"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name=".checking_equipment_maintenance.QuestEndOfChecking"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name=".QRScanner"
+            android:configChanges="orientation"
+            android:hardwareAccelerated="true"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name=".checking_equipment_maintenance.RepairersMaintenanceProblemsList"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
+        <activity
+            android:name=".checking_equipment_maintenance.RepairerSeparateProblem"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"
+            tools:ignore="LockedOrientationActivity" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="@string/package_name"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <service
+            android:name=".classes_serving_other_classes.AppLifecycleTrackerService"
+            android:enabled="true"
+            android:exported="false"
+            android:stopWithTask="false" />
+        <service
+            android:name=".BackgroundService"
+            android:enabled="true"
+            android:exported="true" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/aps_icon" />
+    </application>
+
+</manifest>

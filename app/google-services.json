@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "1066320712067",
+    "firebase_url": "https://aps-project-akfa.firebaseio.com",
+    "project_id": "aps-project-akfa",
+    "storage_bucket": "aps-project-akfa.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1066320712067:android:b373f5d23c50e79ce7e6b6",
+        "android_client_info": {
+          "package_name": "com.akfa.apsproject"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1066320712067-a6k5m0adigpppb6ir2je7mup8arag6or.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.akfa.apsproject",
+            "certificate_hash": "3762ef652be46333836c4376539fc0558b52a1e8"
+          }
+        },
+        {
+          "client_id": "1066320712067-lmvbbqo2ltb7l2rra2t4mird2808e59u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1uGvfiyLnoehcPfvGdvukHvX1IZ1SGuw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1066320712067-lmvbbqo2ltb7l2rra2t4mird2808e59u.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
