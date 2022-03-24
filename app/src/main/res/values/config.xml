@@ -4,5 +4,8 @@
     <integer name="config_multiuserMaximumUsers">1</integer>
     <!--  Whether Multiuser UI should be shown -->
     <bool name="config_enableMultiUserUI">false</bool>
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8caa7b120f6d3cc7ed4f39971583dbf9a8774df4
 </resources>
